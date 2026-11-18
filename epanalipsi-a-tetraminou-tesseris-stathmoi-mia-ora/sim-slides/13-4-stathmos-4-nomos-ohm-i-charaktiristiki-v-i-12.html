@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<script>
+/* ── deck-pause bridge ────────────────────────────────────────────────────────
+   Όταν η διαφάνεια αυτού του εξομοιωτή δεν φαίνεται, το deck στέλνει
+   {deckPause:true} και κάθε animation frame παρακάμπτεται — το loop μένει
+   ζωντανό, οπότε η συνέχεια είναι ακαριαία. Χωρίς αυτό, 5 κρυμμένα sims
+   ζωγραφίζουν συνεχώς (αισθητό σε αργό σχολικό PC). ─────────────────────── */
+(function () {
+  var paused = false, raf = window.requestAnimationFrame.bind(window);
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.deckPause === 'boolean') paused = e.data.deckPause;
+  });
+  window.requestAnimationFrame = function (cb) {
+    return raf(function (t) {
+      if (paused) { window.requestAnimationFrame(cb); return; }
+      cb(t);
+    });
+  };
+  /* χειραψία με το deck: «είμαι εδώ» — ξεχωρίζει «φορτώνει» από «λείπει το αρχείο» */
+  window.addEventListener('load', function () {
+    try { parent.postMessage({ simReady: true }, '*'); } catch (e) {}
+  });
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Σταθμός 4 — Νόμος του Ohm · Χαρακτηριστική V–I | Β΄ ΕΠΑΛ</title>
+<meta name="description" content="Ψηφιακό εργαστήριο ηλεκτρισμού: ρεαλιστική πειραματική διάταξη για τη χαρακτηριστική V–I του νόμου του Ohm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@500;600;700;800&family=Fira+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0b1417; --bg1:#0f1c20; --panel:#15242a; --panel2:#1a2c33;
+  --line:#26404a; --line2:#2f4750;
+  --ink:#e9f3f0; --dim:#9fb4b6; --dim2:#6f8689;
+  --cu:#f2b544; --cu2:#d88a1f; --ph:#4be08e; --ph2:#57ff9d;
+  --bl:#4db2ff; --rd:#ff5d5d; --mg:#ff5da2; --cy:#3ad2da;
+  --lcd:#ccd5c2; --lcdink:#17251b;
+  --fd:'Fira Sans Condensed',system-ui,sans-serif;
+  --fb:'Fira Sans',system-ui,sans-serif;
+  --fm:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+*{scrollbar-width:thin;scrollbar-color:#c9973b #0c171a}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0c171a}
+::-webkit-scrollbar-thumb{background:linear-gradient(#caa24a,#8a5f1e);border-radius:8px;border:2px solid #0c171a}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(#f2b544,#b07c26)}
+::selection{background:rgba(242,181,68,.35)}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--fb);font-size:14px;color:var(--ink);min-height:100vh;
+  background:
+    radial-gradient(1100px 750px at 82% -10%, #143036 0%, transparent 60%),
+    radial-gradient(950px 700px at -10% 110%, #1a2a24 0%, transparent 55%),
+    linear-gradient(#0b1417,#0d181b);
+  background-attachment:fixed;overflow-x:hidden;
+}
+.bg-aurora{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.a1{width:560px;height:560px;left:-160px;top:-140px;background:radial-gradient(circle,rgba(242,181,68,.13),transparent 65%);animation:drift 26s ease-in-out infinite alternate}
+.a2{width:640px;height:640px;right:-200px;bottom:-220px;background:radial-gradient(circle,rgba(75,224,142,.10),transparent 65%);animation:drift 32s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,50px) scale(1.12)}}
+.bg-grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")}
+svg[hidden]{display:none}
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cu);outline-offset:2px;border-radius:6px}
+
+/* ---------- HEADER ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 18px;background:rgba(11,20,23,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(242,181,68,.55),transparent)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.station-chip{display:flex;align-items:center;gap:6px;font:800 12px var(--fd);letter-spacing:1.2px;color:#241505;
+  background:linear-gradient(#f7c96b,#d88a1f);padding:7px 11px;border-radius:9px;box-shadow:0 2px 12px rgba(242,181,68,.35);white-space:nowrap}
+.station-chip .ic{width:14px;height:14px}
+.titles h1{font:700 19px/1.15 var(--fd);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titles h1 span{color:var(--cu)}
+.titles p{font-size:11px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{display:flex;align-items:center;gap:8px}
+.chip-btn{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:10px;border:1px solid var(--line2);
+  background:linear-gradient(#20333b,#17272e);cursor:pointer;font:600 13px var(--fm);transition:filter .15s,transform .12s;position:relative}
+.chip-btn:hover{filter:brightness(1.2)}
+.chip-btn:active{transform:translateY(1px)}
+.icon-btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid var(--line2);
+  background:linear-gradient(#20333b,#17272e);cursor:pointer;transition:filter .15s,transform .12s;position:relative}
+.icon-btn:hover{filter:brightness(1.25)}
+.icon-btn:active{transform:translateY(1px)}
+.icon-btn.on{border-color:var(--cu);color:var(--cu);box-shadow:0 0 12px rgba(242,181,68,.25)}
+#timerBtn.running{border-color:var(--ph);color:var(--ph2)}
+#timerBtn.urgent{border-color:var(--rd);color:var(--rd);animation:ledPulse 1s infinite}
+#timerBtn.done{border-color:var(--cu);color:var(--cu);animation:ledPulse .6s 6}
+.tring{transform:rotate(-90deg)}
+.tring .bgc{stroke:#2c444d}
+.tring .fgc{stroke:var(--cu);transition:stroke-dashoffset .3s linear}
+#timerBtn.running .fgc{stroke:var(--ph)}
+.badge{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;border-radius:8px;background:var(--cu);color:#241505;
+  font:700 10px/15px var(--fm);text-align:center;padding:0 3px}
+
+/* ---------- LAYOUT ---------- */
+.lab{position:relative;z-index:1;display:grid;grid-template-columns:424px minmax(0,1fr) 338px;gap:14px;align-items:start;
+  padding:86px 16px 10px;max-width:1720px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.05);padding:14px;animation:rise .6s var(--d,0s) backwards;min-width:0}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;flex-wrap:wrap}
+.panel-head h2{font:700 12.5px var(--fd);letter-spacing:1.8px;color:var(--cu);display:flex;align-items:center;gap:7px}
+.panel-head h2 .ic{width:14px;height:14px}
+.hint{font-size:10.5px;color:var(--dim2)}
+
+/* ---------- BUTTONS / CONTROLS ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid var(--line2);cursor:pointer;
+  background:linear-gradient(#233640,#1a2b32);color:#dcebe8;font:600 12.5px var(--fb);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.35);transition:filter .15s,transform .1s;white-space:nowrap}
+.btn:hover{filter:brightness(1.18)}
+.btn:active{transform:translateY(1px)}
+.btn.on{border-color:var(--cu);color:var(--cu);background:rgba(242,181,68,.1)}
+.btn-primary{background:linear-gradient(#f7c96b,#d88a1f);color:#241505;border-color:#f7c96b;box-shadow:0 2px 14px rgba(242,181,68,.35)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-sm{padding:5px 9px;font-size:11.5px}
+.btn .ic{width:14px;height:14px}
+.seg{display:inline-flex;background:#0d181c;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:none;background:transparent;color:var(--dim);font:600 12px var(--fb);padding:5px 11px;border-radius:8px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.seg button.active{background:linear-gradient(#f2b544,#d88a1f);color:#241505;box-shadow:0 1px 8px rgba(242,181,68,.35)}
+.seg button .ic{width:13px;height:13px}
+.switch{width:42px;height:23px;border-radius:20px;border:1px solid var(--line2);background:#1b2b32;cursor:pointer;position:relative;transition:all .2s;flex:none}
+.switch .sw-knob{position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:linear-gradient(#8fa4ab,#5d747c);transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.switch[aria-checked="true"]{background:linear-gradient(#d88a1f,#a86812);border-color:#f2b544}
+.switch[aria-checked="true"] .sw-knob{left:21px;background:linear-gradient(#fff3d6,#f2b544);box-shadow:0 0 8px rgba(242,181,68,.6)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:7px;border-radius:5px;background:var(--trk,#22333b);border:1px solid #0d1518}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;margin-top:-7px;
+  background:radial-gradient(circle at 35% 30%,#fdf3da,#f2b544 55%,#9c6a15);border:2px solid #0d1518;box-shadow:0 0 8px rgba(242,181,68,.45);transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-track{height:7px;border-radius:5px;background:var(--trk,#22333b);border:1px solid #0d1518}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fdf3da,#f2b544 55%,#9c6a15);border:2px solid #0d1518;box-shadow:0 0 8px rgba(242,181,68,.45)}
+.stepper{display:inline-flex;align-items:center;gap:5px}
+.stepper .sbtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);background:linear-gradient(#243740,#1a2b32);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:filter .12s}
+.stepper .sbtn:hover{filter:brightness(1.3)}
+.stepper .sbtn:active{transform:translateY(1px)}
+.stepper .sbtn .ic{width:12px;height:12px}
+.stepper .sval{font:600 13px var(--fm);min-width:58px;text-align:center;color:var(--cu)}
+.num-in{width:74px;background:#0b1518;border:1px solid var(--line2);border-radius:8px;color:var(--ph2);font:600 15px var(--fm);padding:5px 8px;text-align:center}
+.num-in:focus{border-color:var(--cu);outline:none}
+
+/* ---------- PSU ---------- */
+.psu{background:linear-gradient(180deg,#2b3438,#20282c 60%,#1b2226);border-color:#3a464c;position:relative}
+.psu::before,.psu::after,.psu .screw3,.psu .screw4{content:"";position:absolute;width:8px;height:8px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#7d8d94,#2c363b 70%);box-shadow:inset 0 -1px 2px rgba(0,0,0,.7)}
+.psu::before{top:8px;left:8px}.psu::after{top:8px;right:8px}
+.psu .screw3{bottom:8px;left:8px}.psu .screw4{bottom:8px;right:8px}
+.psu-brand{display:flex;justify-content:space-between;align-items:baseline;margin:0 10px 10px}
+.psu-brand b{font:800 13px var(--fd);letter-spacing:2px;color:#cfd9dc}
+.psu-brand span{font:500 10px var(--fm);color:#7d9097}
+.displays{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}
+.bezel{background:#080d0e;border-radius:9px;border:1px solid #000;padding:8px 10px 7px;box-shadow:inset 0 2px 10px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.06)}
+.bezel .blabel{font:600 8.5px var(--fb);letter-spacing:1.5px;color:#6d8087;margin-bottom:4px;display:flex;justify-content:space-between}
+.seg-display{display:flex;align-items:flex-end;gap:3px;justify-content:flex-end}
+.seg-digit{width:21px;height:35.5px;filter:drop-shadow(0 0 5px currentColor)}
+.seg{fill:currentColor;opacity:.07;transition:opacity .08s}
+.seg.on{opacity:1}
+.seg-dot{width:5px;height:5px;border-radius:50%;background:currentColor;margin:0 1px 2px;box-shadow:0 0 5px currentColor;transition:opacity .08s}
+#segV{color:#ffab3d}#segA{color:#5dff9d}
+.leds{display:flex;gap:12px;margin-top:6px}
+.led-item{display:flex;align-items:center;gap:4px;font:600 8.5px var(--fb);letter-spacing:1px;color:#6d8087}
+.led{width:9px;height:9px;border-radius:50%;background:#2a3336;box-shadow:inset 0 1px 2px rgba(0,0,0,.8);transition:all .2s}
+.led.on.g{background:var(--ph);box-shadow:0 0 9px var(--ph);animation:ledPulse 1.8s infinite}
+.led.on.r{background:var(--rd);box-shadow:0 0 9px var(--rd);animation:ledPulse .9s infinite}
+.led.on.a{background:var(--cu);box-shadow:0 0 9px var(--cu)}
+@keyframes ledPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.psu-controls{display:flex;gap:14px;align-items:center}
+.knob-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}
+.knob{width:118px;height:118px;cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:50%}
+.knob.drag{cursor:grabbing}
+.knob-cap{font:600 8.5px var(--fb);letter-spacing:1.4px;color:#8b9ba1}
+.psu-right{flex:1;display:flex;flex-direction:column;gap:9px;min-width:0}
+.psu-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.psu-row .rlab{font:600 9px var(--fb);letter-spacing:1.2px;color:#8b9ba1}
+.pwr{padding:9px 14px;border-radius:11px;border:2px solid #3a464c;background:linear-gradient(#242e33,#1a2226);cursor:pointer;
+  font:800 12px var(--fd);letter-spacing:1.5px;color:#8b9ba1;display:flex;align-items:center;gap:8px;transition:all .2s;width:100%;justify-content:center}
+.pwr .pled{width:10px;height:10px;border-radius:50%;background:#2a3336;transition:all .2s}
+.pwr.on{border-color:var(--ph);color:var(--ph2);box-shadow:0 0 18px rgba(70,224,140,.28),inset 0 0 12px rgba(70,224,140,.12)}
+.pwr.on .pled{background:var(--ph);box-shadow:0 0 10px var(--ph);animation:ledPulse 1.8s infinite}
+.vscale{display:flex;justify-content:space-between;font:500 9px var(--fm);color:#6d8087;padding:0 3px;margin-top:-3px}
+
+/* ---------- CIRCUIT BOARD ---------- */
+.board{background:linear-gradient(180deg,#12291f,#0e2119);border-color:#1e4030}
+.board .panel-head h2{color:#7fd8a8}
+.board svg{width:100%;height:auto;display:block}
+#swHit{cursor:pointer}
+#swHit:hover + g .sw-lever{stroke:#f7c96b}
+#dotsG{transition:opacity .3s}
+.cw-red{stroke:#e05252;stroke-width:3.5;fill:none;stroke-linecap:round}
+.cw-dark{stroke:#46545c;stroke-width:3.5;fill:none;stroke-linecap:round}
+.cw-blue{stroke:#4db2ff;stroke-width:2.4;fill:none;stroke-linecap:round;opacity:.9}
+.ctxt{font:600 12px var(--fb);fill:#a8c5b4}
+.ctxt-s{font:500 9.5px var(--fm);fill:#6f9583}
+
+/* ---------- DMM ---------- */
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dmm{background:linear-gradient(180deg,#242c30,#1a2226);border:2px solid #3d3325;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 0 0 3px rgba(242,181,68,.14);padding:11px}
+.dmm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
+.dmm-head b{font:800 10.5px var(--fd);letter-spacing:1.2px;color:#cfd9dc}
+.role-tag{font:600 8.5px var(--fb);letter-spacing:.6px;color:#241505;background:linear-gradient(#f2b544,#d88a1f);padding:2px 7px;border-radius:6px;white-space:nowrap}
+.lcd{background:linear-gradient(#d6dfca,#c1cbb2);border-radius:6px;box-shadow:inset 0 2px 8px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.4);
+  padding:6px 9px 7px;color:var(--lcdink);transition:all .25s}
+.lcd.backlit{background:linear-gradient(#c3ecd4,#9fd8b8);box-shadow:inset 0 2px 8px rgba(0,0,0,.3),0 0 20px rgba(120,255,180,.3)}
+.lcd-top{display:flex;justify-content:space-between;font:700 8px var(--fm);letter-spacing:1px;opacity:.75;margin-bottom:2px}
+.lcd-main{display:flex;align-items:baseline;justify-content:flex-end;gap:6px}
+.lcd-digits{font:700 27px var(--fm);letter-spacing:.5px;transform:skewX(-3deg)}
+.lcd-unit{font:700 15px var(--fm)}
+.lcd-bar{display:flex;gap:1px;height:6px;margin-top:5px}
+.lcd-bar i{flex:1;background:var(--lcdink);opacity:.13;border-radius:1px}
+.lcd-bar i.on{opacity:.85}
+.dmm-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:6px}
+.range-lbl{font:500 9px var(--fm);color:#7d9097}
+.dmm-btns{display:flex;gap:5px}
+.dbtn{padding:4px 9px;border-radius:7px;border:1px solid #3a464c;background:linear-gradient(#2b353a,#20282c);font:700 9.5px var(--fb);letter-spacing:.8px;color:#9db0b6;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.dbtn:hover{filter:brightness(1.25)}
+.dbtn.on{border-color:var(--cu);color:var(--cu);box-shadow:0 0 8px rgba(242,181,68,.3)}
+.dbtn .ic{width:11px;height:11px}
+
+/* ---------- TRACER ---------- */
+.tracer-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.screen-wrap{position:relative;height:388px;border-radius:11px;overflow:hidden;border:1px solid #0a1f16;
+  background:#081511;box-shadow:inset 0 0 40px rgba(0,0,0,.75),inset 0 0 4px #000}
+.screen-wrap::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,rgba(70,224,140,.06),transparent 70%)}
+.screen-wrap::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.4;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 62%,rgba(0,0,0,.42))}
+#chart{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:pan-y}
+.caption{position:absolute;left:50%;bottom:12px;transform:translate(-50%,10px);z-index:4;max-width:92%;
+  background:rgba(7,18,13,.9);border:1px solid rgba(75,224,142,.4);backdrop-filter:blur(6px);border-radius:12px;
+  padding:9px 15px;color:#d9ffe9;font:500 13px/1.45 var(--fb);opacity:0;pointer-events:none;transition:all .35s;text-align:center}
+.caption.show{opacity:1;transform:translate(-50%,0)}
+.caption b{color:var(--cu)}
+.chart-tip{position:absolute;z-index:5;background:rgba(9,22,16,.94);border:1px solid rgba(58,210,218,.5);border-radius:8px;
+  padding:6px 9px;font:600 11px var(--fm);color:#c9f6f8;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap}
+.chart-tip.show{opacity:1}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
+.lg-chip{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--fm);padding:4px 9px;border-radius:8px;border:1px solid var(--line2);background:#101d22;color:var(--dim)}
+.lg-chip .dot{width:8px;height:8px;border-radius:50%}
+.lg-chip.live{color:var(--ph2);border-color:rgba(75,224,142,.4)}
+.lg-chip.live .dot{background:var(--ph2);box-shadow:0 0 7px var(--ph2);animation:ledPulse 1.6s infinite}
+.lg-chip.ghost{cursor:pointer}
+.lg-chip.ghost:hover{border-color:var(--rd);color:var(--rd)}
+.lg-chip.ghost .ic{width:11px;height:11px}
+
+/* ---------- READOUTS ---------- */
+.readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ro{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-top:2px solid var(--acc,var(--cu));
+  border-radius:11px;padding:9px 11px;animation:rise .6s var(--d,0s) backwards;min-width:0}
+.ro .rl{font:700 8.8px var(--fb);letter-spacing:1.3px;color:var(--dim2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .rv{font:700 19px var(--fm);color:var(--acc,var(--cu));white-space:nowrap}
+.ro .rs{font:500 10px var(--fb);color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- DATA TABLE ---------- */
+.count-chip{font:600 11px var(--fm);color:var(--ph2);background:rgba(75,224,142,.1);border:1px solid rgba(75,224,142,.3);padding:2px 8px;border-radius:7px}
+.tbl-wrap{max-height:236px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#101c21}
+table{width:100%;border-collapse:collapse;font:500 12.5px var(--fm)}
+th{position:sticky;top:0;background:#182931;font:700 10px var(--fb);letter-spacing:1px;color:var(--dim);text-align:right;padding:7px 10px;border-bottom:1px solid var(--line2);z-index:1}
+th:first-child,td:first-child{text-align:left}
+td{padding:6px 10px;text-align:right;border-bottom:1px solid rgba(38,64,74,.4);color:#cfe2de}
+tr:hover td{background:rgba(75,224,142,.05)}
+tr.flash td{animation:rowFlash 1.2s}
+@keyframes rowFlash{from{background:rgba(75,224,142,.28)}to{background:transparent}}
+td .del{width:22px;height:22px;border-radius:6px;border:none;background:transparent;color:var(--dim2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+td .del:hover{color:var(--rd);background:rgba(255,93,93,.12)}
+td .del .ic{width:12px;height:12px}
+.empty-row td{text-align:center;color:var(--dim2);font:500 12px var(--fb);padding:22px 10px}
+
+/* ---------- DUT ---------- */
+.dut.lamp .panel-head h2{color:var(--mg)}
+.temp-chip{display:inline-flex;align-items:center;gap:5px;font:600 11.5px var(--fm);padding:3px 9px;border-radius:8px;border:1px solid var(--line2);color:var(--dim);transition:all .3s}
+.temp-chip .ic{width:12px;height:12px}
+.temp-chip.warm{color:var(--cu);border-color:rgba(242,181,68,.5)}
+.temp-chip.hot{color:var(--rd);border-color:rgba(255,93,93,.6);box-shadow:0 0 10px rgba(255,93,93,.25)}
+.dut-svg{width:100%;height:auto;display:block;margin:2px 0 4px}
+.bands-names{font:500 10.5px var(--fm);color:var(--dim);text-align:center;margin-bottom:9px;min-height:14px}
+.dut-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.dut-row .rlab{font:700 9px var(--fb);letter-spacing:1.3px;color:var(--dim2)}
+.rchips{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0 9px}
+.rchip{padding:5px 10px;border-radius:8px;border:1px solid var(--line2);background:#101d22;font:600 12px var(--fm);color:var(--dim);cursor:pointer;transition:all .15s}
+.rchip:hover{filter:brightness(1.35);color:var(--ink)}
+.rchip.active{background:linear-gradient(#f2b544,#d88a1f);color:#241505;border-color:#f7c96b;box-shadow:0 1px 8px rgba(242,181,68,.4)}
+.nom-lbl{font:500 11px var(--fb);color:var(--dim);text-align:center;margin-top:5px}
+
+/* ---------- REALISM / DEMO / QUIZ ---------- */
+.tgl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(38,64,74,.4)}
+.tgl-row:last-of-type{border-bottom:none}
+.tgl-txt{flex:1;min-width:0}
+.tgl-txt b{font:600 12.5px var(--fb);display:block}
+.tgl-txt span{font:400 10.5px/1.35 var(--fb);color:var(--dim2);display:block;margin-top:1px}
+.demo-steps{list-style:none;margin:4px 0 11px}
+.demo-steps li{display:flex;align-items:center;gap:8px;padding:6px 9px;border-left:2px solid transparent;color:var(--dim2);font:500 12px/1.35 var(--fb);border-radius:0 7px 7px 0;transition:all .25s}
+.demo-steps li .n{font:700 10px var(--fm);width:17px;height:17px;border-radius:50%;border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.demo-steps li.active{border-left-color:var(--cu);color:var(--ink);background:rgba(242,181,68,.08)}
+.demo-steps li.active .n{border-color:var(--cu);color:var(--cu)}
+.demo-steps li.done{color:var(--dim)}
+.demo-steps li.done .n{border-color:var(--ph);color:var(--ph);background:rgba(75,224,142,.1)}
+.quiz-q{font:600 14px/1.45 var(--fb);margin-bottom:3px}
+.quiz-axis{font:500 10.5px var(--fm);color:var(--dim2);margin-bottom:10px}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qopt{padding:12px 8px;border-radius:10px;border:1px solid var(--line2);background:linear-gradient(#1f313a,#17262d);font:700 13px var(--fd);letter-spacing:.5px;cursor:pointer;transition:all .15s;color:#dcebe8}
+.qopt:hover{filter:brightness(1.25);transform:translateY(-1px)}
+.qopt.correct{border-color:var(--ph);color:var(--ph2);background:rgba(75,224,142,.12);box-shadow:0 0 16px rgba(75,224,142,.25)}
+.qopt.wrong{border-color:var(--rd);color:var(--rd);background:rgba(255,93,93,.1);animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.quiz-fb{font:500 12px/1.5 var(--fb);margin-top:9px;min-height:18px;color:var(--dim)}
+.quiz-fb.ok{color:var(--ph2)}.quiz-fb.no{color:var(--rd)}
+.quiz-reset{background:none;border:none;color:var(--dim2);font:500 11px var(--fb);cursor:pointer;margin-top:6px;text-decoration:underline dotted}
+.quiz-reset:hover{color:var(--cu)}
+.panel.pulse{animation:quizPulse 1.1s ease 3}
+@keyframes quizPulse{0%{box-shadow:0 0 0 0 rgba(242,181,68,.55)}100%{box-shadow:0 0 0 16px rgba(242,181,68,0)}}
+
+/* ---------- FOOTER / DRAWER / TOASTS ---------- */
+footer{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 18px 16px;max-width:1720px;margin:0 auto;color:var(--dim2);font-size:11px}
+kbd{font:600 10px var(--fm);background:#182931;border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:2px 6px;color:var(--dim)}
+.hints{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#scrim{position:fixed;inset:0;z-index:80;background:rgba(4,10,12,.62);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+#scrim.show{opacity:1;pointer-events:auto}
+#notesDrawer{position:fixed;top:0;right:0;bottom:0;z-index:90;width:min(430px,94vw);background:#101d22;border-left:1px solid rgba(242,181,68,.3);
+  transform:translateX(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+#notesDrawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line)}
+.drawer-head h3{font:700 13px var(--fd);letter-spacing:1.8px;color:var(--cu)}
+#notesTa{flex:1;margin:14px 16px;background:#0c171b;border:1px solid var(--line);border-radius:10px;color:#d7e6e2;
+  font:400 13px/1.65 var(--fb);padding:13px;resize:none}
+#notesTa:focus{outline:none;border-color:rgba(242,181,68,.5)}
+.drawer-foot{display:flex;align-items:center;gap:8px;padding:0 16px 16px}
+#notesSaved{font:500 11px var(--fb);color:var(--ph);opacity:0;transition:opacity .3s;margin-right:auto}
+#notesSaved.show{opacity:1}
+#toasts{position:fixed;top:74px;right:16px;z-index:100;display:flex;flex-direction:column;gap:8px;width:min(370px,calc(100vw - 24px))}
+.toast{display:flex;align-items:flex-start;gap:9px;background:#14232a;border:1px solid var(--line2);border-left:3px solid var(--bl);
+  border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastIn .3s;font:500 12.5px/1.45 var(--fb)}
+.toast.out{opacity:0;transform:translateX(20px);transition:all .25s}
+.toast .ic{width:15px;height:15px;margin-top:1px;color:var(--bl)}
+.toast.success{border-left-color:var(--ph)}.toast.success .ic{color:var(--ph)}
+.toast.warn{border-left-color:var(--cu)}.toast.warn .ic{color:var(--cu)}
+.toast.danger{border-left-color:var(--rd)}.toast.danger .ic{color:var(--rd)}
+.toast .tmsg{flex:1}
+.toast .tact{border:none;background:rgba(242,181,68,.14);color:var(--cu);font:700 11.5px var(--fb);padding:4px 9px;border-radius:7px;cursor:pointer;flex:none}
+.toast .tact:hover{background:rgba(242,181,68,.28)}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:1360px){.lab{grid-template-columns:400px minmax(0,1fr) 316px}}
+@media (max-width:1240px){
+  .lab{grid-template-columns:396px minmax(0,1fr)}
+  .col-side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;align-items:start}
+}
+@media (max-width:880px){
+  .lab{display:flex;flex-direction:column;padding-top:80px}
+  .col{display:contents}
+  #psuPanel{order:1}.board{order:2}.meters{order:3}#dutPanel{order:4}.tracer{order:5}
+  .readouts{order:6}.data{order:7}.realism{order:8}.demo{order:9}.quiz{order:10}
+  .screen-wrap{height:320px}
+  .titles p{display:none}
+  .readouts{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:620px){
+  .titles h1 span{display:none}
+  .titles h1{font-size:16px}
+  .station-chip span{display:none}
+  .readouts{grid-template-columns:1fr 1fr}
+  .meters{grid-template-columns:1fr}
+  .hints{display:none}
+  .psu-controls{flex-wrap:wrap;justify-content:center}
+  .psu-right{min-width:220px}
+}
+@media (prefers-reduced-motion:reduce){
+  .a1,.a2,.led.on.g,.led.on.r,.pwr.on .pled,.lg-chip.live .dot{animation:none}
+  .panel,.ro{animation:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-sweep" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+    <symbol id="i-max" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h8"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+    <symbol id="i-volx" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-4 10c.7.6 1 1.4 1 2h6c0-.6.3-1.4 1-2a6 6 0 0 0-4-10z"/><path d="M9 18h6M10 21h4"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7.5 15h9"/></symbol>
+  </defs>
+</svg>
+
+<div class="bg-aurora a1"></div><div class="bg-aurora a2"></div><div class="bg-grain"></div>
+
+<header>
+  <div class="brand">
+    <div class="station-chip"><svg class="ic"><use href="#i-zap"/></svg>ΣΤΑΘΜΟΣ <span>&nbsp;4 · 13</span></div>
+    <div class="titles">
+      <h1>Νόμος του Ohm <span>— Χαρακτηριστική V–I</span></h1>
+      <p>Επανάληψη Α΄ Τετραμήνου · Ενότητες 1.1 → 2.1 · Β΄ ΕΠΑΛ · Διάρκεια σταθμού: 12΄</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="chip-btn" id="timerBtn" title="Χρονόμετρο σταθμού 12΄ — έναρξη/παύση">
+      <svg class="tring" width="24" height="24" viewBox="0 0 26 26"><circle class="bgc" cx="13" cy="13" r="10" fill="none" stroke-width="3"/><circle class="fgc" id="timerRingFg" cx="13" cy="13" r="10" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="62.83" stroke-dashoffset="0"/></svg>
+      <span id="timerTxt">12:00</span>
+      <svg class="ic" id="timerPlayIc"><use href="#i-play"/></svg>
+      <svg class="ic" id="timerPauseIc" hidden><use href="#i-pause"/></svg>
+    </button>
+    <button type="button" class="icon-btn" id="timerResetBtn" title="Επαναφορά χρονόμετρου στα 12:00"><svg class="ic"><use href="#i-reset"/></svg></button>
+    <button type="button" class="icon-btn on" id="soundBtn" title="Ήχος εργαστηρίου: ενεργός (M)">
+      <svg class="ic" id="soundOnIc"><use href="#i-vol"/></svg>
+      <svg class="ic" id="soundOffIc" hidden><use href="#i-volx"/></svg>
+    </button>
+    <button type="button" class="icon-btn" id="notesBtn" title="Σημειώσεις σταθμού (N)"><svg class="ic"><use href="#i-note"/></svg><span class="badge" id="notesBadge">1</span></button>
+    <button type="button" class="icon-btn" id="fsBtn" title="Πλήρης οθόνη (F)"><svg class="ic"><use href="#i-max"/></svg></button>
+  </div>
+</header>
+
+<main class="lab">
+
+  <!-- ============ INSTRUMENTS ============ -->
+  <section class="col col-inst">
+
+    <article class="panel psu" id="psuPanel" style="--d:.05s">
+      <span class="screw3"></span><span class="screw4"></span>
+      <div class="psu-brand"><b>ΕΠΑΛ·LAB PS-2430</b><span>ΤΡΟΦΟΔΟΤΙΚΟ DC · 0–24 V / 0–5 A</span></div>
+      <div class="displays">
+        <div class="bezel">
+          <div class="blabel"><span>ΤΑΣΗ ΕΞΟΔΟΥ</span><span>V ⎓</span></div>
+          <div class="seg-display" id="segV"></div>
+        </div>
+        <div class="bezel">
+          <div class="blabel"><span>ΕΝΤΑΣΗ ΕΞΟΔΟΥ</span><span>A ⎓</span></div>
+          <div class="seg-display" id="segA"></div>
+          <div class="leds">
+            <span class="led-item"><span class="led g" id="ledCV"></span>CV</span>
+            <span class="led-item"><span class="led r" id="ledCC"></span>CC</span>
+            <span class="led-item"><span class="led a" id="ledOut"></span>ΕΞΟΔΟΣ</span>
+          </div>
+        </div>
+      </div>
+      <div class="psu-controls">
+        <div class="knob-wrap">
+          <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Ρύθμιση τάσης εξόδου" aria-valuemin="0" aria-valuemax="24" aria-valuenow="12"></div>
+          <span class="knob-cap">ΡΥΘΜΙΣΗ ΤΑΣΗΣ · ↑↓ / τροχός</span>
+        </div>
+        <div class="psu-right">
+          <div class="psu-row">
+            <span class="rlab">ΤΙΜΗ (V)</span>
+            <input type="number" class="num-in" id="vInput" min="0" max="24" step="0.1" value="12.0" aria-label="Τάση σε βολτ">
+          </div>
+          <div class="psu-row">
+            <span class="rlab">±1 V</span>
+            <span class="stepper">
+              <button type="button" class="sbtn" id="vMinus1" title="−1 V"><svg class="ic"><use href="#i-minus"/></svg></button>
+              <button type="button" class="sbtn" id="vPlus1" title="+1 V"><svg class="ic"><use href="#i-plus"/></svg></button>
+            </span>
+            <span class="rlab">±0,1 V</span>
+            <span class="stepper">
+              <button type="button" class="sbtn" id="vMinus01" title="−0,1 V (λεπτομερής)"><svg class="ic"><use href="#i-minus"/></svg></button>
+              <button type="button" class="sbtn" id="vPlus01" title="+0,1 V (λεπτομερής)"><svg class="ic"><use href="#i-plus"/></svg></button>
+            </span>
+          </div>
+          <div class="psu-row">
+            <span class="rlab">ΟΡΙΟ ΡΕΥΜΑΤΟΣ</span>
+            <span class="stepper">
+              <button type="button" class="sbtn" id="limMinus" title="Μείωση ορίου ρεύματος"><svg class="ic"><use href="#i-minus"/></svg></button>
+              <span class="sval" id="limVal">3,00 A</span>
+              <button type="button" class="sbtn" id="limPlus" title="Αύξηση ορίου ρεύματος"><svg class="ic"><use href="#i-plus"/></svg></button>
+            </span>
+          </div>
+          <button type="button" class="pwr on" id="outBtn" title="Ενεργοποίηση/απενεργοποίηση εξόδου (Space)"><span class="pled"></span>ΕΞΟΔΟΣ ON / OFF</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <input type="range" id="vSlider" min="0" max="24" step="0.1" value="12" aria-label="Γρήγορη ρύθμιση τάσης">
+        <div class="vscale"><span>0</span><span>6</span><span>12</span><span>18</span><span>24 V</span></div>
+      </div>
+    </article>
+
+    <article class="panel board" style="--d:.12s">
+      <div class="panel-head"><h2><svg class="ic"><use href="#i-flask"/></svg>ΠΕΙΡΑΜΑΤΙΚΗ ΔΙΑΤΑΞΗ</h2><span class="hint">Κλικ στον διακόπτη S</span></div>
+      <svg id="circuitSvg" viewBox="0 0 560 235" role="img" aria-label="Κύκλωμα: πηγή, διακόπτης, αμπερόμετρο, αντίσταση, βολτόμετρο">
+        <defs>
+          <radialGradient id="postR" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff9d9d"/><stop offset="55%" stop-color="#d33b3b"/><stop offset="100%" stop-color="#7c1d1d"/></radialGradient>
+          <radialGradient id="postB" cx="35%" cy="30%"><stop offset="0%" stop-color="#8b9ba3"/><stop offset="55%" stop-color="#39454c"/><stop offset="100%" stop-color="#141b1f"/></radialGradient>
+          <linearGradient id="ceramS" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ead9b8"/><stop offset="55%" stop-color="#d3bd93"/><stop offset="100%" stop-color="#a98e60"/></linearGradient>
+          <radialGradient id="lampGlowS"><stop offset="0%" stop-color="#fff7d6" stop-opacity=".95"/><stop offset="45%" stop-color="#ffd66b" stop-opacity=".5"/><stop offset="100%" stop-color="#ffd66b" stop-opacity="0"/></radialGradient>
+          <radialGradient id="dotG"><stop offset="0%" stop-color="#fff2c9"/><stop offset="60%" stop-color="#f2b544"/><stop offset="100%" stop-color="#f2b544" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect x="20" y="78" width="64" height="84" rx="8" fill="#1c2f28" stroke="#3a5a4a" stroke-width="1.5"/>
+        <text x="52" y="103" text-anchor="middle" class="ctxt" style="font-weight:700">DC</text>
+        <text x="52" y="121" text-anchor="middle" class="ctxt-s" id="eLabelSvg">E = 12,0 V</text>
+        <text x="52" y="137" text-anchor="middle" class="ctxt-s" id="rInternTxt">r = 0,4 Ω</text>
+        <circle cx="52" cy="78" r="7" fill="url(#postR)" stroke="#000" stroke-width="1"/>
+        <circle cx="52" cy="162" r="7" fill="url(#postB)" stroke="#000" stroke-width="1"/>
+        <text x="38" y="74" class="ctxt" style="fill:#ff8f8f;font-weight:700">+</text>
+        <text x="38" y="176" class="ctxt" style="fill:#9fb4b6;font-weight:700">−</text>
+        <path class="cw-red" d="M52 71 V30 H350"/>
+        <path class="cw-dark" d="M430 30 H508 V200 H52 V169"/>
+        <path class="cw-blue" d="M350 30 V118 H375"/>
+        <path class="cw-blue" d="M430 30 V118 H405"/>
+        <path id="loopPath" d="M52 71 V30 H508 V200 H52 V169" fill="none" stroke="none"/>
+        <rect id="swHit" x="136" y="6" width="66" height="42" fill="transparent"><title>Διακόπτης S — κλικ για ON/OFF</title></rect>
+        <g>
+          <circle cx="148" cy="30" r="3.4" fill="#f2b544"/><circle cx="190" cy="30" r="3.4" fill="#f2b544"/>
+          <g id="swLever"><line class="sw-lever" x1="148" y1="30" x2="188" y2="30" stroke="#e0a53c" stroke-width="4.5" stroke-linecap="round"/></g>
+          <text x="168" y="14" text-anchor="middle" class="ctxt">S</text>
+        </g>
+        <circle cx="268" cy="30" r="15" fill="#f2efe2" stroke="#c8b98a" stroke-width="2"/>
+        <text x="268" y="35.5" text-anchor="middle" style="font:700 15px var(--fb);fill:#22291f">A</text>
+        <text x="268" y="59" text-anchor="middle" class="ctxt-s">DMM·1</text>
+        <g id="resSymG">
+          <rect x="350" y="19" width="80" height="22" rx="3" fill="url(#ceramS)" stroke="#7a6335" stroke-width="1.2"/>
+          <rect id="miniB1" x="362" y="19" width="5" height="22" fill="#3f6fd3"/>
+          <rect id="miniB2" x="372" y="19" width="5" height="22" fill="#1b1b1b"/>
+          <rect id="miniB3" x="382" y="19" width="5" height="22" fill="#c9a227"/>
+          <rect id="resHeatRect" x="350" y="19" width="80" height="22" rx="3" fill="#ff5d3d" opacity="0"/>
+        </g>
+        <g id="lampSymG" style="display:none">
+          <circle id="lampGlowC" cx="390" cy="30" r="20" fill="url(#lampGlowS)" opacity="0"/>
+          <circle cx="390" cy="30" r="14" fill="rgba(210,235,255,.08)" stroke="#9fc4dd" stroke-width="1.6"/>
+          <line x1="380" y1="20" x2="400" y2="40" stroke="#c9a227" stroke-width="2"/>
+          <line x1="400" y1="20" x2="380" y2="40" stroke="#c9a227" stroke-width="2"/>
+        </g>
+        <text x="390" y="10" text-anchor="middle" class="ctxt" id="rLabelSvg">R = 6,0 Ω</text>
+        <circle cx="390" cy="118" r="15" fill="#f2efe2" stroke="#c8b98a" stroke-width="2"/>
+        <text x="390" y="123.5" text-anchor="middle" style="font:700 15px var(--fb);fill:#22291f">V</text>
+        <text x="390" y="147" text-anchor="middle" class="ctxt-s">DMM·2</text>
+        <g id="dotsG"></g>
+      </svg>
+    </article>
+
+    <div class="meters">
+      <article class="panel dmm" style="--d:.18s">
+        <div class="dmm-head"><b>DMM·1 · 830</b><span class="role-tag">ΑΜΠΕΡΟΜΕΤΡΟ · ΣΕ ΣΕΙΡΑ</span></div>
+        <div class="lcd" id="aLcd">
+          <div class="lcd-top"><span>DC</span><span id="aHoldTag" style="visibility:hidden">HOLD</span><span>AUTO</span></div>
+          <div class="lcd-main"><span class="lcd-digits" id="aDigits">0.000</span><span class="lcd-unit">A</span></div>
+          <div class="lcd-bar" id="aBar"></div>
+        </div>
+        <div class="dmm-foot">
+          <span class="range-lbl" id="aRangeLbl">Κλίμακα: 2 A</span>
+          <span class="dmm-btns">
+            <button type="button" class="dbtn" id="aHoldBtn" title="Πάγωμα ένδειξης">HOLD</button>
+            <button type="button" class="dbtn" id="aBlBtn" title="Οπίσθιος φωτισμός LCD"><svg class="ic"><use href="#i-sun"/></svg></button>
+          </span>
+        </div>
+      </article>
+      <article class="panel dmm" style="--d:.22s">
+        <div class="dmm-head"><b>DMM·2 · 830</b><span class="role-tag">ΒΟΛΤΟΜΕΤΡΟ · ΠΑΡΑΛΛΗΛΑ</span></div>
+        <div class="lcd" id="vLcd">
+          <div class="lcd-top"><span>DC</span><span id="vHoldTag" style="visibility:hidden">HOLD</span><span>AUTO</span></div>
+          <div class="lcd-main"><span class="lcd-digits" id="vDigits">0.00</span><span class="lcd-unit">V</span></div>
+          <div class="lcd-bar" id="vBar"></div>
+        </div>
+        <div class="dmm-foot">
+          <span class="range-lbl" id="vRangeLbl">Κλίμακα: 20 V</span>
+          <span class="dmm-btns">
+            <button type="button" class="dbtn" id="vHoldBtn" title="Πάγωμα ένδειξης">HOLD</button>
+            <button type="button" class="dbtn" id="vBlBtn" title="Οπίσθιος φωτισμός LCD"><svg class="ic"><use href="#i-sun"/></svg></button>
+          </span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ CENTER: TRACER + DATA ============ -->
+  <section class="col col-center">
+
+    <article class="panel tracer" style="--d:.08s">
+      <div class="panel-head">
+        <h2><svg class="ic"><use href="#i-sweep"/></svg>ΧΑΡΑΚΤΗΡΙΟΓΡΑΦΟΣ · V–I
+          <button type="button" class="icon-btn" id="infoBtn" style="width:24px;height:24px;border:none;background:none;color:var(--dim2)" title="Τι σημαίνει η κλίση;"><svg class="ic" style="width:14px;height:14px"><use href="#i-info"/></svg></button>
+        </h2>
+        <div class="tracer-tools">
+          <span class="seg" role="group" aria-label="Προσανατολισμός αξόνων">
+            <button type="button" id="axisIU" class="active" title="Άξονας y: I, άξονας x: U — κλίση = 1/R">I–U</button>
+            <button type="button" id="axisUI" title="Άξονας y: U, άξονας x: I — κλίση = R">U–I</button>
+          </span>
+          <button type="button" class="btn btn-sm on" id="fitTgl" aria-pressed="true" title="Βέλτιστη ευθεία (ελάχιστα τετράγωνα)">Βέλτιστη ευθεία</button>
+          <button type="button" class="btn btn-sm" id="triTgl" aria-pressed="false" title="Τρίγωνο υπολογισμού κλίσης">Τρίγωνο κλίσης</button>
+          <button type="button" class="btn btn-sm" id="ghostBtn" title="Αποθήκευση τρεχουσών σημείων ως καμπύλη σύγκρισης"><svg class="ic"><use href="#i-save"/></svg>Καμπύλη</button>
+          <button type="button" class="btn btn-sm" id="pngBtn" title="Εξαγωγή γραφήματος ως PNG"><svg class="ic"><use href="#i-img"/></svg>PNG</button>
+        </div>
+      </div>
+      <div class="screen-wrap" id="screenWrap">
+        <canvas id="chart"></canvas>
+        <div class="caption" id="demoCaption"></div>
+        <div class="chart-tip" id="chartTip"></div>
+      </div>
+      <div class="legend" id="ghostLegend">
+        <span class="lg-chip live"><span class="dot"></span><span id="liveLegend">Ζωντανό ίχνος · R 6 Ω</span></span>
+      </div>
+    </article>
+
+    <div class="readouts">
+      <div class="ro" style="--acc:var(--bl);--d:.14s"><div class="rl">ΙΔΑΝΙΚΟ ΡΕΥΜΑ</div><div class="rv" id="roIthV">2,00 A</div><div class="rs">I = U/R (ονομαστικό, χωρίς όρια)</div></div>
+      <div class="ro" style="--acc:var(--ph);--d:.17s"><div class="rl">ΜΕΤΡΗΜΕΝΟ ΡΕΥΜΑ</div><div class="rv" id="roImV">—</div><div class="rs" id="roImS">αμπερόμετρο DMM·1</div></div>
+      <div class="ro" style="--acc:var(--cu);--d:.20s"><div class="rl">R = U/I</div><div class="rv" id="roRV">—</div><div class="rs" id="roRS">ονομαστική: 6 Ω ±5%</div></div>
+      <div class="ro" style="--acc:var(--cy);--d:.23s"><div class="rl">ΚΛΙΣΗ ΕΥΘΕΙΑΣ</div><div class="rv" id="roSlV">—</div><div class="rs" id="roSlS">από τα καταγεγραμμένα σημεία</div></div>
+      <div class="ro" style="--acc:var(--rd);--d:.26s"><div class="rl">ΙΣΧΥΣ P = U·I</div><div class="rv" id="roPV">—</div><div class="rs" id="roPS">—</div></div>
+      <div class="ro" style="--acc:var(--ph);--d:.29s"><div class="rl">ΓΡΑΜΜΙΚΟΤΗΤΑ</div><div class="rv" id="roLnV">—</div><div class="rs" id="roLnS">απαιτούνται ≥ 2 σημεία</div></div>
+    </div>
+
+    <article class="panel data" style="--d:.2s">
+      <div class="panel-head">
+        <h2><svg class="ic"><use href="#i-note"/></svg>ΚΑΤΑΓΡΑΦΕΣ <span class="count-chip" id="ptCount">0 σημεία</span></h2>
+        <div class="tracer-tools">
+          <button type="button" class="btn btn-primary btn-sm" id="recordBtn" title="Καταγραφή τρέχουσας μέτρησης (R)"><svg class="ic"><use href="#i-rec"/></svg>Καταγραφή</button>
+          <button type="button" class="btn btn-sm" id="sweepBtn" title="Αυτόματη σάρωση τάσης με 8 καταγραφές"><svg class="ic"><use href="#i-sweep"/></svg>Σάρωση</button>
+          <button type="button" class="btn btn-sm" id="csvBtn" title="Εξαγωγή μετρήσεων σε CSV (Excel)"><svg class="ic"><use href="#i-dl"/></svg>CSV</button>
+          <button type="button" class="icon-btn" id="clearBtn" style="width:30px;height:30px" title="Διαγραφή όλων των καταγραφών"><svg class="ic" style="width:14px;height:14px"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+      <div class="tbl-wrap" id="tblWrap">
+        <table aria-label="Πίνακας μετρήσεων">
+          <thead><tr><th>α/α</th><th>U (V)</th><th>I (A)</th><th>R = U/I (Ω)</th><th>P (W)</th><th></th></tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ SIDE: DUT + MODEL + DEMO + QUIZ ============ -->
+  <aside class="col col-side">
+
+    <article class="panel dut" id="dutPanel" style="--d:.1s">
+      <div class="panel-head">
+        <h2><svg class="ic"><use href="#i-zap"/></svg>ΕΞΑΡΤΗΜΑ ΥΠΟ ΔΟΚΙΜΗ</h2>
+        <span class="temp-chip" id="dutTemp"><svg class="ic"><use href="#i-thermo"/></svg><span id="dutTempV">25 °C</span></span>
+      </div>
+      <svg class="dut-svg" id="resSvg" viewBox="0 0 340 104" role="img" aria-label="Αντίσταση με χρωματικές ζώνες">
+        <defs>
+          <linearGradient id="leadG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d9e2e6"/><stop offset="50%" stop-color="#8b9ba3"/><stop offset="100%" stop-color="#4c5a61"/></linearGradient>
+          <linearGradient id="ceramB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#efe0c0"/><stop offset="45%" stop-color="#d8c49c"/><stop offset="100%" stop-color="#a3885c"/></linearGradient>
+          <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff" stop-opacity=".45"/><stop offset="35%" stop-color="#ffffff" stop-opacity="0"/><stop offset="100%" stop-color="#000000" stop-opacity=".18"/></linearGradient>
+        </defs>
+        <ellipse cx="170" cy="92" rx="120" ry="7" fill="#000" opacity=".28"/>
+        <path d="M4 52 H94" stroke="url(#leadG)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M246 52 H336" stroke="url(#leadG)" stroke-width="5" stroke-linecap="round"/>
+        <g id="resBodyG">
+          <rect x="92" y="25" width="156" height="54" rx="17" fill="url(#ceramB)" stroke="#00000033"/>
+          <rect id="band1" x="112" y="25" width="13" height="54" rx="2" fill="#3f6fd3" stroke="#00000040"/>
+          <rect id="band2" x="138" y="25" width="13" height="54" rx="2" fill="#1b1b1b" stroke="#00000040"/>
+          <rect id="band3" x="164" y="25" width="13" height="54" rx="2" fill="#c9a227" stroke="#00000040"/>
+          <rect id="band4" x="219" y="25" width="13" height="54" rx="2" fill="#c9a227" stroke="#00000040"/>
+          <rect x="92" y="25" width="156" height="54" rx="17" fill="url(#sheen)"/>
+          <rect id="resHeatBig" x="92" y="25" width="156" height="54" rx="17" fill="#ff5d3d" opacity="0"/>
+        </g>
+      </svg>
+      <svg class="dut-svg" id="lampSvg" viewBox="0 0 340 104" style="display:none" role="img" aria-label="Λαμπτήρας πυρακτώσεως">
+        <defs>
+          <radialGradient id="glassG" cx="42%" cy="35%"><stop offset="0%" stop-color="#dff1ff" stop-opacity=".22"/><stop offset="70%" stop-color="#bcd9ee" stop-opacity=".07"/><stop offset="100%" stop-color="#bcd9ee" stop-opacity=".14"/></radialGradient>
+          <linearGradient id="brassG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8cf8e"/><stop offset="50%" stop-color="#b3924e"/><stop offset="100%" stop-color="#7a6132"/></linearGradient>
+          <radialGradient id="lampGlowB"><stop offset="0%" stop-color="#fff9dd" stop-opacity="1"/><stop offset="40%" stop-color="#ffd66b" stop-opacity=".55"/><stop offset="100%" stop-color="#ffd66b" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="170" cy="97" rx="60" ry="5" fill="#000" opacity=".28"/>
+        <circle id="lampGlowBig" cx="170" cy="40" r="34" fill="url(#lampGlowB)" opacity="0"/>
+        <ellipse cx="170" cy="40" rx="35" ry="30" fill="url(#glassG)" stroke="#9fc4dd" stroke-opacity=".5" stroke-width="1.6"/>
+        <path d="M158 66 V50 l4 -9 4 9 4 -9 4 9 4 -9 4 9 V66" fill="none" stroke="#c9a227" stroke-width="2" stroke-linejoin="round"/>
+        <path id="filamentHot" d="M158 66 V50 l4 -9 4 9 4 -9 4 9 4 -9 4 9 V66" fill="none" stroke="#fff6d8" stroke-width="2.4" stroke-linejoin="round" opacity="0"/>
+        <rect x="152" y="66" width="36" height="24" rx="4" fill="url(#brassG)" stroke="#00000055"/>
+        <path d="M152 72 h36 M152 78 h36 M152 84 h36" stroke="#00000033" stroke-width="1.6"/>
+        <circle cx="170" cy="93" r="4.5" fill="#8b9ba3" stroke="#00000066"/>
+      </svg>
+      <div class="bands-names" id="bandsNames"></div>
+      <div class="dut-row">
+        <span class="seg" role="group" aria-label="Είδος εξαρτήματος">
+          <button type="button" id="compRes" class="active"><svg class="ic"><use href="#i-zap"/></svg>Αντίσταση</button>
+          <button type="button" id="compLamp"><svg class="ic"><use href="#i-bulb"/></svg>Λαμπτήρας</button>
+        </span>
+        <button type="button" class="btn btn-sm" id="randBtn" title="Τοποθέτηση τυχαίας αντίστασης — βρείτε την πραγματική της τιμή!"><svg class="ic"><use href="#i-dice"/></svg>Τυχαία</button>
+      </div>
+      <div class="rchips" id="rChips"></div>
+      <div class="dut-row"><span class="rlab">ΟΝΟΜΑΣΤΙΚΗ ΤΙΜΗ</span><span class="sval" style="font:600 13px var(--fm);color:var(--cu)" id="rSliderVal">6 Ω</span></div>
+      <input type="range" id="rSlider" min="2" max="47" step="1" value="6" aria-label="Ονομαστική αντίσταση">
+      <div class="nom-lbl" id="nomLbl"></div>
+    </article>
+
+    <article class="panel realism" style="--d:.16s">
+      <div class="panel-head"><h2><svg class="ic"><use href="#i-flask"/></svg>ΡΕΑΛΙΣΤΙΚΟ ΜΟΝΤΕΛΟ</h2></div>
+      <div class="tgl-row">
+        <div class="tgl-txt"><b>Θόρυβος οργάνων</b><span>Διασπορά ±0,3% + 1 ψηφίο — όπως τα πραγματικά πολύμετρα.</span></div>
+        <button type="button" class="switch" id="noiseTgl" role="switch" aria-checked="true" aria-label="Θόρυβος οργάνων"><span class="sw-knob"></span></button>
+      </div>
+      <div class="tgl-row">
+        <div class="tgl-txt"><b>Αυτοθέρμανση · R(T)</b><span>Ο λαμπτήρας γίνεται μη ωμικός. Χωρίς αυτήν, συμπεριφέρεται ωμικά.</span></div>
+        <button type="button" class="switch" id="heatTgl" role="switch" aria-checked="true" aria-label="Αυτοθέρμανση"><span class="sw-knob"></span></button>
+      </div>
+      <div class="tgl-row">
+        <div class="tgl-txt"><b>Εσωτερική αντίσταση πηγής</b><span>r = 0,4 Ω + καλώδια 0,1 Ω → πτώση τάσης υπό φορτίο.</span></div>
+        <button type="button" class="switch" id="rintTgl" role="switch" aria-checked="true" aria-label="Εσωτερική αντίσταση πηγής"><span class="sw-knob"></span></button>
+      </div>
+      <div class="tgl-row">
+        <div class="tgl-txt"><b>Ανοχή εξαρτήματος ±5%</b><span>Η πραγματική τιμή «κρύβεται» εντός της χρυσής ζώνης — βρείτε τη με μέτρηση!</span></div>
+        <button type="button" class="switch" id="tolTgl" role="switch" aria-checked="true" aria-label="Ανοχή εξαρτήματος"><span class="sw-knob"></span></button>
+      </div>
+      <button type="button" class="btn btn-sm" id="resetBtn" style="width:100%;justify-content:center;margin-top:10px" title="Επαναφορά ολόκληρου του εργαστηρίου"><svg class="ic"><use href="#i-reset"/></svg>Επαναφορά εργαστηρίου</button>
+    </article>
+
+    <article class="panel demo" style="--d:.22s">
+      <div class="panel-head"><h2><svg class="ic"><use href="#i-clock"/></svg>ΣΕΝΑΡΙΟ ΕΠΙΔΕΙΞΗΣ · 12΄</h2></div>
+      <ol class="demo-steps" id="demoList">
+        <li><span class="n">1</span>R = 6 Ω · τάση 6 → 12 → 18 V — καταγραφές</li>
+        <li><span class="n">2</span>Ίδια κλίση — η ευθεία περνά από το (0,0)</li>
+        <li><span class="n">3</span>Αλλαγή ΜΟΝΟ του R → 20 Ω</li>
+        <li><span class="n">4</span>Νέες καταγραφές — πιο επίπεδη ευθεία</li>
+        <li><span class="n">5</span>Ερώτηση στους μαθητές</li>
+      </ol>
+      <button type="button" class="btn btn-primary" id="demoBtn" style="width:100%;justify-content:center"><svg class="ic"><use href="#i-play"/></svg>Έναρξη σεναρίου</button>
+    </article>
+
+    <article class="panel quiz" id="quizPanel" style="--d:.28s">
+      <div class="panel-head"><h2><svg class="ic"><use href="#i-check"/></svg>ΕΛΕΓΧΟΣ ΚΑΤΑΝΟΗΣΗΣ</h2></div>
+      <div class="quiz-q">«Μεγαλύτερη αντίσταση — η ευθεία γίνεται…»</div>
+      <div class="quiz-axis" id="quizAxis">γράφημα I–U · κλίση = 1/R</div>
+      <div class="quiz-opts">
+        <button type="button" class="qopt" id="ansSteep">Πιο απότομη</button>
+        <button type="button" class="qopt" id="ansFlat">Πιο επίπεδη</button>
+      </div>
+      <div class="quiz-fb" id="quizFb"></div>
+      <button type="button" class="quiz-reset" id="quizReset">Επαναφορά ερώτησης</button>
+    </article>
+  </aside>
+</main>
+
+<footer>
+  <div class="hints">
+    <span><kbd>Space</kbd> Έξοδος</span><span><kbd>R</kbd> Καταγραφή</span><span><kbd>←</kbd><kbd>→</kbd> Τάση (Shift: ±1 V)</span>
+    <span><kbd>N</kbd> Σημειώσεις</span><span><kbd>F</kbd> Πλήρης οθόνη</span><span><kbd>M</kbd> Ήχος</span>
+  </div>
+  <div>Ψηφιακό εργαστήριο ηλεκτρισμού · Επανάληψη Α΄ Τετραμήνου — Β΄ ΕΠΑΛ · Σταθμός 4</div>
+</footer>
+
+<div id="scrim"></div>
+<aside id="notesDrawer" aria-label="Σημειώσεις σταθμού">
+  <div class="drawer-head">
+    <h3>ΣΗΜΕΙΩΣΕΙΣ ΣΤΑΘΜΟΥ</h3>
+    <button type="button" class="icon-btn" id="notesClose" title="Κλείσιμο (Esc)"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+  <textarea id="notesTa" spellcheck="false" aria-label="Κείμενο σημειώσεων"></textarea>
+  <div class="drawer-foot">
+    <span id="notesSaved">✓ Αποθηκεύτηκε</span>
+    <button type="button" class="btn btn-sm" id="notesCopy"><svg class="ic"><use href="#i-copy"/></svg>Αντιγραφή</button>
+    <button type="button" class="btn btn-sm" id="notesRestore"><svg class="ic"><use href="#i-reset"/></svg>Σενάριο</button>
+  </div>
+</aside>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= UTILS ================= */
+const E=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt=(n,d=2)=>isFinite(n)?n.toFixed(d).replace('.',','):'—';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let gSpare=null;
+function gauss(){ if(gSpare!==null){const v=gSpare;gSpare=null;return v;}
+  let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+  const m=Math.sqrt(-2*Math.log(u)), a=2*Math.PI*v; gSpare=m*Math.sin(a); return m*Math.cos(a); }
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h;}
+function seeded(s){let t=hash(s)+0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;}
+const LS={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+
+/* ================= AUDIO ================= */
+let AC=null,master=null,noiseBuf=null,lastDetent=0;
+function initAudio(){ if(AC)return;
+  try{ AC=new (window.AudioContext||window.webkitAudioContext)();
+    master=AC.createGain(); master.gain.value=S.sound?0.5:0; master.connect(AC.destination);
+    noiseBuf=AC.createBuffer(1,AC.sampleRate*0.04,AC.sampleRate);
+    const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+  }catch(e){}
+}
+function beep(f,dur,type='sine',vol=0.2,delay=0){ if(!AC||!S.sound)return;
+  if(AC.state==='suspended')AC.resume();
+  const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();
+  o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(vol,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.05);
+}
+function clack(){ if(!AC||!S.sound)return; if(AC.state==='suspended')AC.resume();
+  const t=AC.currentTime,s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
+  s.buffer=noiseBuf;f.type='bandpass';f.frequency.value=2200;f.Q.value=1.2;
+  g.gain.setValueAtTime(0.5,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+  s.connect(f);f.connect(g);g.connect(master);s.start(t);
+}
+const sClick=()=>{clack();beep(240,0.05,'square',0.12);};
+const sRecord=()=>beep(1320,0.07,'sine',0.2);
+const sTick=()=>beep(880,0.035,'sine',0.12);
+const sOk=()=>{beep(660,0.1,'sine',0.18);beep(880,0.1,'sine',0.18,0.09);beep(1320,0.16,'sine',0.18,0.18);};
+const sBad=()=>{beep(160,0.22,'sawtooth',0.14);beep(110,0.28,'sawtooth',0.12,0.06);};
+const sChime=()=>{[880,1108,1318].forEach((f,i)=>beep(f,0.3,'sine',0.16,i*0.14));[880,1108,1318].forEach((f,i)=>beep(f,0.3,'sine',0.14,0.6+i*0.14));};
+function sDetent(){const n=performance.now();if(n-lastDetent>45){lastDetent=n;beep(1500,0.014,'sine',0.05);}}
+document.addEventListener('pointerdown',initAudio,{once:true});
+document.addEventListener('keydown',initAudio,{once:true});
+
+/* ================= STATE ================= */
+const PRESETS=[6,10,15,20,33,47];
+const GHOST_COLORS=['#4db2ff','#ff5da2','#3ad2da','#ffa14d'];
+const S={
+  E:12, limit:3, out:true, comp:'res', Rnom:6, T:25,
+  noise:true, heat:true, rint:true, tolOn:true,
+  axis:'IU', fitOn:true, triOn:false,
+  points:[], ghosts:[], fit:null,
+  holdA:false, holdV:false,
+  trueI:0,trueUt:0,trueUR:0,trueP:0,mode:'—',Ract:6,
+  mV:0,mA:0, dV:0,dA:0, pV:0,pA:0, hV:0,hA:0,
+  knobAng:0, swAng:0, flowOff:0,
+  trail:[], iMax:3.5, hover:{x:0,y:0,in:false},
+  cw:0,ch:0,dpr:1,
+  demo:false, sweep:false,
+  tLeft:720,tRun:false,tEnd:0,
+  sound:(LS.get('ohmlab.sound')!=='off'),
+  lastWarn:0, ccNoted:false
+};
+function tolFor(r){return S.tolOn?(seeded('R'+r)-0.5)*0.1:0;}
+
+/* ================= SEVEN SEGMENT ================= */
+const SEGPTS={a:"5,2 21,2 23,4 21,6 5,6 3,4",b:"22,5 24,7 24,19 22,21 20,19 20,7",c:"22,23 24,25 24,37 22,39 20,37 20,25",d:"5,38 21,38 23,40 21,42 5,42 3,40",e:"4,23 6,25 6,37 4,39 2,37 2,25",f:"4,5 6,7 6,19 4,21 2,19 2,7",g:"5,20 21,20 23,22 21,24 5,24 3,22"};
+const SEGMAP={'0':'abcdef','1':'bc','2':'abdeg','3':'abcdg','4':'bcfg','5':'acdfg','6':'acdefg','7':'abc','8':'abcdefg','9':'abcdfg','-':'g',' ':''};
+const NS='http://www.w3.org/2000/svg';
+function makeSeg(el,pattern){
+  el.innerHTML=''; const chars=[];
+  for(const ch of pattern){
+    if(ch==='.'){const d=document.createElement('span');d.className='seg-dot';el.appendChild(d);chars.push({dot:d});}
+    else{const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 26 44');svg.classList.add('seg-digit');
+      const polys={};for(const k in SEGPTS){const p=document.createElementNS(NS,'polygon');p.setAttribute('points',SEGPTS[k]);p.classList.add('seg');svg.appendChild(p);polys[k]=p;}
+      el.appendChild(svg);chars.push({polys});}
+  }
+  return{set(str){str=String(str).padStart(pattern.length,' ');
+    for(let i=0;i<pattern.length;i++){const c=chars[i],ch=str[i]||' ';
+      if(c.dot)c.dot.style.opacity=(ch==='.')?1:0.07;
+      else{const on=SEGMAP[ch]||'';for(const k in c.polys)c.polys[k].classList.toggle('on',on.includes(k));}}}};
+}
+const segV=makeSeg(E('segV'),'88.88'), segA=makeSeg(E('segA'),'8.888');
+
+/* ================= KNOB ================= */
+(function buildKnob(){
+  const el=E('knob');let ticks='';
+  for(let i=0;i<=20;i++){const a=(-135+i*13.5)*Math.PI/180,maj=i%5===0,r1=maj?45:48,r2=54;
+    ticks+=`<line x1="${(Math.sin(a)*r1).toFixed(1)}" y1="${(-Math.cos(a)*r1).toFixed(1)}" x2="${(Math.sin(a)*r2).toFixed(1)}" y2="${(-Math.cos(a)*r2).toFixed(1)}" stroke="${maj?'#8fa7ad':'#4c626b'}" stroke-width="${maj?2.4:1.4}" stroke-linecap="round"/>`;}
+  el.innerHTML=`<svg viewBox="-60 -60 120 120" width="118" height="118">
+    <defs><radialGradient id="kGrad" cx="35%" cy="30%"><stop offset="0%" stop-color="#4d5e66"/><stop offset="60%" stop-color="#26333a"/><stop offset="100%" stop-color="#10181b"/></radialGradient></defs>
+    ${ticks}<circle r="43" fill="url(#kGrad)" stroke="#0b1114" stroke-width="2.5"/>
+    <circle r="43" fill="none" stroke="#ffffff12" stroke-width="1"/>
+    <g class="k-pointer"><line x1="0" y1="-17" x2="0" y2="-37" stroke="#f2b544" stroke-width="5" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(242,181,68,.8))"/></g>
+    <circle r="10" fill="#1b262b" stroke="#32444c" stroke-width="1.5"/></svg>`;
+  const ptr=el.querySelector('.k-pointer');
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);drag={y:e.clientY,v:S.E};el.classList.add('drag');});
+  el.addEventListener('pointermove',e=>{if(!drag)return;
+    const dv=(drag.y-e.clientY)*24/170*(e.shiftKey?0.12:1);
+    const nv=clamp(Math.round((drag.v+dv)*10)/10,0,24);
+    if(nv!==S.E){setE(nv);sDetent();}});
+  const end=()=>{drag=null;el.classList.remove('drag');};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);el.addEventListener('lostpointercapture',end);
+  el.addEventListener('wheel',e=>{e.preventDefault();setE(clamp(Math.round((S.E+(e.deltaY<0?1:-1)*(e.shiftKey?1:0.1))*10)/10,0,24));sDetent();},{passive:false});
+  el.addEventListener('keydown',e=>{const st=e.shiftKey?1:0.1;let h=true;
+    if(e.key==='ArrowUp'||e.key==='ArrowRight')setE(clamp(Math.round((S.E+st)*10)/10,0,24));
+    else if(e.key==='ArrowDown'||e.key==='ArrowLeft')setE(clamp(Math.round((S.E-st)*10)/10,0,24));
+    else if(e.key==='Home')setE(0);else if(e.key==='End')setE(24);else h=false;
+    if(h){e.preventDefault();e.stopPropagation();sDetent();}});
+  S._knobPtr=ptr;
+})();
+
+/* ================= BARS / DOTS ================= */
+for(const id of ['aBar','vBar']){const el=E(id);for(let i=0;i<36;i++)el.appendChild(document.createElement('i'));}
+const loopPath=E('loopPath'),loopLen=loopPath.getTotalLength(),dotsG=E('dotsG'),dotEls=[];
+for(let i=0;i<7;i++){const c=document.createElementNS(NS,'circle');c.setAttribute('r','4');c.setAttribute('fill','url(#dotG)');dotsG.appendChild(c);dotEls.push(c);}
+
+/* ================= COLOR BANDS ================= */
+const BAND_COLORS=['#1b1b1b','#6b3f22','#d33b3b','#e8842a','#e8d44d','#3f9e5f','#3f6fd3','#8b5cf6','#9aa0a6','#f2f2f2'];
+const BAND_NAMES=['Μαύρο','Καφέ','Κόκκινο','Πορτοκαλί','Κίτρινο','Πράσινο','Μπλε','Μωβ','Γκρι','Λευκό'];
+function bandsFor(v){const d1=Math.floor(v<10?v:v/10),d2=Math.round(v<10?v*10:v)%10,mult=v<10?-1:0;return[d1,d2,mult];}
+function renderBands(){
+  const[d1,d2,m]=bandsFor(S.Rnom);
+  const mc=m===-1?'#c9a227':BAND_COLORS[m];
+  E('band1').setAttribute('fill',BAND_COLORS[d1]);E('band2').setAttribute('fill',BAND_COLORS[d2]);
+  E('band3').setAttribute('fill',mc);E('band4').setAttribute('fill','#c9a227');
+  E('miniB1').setAttribute('fill',BAND_COLORS[d1]);E('miniB2').setAttribute('fill',BAND_COLORS[d2]);E('miniB3').setAttribute('fill',mc);
+  E('bandsNames').textContent=S.comp==='res'
+    ?`${BAND_NAMES[d1]} · ${BAND_NAMES[d2]} · ${m===-1?'Χρυσό (×0,1)':BAND_NAMES[m]+' (×1)'} · Χρυσό (±5%)`
+    :'Νήμα βολφραμίου · α ≈ 0,0045 /K';
+  E('nomLbl').textContent=S.comp==='res'
+    ?`Αντίσταση αναφοράς · Ονομαστική ${S.Rnom} Ω ±5% · ισχύς ≤ 50 W`
+    :`Λαμπτήρας πυρακτώσεως · ψυχρό νήμα R₂₅ = ${S.Rnom} Ω`;
+  E('rSliderVal').textContent=S.Rnom+' Ω';
+  E('rLabelSvg').textContent=S.comp==='res'?`R = ${fmt(S.Rnom,1)} Ω`:'Λαμπτήρας';
+  E('liveLegend').textContent='Ζωντανό ίχνος · '+(S.comp==='res'?`R ${S.Rnom} Ω`:'Λαμπτήρας');
+  document.querySelectorAll('.rchip').forEach(c=>c.classList.toggle('active',+c.dataset.r===S.Rnom));
+}
+
+/* ================= TOASTS ================= */
+function toast(type,msg,action){
+  const box=E('toasts');
+  while(box.children.length>=4)box.firstChild.remove();
+  const t=document.createElement('div');t.className='toast '+type;
+  const icn=type==='success'?'check':type==='danger'?'x':type==='warn'?'zap':'info';
+  t.innerHTML=`<svg class="ic"><use href="#i-${icn}"/></svg><div class="tmsg">${msg}</div>`;
+  let to;
+  const kill=()=>{t.classList.add('out');setTimeout(()=>t.remove(),260);};
+  if(action){const b=document.createElement('button');b.type='button';b.className='tact';b.textContent=action.label;
+    b.addEventListener('click',()=>{action.fn();clearTimeout(to);kill();});t.appendChild(b);}
+  box.appendChild(t);to=setTimeout(kill,4800);
+  t.addEventListener('pointerenter',()=>clearTimeout(to));
+  t.addEventListener('pointerleave',()=>{to=setTimeout(kill,1800);});
+  return t;
+}
+
+/* ================= ACTIONS ================= */
+function interrupt(){ if(S.demo)endDemo(true); if(S.sweep)stopSweep(true); }
+function sliderFill(el){const p=(el.value-el.min)/(el.max-el.min)*100;
+  el.style.setProperty('--trk',`linear-gradient(90deg,#d88a1f ${p}%,#22333b ${p}%)`);}
+function setE(v,internal){
+  S.E=clamp(Math.round(v*10)/10,0,24);
+  E('vInput').value=S.E.toFixed(1);E('vSlider').value=S.E;sliderFill(E('vSlider'));
+  E('knob').setAttribute('aria-valuenow',S.E);E('knob').setAttribute('aria-valuetext',fmt(S.E,1)+' βολτ');
+  if(!internal)interrupt();
+}
+function setR(v,internal){
+  S.Rnom=clamp(Math.round(v),2,47);S.T=25;
+  E('rSlider').value=S.Rnom;sliderFill(E('rSlider'));renderBands();
+  if(!internal){interrupt();archiveIfMixed();}
+}
+function setComp(c,internal){
+  if(S.comp===c)return; S.comp=c;S.T=25;
+  E('compRes').classList.toggle('active',c==='res');E('compLamp').classList.toggle('active',c==='lamp');
+  E('dutPanel').classList.toggle('lamp',c==='lamp');
+  E('resSvg').style.display=c==='res'?'':'none';E('lampSvg').style.display=c==='lamp'?'':'none';
+  E('resSymG').style.display=c==='res'?'':'none';E('lampSymG').style.display=c==='lamp'?'':'none';
+  renderBands();
+  if(!internal){interrupt();archiveIfMixed();
+    if(c==='lamp')toast('info','Λαμπτήρας: θερμαινόμενο νήμα βολφραμίου — η χαρακτηριστική του ΔΕΝ είναι ευθεία. Κάντε σάρωση!');}
+}
+function toggleOut(force,internal){
+  S.out=(force!==undefined)?force:!S.out;
+  E('outBtn').classList.toggle('on',S.out);sClick();
+  if(!internal)interrupt();
+}
+function setLimit(v,internal){S.limit=clamp(Math.round(v*10)/10,0.2,5);E('limVal').textContent=fmt(S.limit,2)+' A';if(!internal)interrupt();}
+function setAxis(a,internal){
+  S.axis=a;E('axisIU').classList.toggle('active',a==='IU');E('axisUI').classList.toggle('active',a==='UI');
+  E('quizAxis').textContent=a==='IU'?'γράφημα I–U · κλίση = 1/R':'γράφημα U–I · κλίση = R';
+  computeFit();resetQuiz();if(!internal)interrupt();
+}
+function syncSwitch(id,val){E(id).setAttribute('aria-checked',String(val));}
+function bindSwitch(id,key,extra){E(id).addEventListener('click',()=>{S[key]=!S[key];syncSwitch(id,S[key]);sClick();interrupt();if(extra)extra();});}
+bindSwitch('noiseTgl','noise');bindSwitch('heatTgl','heat');
+bindSwitch('rintTgl','rint',()=>{E('rInternTxt').style.visibility=S.rint?'visible':'hidden';});
+bindSwitch('tolTgl','tolOn',()=>toast('info',S.tolOn?'Ανοχή ±5%: κάθε αντίσταση έχει «κρυφή» πραγματική τιμή.':'Ιδανικές αντιστάσεις: πραγματική τιμή = ονομαστική.'));
+
+function archiveIfMixed(){
+  if(S.points.length&&(S.points[0].r!==S.Rnom||S.points[0].comp!==S.comp)){
+    const buf=S.points.map((p,i)=>({p,idx:i}));S.points=[];renderTable();computeFit();
+    toast('info','Νέο εξάρτημα — οι παλιές καταγραφές καθαρίστηκαν.',{label:'Αναίρεση',fn(){S.points=buf.map(b=>b.p);renderTable();computeFit();}});
+  }
+}
+
+/* ================= DATA / FIT ================= */
+function record(internal){
+  if(S.points.length>=60){toast('warn','Όριο 60 καταγραφών — διαγράψτε μερικές πρώτα.');return;}
+  S.points.push({u:S.dV,i:S.dA,r:S.Rnom,comp:S.comp});
+  renderTable(true);computeFit();sRecord();
+  if(!internal)interrupt();
+}
+function renderTable(flashLast){
+  const tb=E('tblBody');
+  E('ptCount').textContent=S.points.length+(S.points.length===1?' σημείο':' σημεία');
+  if(!S.points.length){tb.innerHTML='<tr class="empty-row"><td colspan="6">Καμία καταγραφή — ρυθμίστε την τάση και πατήστε «Καταγραφή» ή «Σάρωση».</td></tr>';return;}
+  tb.innerHTML=S.points.map((p,idx)=>`<tr${flashLast&&idx===S.points.length-1?' class="flash"':''}>
+    <td>${idx+1}</td><td>${fmt(p.u,2)}</td><td>${fmt(p.i,3)}</td>
+    <td>${p.i>0.0005?fmt(p.u/p.i,2):'—'}</td><td>${fmt(p.u*p.i,2)}</td>
+    <td><button type="button" class="del" data-del="${idx}" title="Διαγραφή σημείου"><svg class="ic"><use href="#i-trash"/></svg></button></td></tr>`).join('');
+  if(flashLast)E('tblWrap').scrollTop=E('tblWrap').scrollHeight;
+}
+E('tblBody').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]');if(!b)return;
+  const idx=+b.dataset.del,p=S.points[idx];S.points.splice(idx,1);renderTable();computeFit();sClick();
+  toast('info',`Το σημείο #${idx+1} διαγράφηκε.`,{label:'Αναίρεση',fn(){S.points.splice(Math.min(idx,S.points.length),0,p);renderTable();computeFit();}});
+});
+function clearPoints(internal){
+  if(!S.points.length){if(!internal)toast('info','Δεν υπάρχουν καταγραφές.');return;}
+  const buf=S.points.map((p,i)=>({p,idx:i}));S.points=[];renderTable();computeFit();
+  if(!internal){sClick();toast('warn','Όλες οι καταγραφές διαγράφηκαν.',{label:'Αναίρεση',fn(){S.points=buf.map(b=>b.p);renderTable();computeFit();}});}
+}
+function computeFit(){
+  const n=S.points.length;S.fit=null;
+  if(n>=2){
+    const IU=S.axis==='IU';
+    const xs=S.points.map(p=>IU?p.u:p.i),ys=S.points.map(p=>IU?p.i:p.u);
+    const mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
+    let sxy=0,sxx=0,syy=0;
+    for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)**2;syy+=(ys[i]-my)**2;}
+    if(sxx>1e-9){
+      const m=sxy/sxx,b=my-m*mx;let ssr=0;
+      for(let i=0;i<n;i++)ssr+=(ys[i]-(m*xs[i]+b))**2;
+      const r2=syy>1e-12?clamp(1-ssr/syy,0,1):1;
+      const R=IU?(Math.abs(m)>1e-9?1/m:NaN):m;
+      S.fit={m,b,r2,R,n};
+    }
+  }
+  const f=S.fit,IU=S.axis==='IU';
+  E('roSlV').textContent=f?(IU?fmt(f.m,3)+' A/V':fmt(f.m,2)+' Ω'):'—';
+  E('roSlS').textContent=f?`R από κλίση = ${fmt(f.R,2)} Ω ${IU?'(κλίση = 1/R)':'(κλίση = R)'}`:'από τα καταγεγραμμένα σημεία';
+  const lin=E('roLnV');
+  if(f){const ok=f.r2>=0.998;lin.textContent=ok?'Γραμμική ✓':'Μη γραμμική ✗';
+    lin.style.color=ok?'var(--ph)':'var(--mg)';lin.parentElement.style.setProperty('--acc',ok?'var(--ph)':'var(--mg)');
+    E('roLnS').textContent='R² = '+fmt(f.r2,4);}
+  else{lin.textContent='—';lin.style.color='var(--dim)';E('roLnS').textContent='απαιτούνται ≥ 2 σημεία';}
+}
+function saveGhost(internal){
+  if(S.points.length<2){toast('warn','Χρειάζονται τουλάχιστον 2 σημεία για αποθήκευση καμπύλης.');return;}
+  if(S.ghosts.length>=4)S.ghosts.shift();
+  const color=GHOST_COLORS[S.ghosts.length%4];
+  S.ghosts.push({label:S.comp==='res'?`R = ${S.Rnom} Ω`:'Λαμπτήρας',color,pts:S.points.map(p=>({u:p.u,i:p.i}))});
+  renderLegend();sOk();
+  if(!internal){interrupt();toast('success','Η καμπύλη αποθηκεύτηκε για σύγκριση (κλικ στο υπόμνημα για αφαίρεση).');}
+}
+function renderLegend(){
+  const lg=E('ghostLegend');
+  lg.querySelectorAll('.ghost').forEach(x=>x.remove());
+  S.ghosts.forEach((g,i)=>{const c=document.createElement('span');c.className='lg-chip ghost';c.dataset.gi=i;c.title='Αφαίρεση καμπύλης';
+    c.innerHTML=`<span class="dot" style="background:${g.color};box-shadow:0 0 6px ${g.color}"></span>${g.label}<svg class="ic"><use href="#i-x"/></svg>`;lg.appendChild(c);});
+}
+E('ghostLegend').addEventListener('click',e=>{const c=e.target.closest('[data-gi]');if(!c)return;S.ghosts.splice(+c.dataset.gi,1);renderLegend();sClick();});
+
+/* ================= SWEEP ================= */
+let sweepTok=0;
+function sweepUI(){E('sweepBtn').innerHTML=S.sweep?'<svg class="ic"><use href="#i-stop"/></svg><span id="swProg">0/8</span>':'<svg class="ic"><use href="#i-sweep"/></svg>Σάρωση';}
+async function startSweep(){
+  S.sweep=true;const tok=++sweepTok;sweepUI();
+  const alive=()=>S.sweep&&tok===sweepTok;
+  try{
+    if(!S.out)toggleOut(true,true);
+    const umax=S.comp==='lamp'?24:Math.min(24,S.limit*S.Rnom*0.96),n=8;
+    for(let k=1;k<=n;k++){
+      if(!alive())throw 0;
+      setE(umax*k/n,true);const pr=E('swProg');if(pr)pr.textContent=k+'/8';
+      await sleep(S.comp==='lamp'?2300:850);
+      if(!alive())throw 0;
+      record(true);sTick();
+    }
+    S.sweep=false;sweepUI();S.fitOn=true;syncFitBtns();
+    toast('success',`Η σάρωση ολοκληρώθηκε: 8 σημεία${S.fit?' · R² = '+fmt(S.fit.r2,4):''}.`);sOk();
+  }catch(e){sweepUI();}
+}
+function stopSweep(user){S.sweep=false;sweepTok++;sweepUI();if(user)toast('info','Η σάρωση διακόπηκε.');}
+function syncFitBtns(){E('fitTgl').classList.toggle('on',S.fitOn);E('fitTgl').setAttribute('aria-pressed',S.fitOn);
+  E('triTgl').classList.toggle('on',S.triOn);E('triTgl').setAttribute('aria-pressed',S.triOn);}
+
+/* ================= DEMO ================= */
+let demoTok=0;
+function caption(html){const c=E('demoCaption');c.innerHTML=html;c.classList.add('show');}
+function hideCaption(){E('demoCaption').classList.remove('show');}
+function demoStep(i){[...E('demoList').children].forEach((li,k)=>{li.classList.toggle('active',k===i);li.classList.toggle('done',k<i);});}
+function demoUI(){E('demoBtn').innerHTML=S.demo?'<svg class="ic"><use href="#i-stop"/></svg>Διακοπή':'<svg class="ic"><use href="#i-play"/></svg>Έναρξη σεναρίου';
+  E('demoBtn').classList.toggle('btn-primary',!S.demo);}
+async function startDemo(){
+  S.demo=true;const tok=++demoTok;demoUI();
+  const alive=()=>S.demo&&tok===demoTok;
+  const wait=async ms=>{await sleep(ms);if(!alive())throw 0;};
+  try{
+    demoStep(0);caption('Βήμα 1: <b>R = 6 Ω</b> — μεταβάλλουμε <b>μόνο την τάση</b> U (6 → 12 → 18 V).');
+    setComp('res',true);setR(6,true);setLimit(3,true);setAxis('IU',true);
+    S.heat=true;syncSwitch('heatTgl',true);S.noise=true;syncSwitch('noiseTgl',true);
+    S.rint=true;syncSwitch('rintTgl',true);E('rInternTxt').style.visibility='visible';
+    clearPoints(true);S.ghosts=[];renderLegend();S.triOn=false;S.fitOn=true;syncFitBtns();
+    if(!S.out)toggleOut(true,true);
+    if(!S.tRun)timerToggle();
+    await wait(1000);
+    for(const u of[6,12,18]){setE(u,true);await wait(1150);record(true);await wait(450);}
+    demoStep(1);S.triOn=true;syncFitBtns();
+    caption('<b>Ίδιο R → ίδια κλίση</b> σε όλα τα σημεία. Η ευθεία περνά από την αρχή <b>(0,0)</b>. ✓');
+    await wait(3400);
+    demoStep(2);saveGhost(true);
+    caption('Αποθηκεύτηκε η καμπύλη <b>R = 6 Ω</b>. Αλλάζουμε <b>ΜΟΝΟ το R → 20 Ω</b>.');
+    await wait(1800);clearPoints(true);setR(20,true);await wait(1400);
+    demoStep(3);S.triOn=false;syncFitBtns();
+    for(const u of[6,12,18]){setE(u,true);await wait(1050);record(true);await wait(420);}
+    caption('Παρατηρήστε: με <b>R = 20 Ω</b> η ευθεία έγινε πιο <b>ΕΠΙΠΕΔΗ</b> (μικρότερη κλίση 1/R).');
+    await wait(3400);
+    demoStep(4);
+    E('quizPanel').classList.add('pulse');setTimeout(()=>E('quizPanel').classList.remove('pulse'),4000);
+    caption('Ερώτηση ➜ <b>«Μεγαλύτερη αντίσταση — πιο απότομη ή πιο επίπεδη ευθεία;»</b> Απαντήστε στον έλεγχο κατανόησης!');
+    sOk();await wait(3000);
+    S.demo=false;demoUI();demoStep(5);
+    toast('success','Η επίδειξη ολοκληρώθηκε — σειρά σας στον έλεγχο κατανόησης!');
+    setTimeout(()=>{if(!S.demo)hideCaption();},5000);
+  }catch(e){/* ακυρώθηκε */}
+}
+function endDemo(user){S.demo=false;demoTok++;demoUI();hideCaption();
+  [...E('demoList').children].forEach(li=>li.classList.remove('active'));
+  if(user)toast('info','Η επίδειξη διακόπηκε από χειρισμό — το εργαστήριο είναι ξανά ελεύθερο.');}
+
+/* ================= QUIZ ================= */
+function resetQuiz(){E('ansSteep').classList.remove('correct','wrong');E('ansFlat').classList.remove('correct','wrong');
+  E('quizFb').textContent='';E('quizFb').className='quiz-fb';}
+function answer(kind,btn){
+  resetQuiz();
+  const IU=S.axis==='IU',correct=IU?'flat':'steep',ok=kind===correct;
+  btn.classList.add(ok?'correct':'wrong');
+  const fb=E('quizFb');fb.className='quiz-fb '+(ok?'ok':'no');
+  fb.textContent=ok
+    ?(IU?'✓ Σωστά! Κλίση = 1/R: μεγαλύτερο R → μικρότερη κλίση → πιο επίπεδη ευθεία.'
+        :'✓ Σωστά! Στο γράφημα U–I η κλίση ισούται με R: μεγαλύτερο R → πιο απότομη ευθεία.')
+    :(IU?'✗ Όχι — στο γράφημα I–U η κλίση είναι 1/R. Συγκρίνετε τις δύο αποθηκευμένες καμπύλες και δοκιμάστε ξανά.'
+        :'✗ Όχι — στο γράφημα U–I η κλίση είναι R. Δοκιμάστε ξανά.');
+  ok?sOk():sBad();
+}
+E('ansSteep').addEventListener('click',()=>answer('steep',E('ansSteep')));
+E('ansFlat').addEventListener('click',()=>answer('flat',E('ansFlat')));
+E('quizReset').addEventListener('click',resetQuiz);
+
+/* ================= TIMER ================= */
+function timerToggle(){
+  if(S.tLeft<=0){S.tLeft=720;}
+  S.tRun=!S.tRun;
+  if(S.tRun)S.tEnd=Date.now()+S.tLeft*1000;
+  E('timerBtn').classList.toggle('running',S.tRun);
+  E('timerPlayIc').hidden=S.tRun;E('timerPauseIc').hidden=!S.tRun;
+  sClick();
+}
+E('timerBtn').addEventListener('click',timerToggle);
+E('timerResetBtn').addEventListener('click',()=>{S.tRun=false;S.tLeft=720;
+  E('timerBtn').classList.remove('running','urgent','done');
+  E('timerPlayIc').hidden=false;E('timerPauseIc').hidden=true;sClick();});
+
+/* ================= NOTES ================= */
+const NOTES_SEED=`ΣΕΝΑΡΙΟ ΕΠΙΔΕΙΞΗΣ (12΄) — ΣΤΑΘΜΟΣ 4
+• R = 6 Ω: αλλάξτε μόνο το U (6 → 12 → 18 V) — η κλίση ΔΕΝ αλλάζει.
+• Μετά αλλάξτε το R σε 20 Ω — η ευθεία γίνεται πιο «επίπεδη».
+• Ερώτηση: «Μεγαλύτερη αντίσταση — πιο απότομη ή πιο επίπεδη ευθεία;»
+  (Απάντηση: πιο επίπεδη στο γράφημα I–U, όπου κλίση = 1/R· στο U–I η κλίση είναι R και η ευθεία γίνεται πιο απότομη.)
+
+ΡΕΑΛΙΣΤΙΚΕΣ ΛΕΠΤΟΜΕΡΕΙΕΣ ΓΙΑ ΣΥΖΗΤΗΣΗ
+• Γιατί το βολτόμετρο δείχνει λίγο λιγότερα από την ένδειξη του τροφοδοτικού; (πτώση σε r και καλώδια)
+• Γιατί η μετρημένη R διαφέρει από την ονομαστική; (χρυσή ζώνη ±5%)
+• Γιατί ο λαμπτήρας ΔΕΝ δίνει ευθεία; (αυτοθέρμανση νήματος → R(T))
+
+ΠΑΡΑΤΗΡΗΣΕΙΣ ΜΑΘΗΤΩΝ
+— `;
+let notesTo=null;
+function notesInit(){
+  const v=LS.get('ohmlab.notes');E('notesTa').value=(v!==null)?v:NOTES_SEED;
+  E('notesBadge').textContent=E('notesTa').value.trim()?'1':'0';
+}
+function notesSave(){LS.set('ohmlab.notes',E('notesTa').value);
+  E('notesBadge').textContent=E('notesTa').value.trim()?'1':'0';
+  E('notesSaved').classList.add('show');clearTimeout(notesTo);
+  notesTo=setTimeout(()=>E('notesSaved').classList.remove('show'),1600);}
+E('notesTa').addEventListener('input',()=>{clearTimeout(notesTo);notesTo=setTimeout(notesSave,450);});
+function notesOpen(o){E('notesDrawer').classList.toggle('open',o);E('scrim').classList.toggle('show',o);
+  if(o)E('notesTa').focus();else notesSave();}
+E('notesBtn').addEventListener('click',()=>notesOpen(!E('notesDrawer').classList.contains('open')));
+E('notesClose').addEventListener('click',()=>notesOpen(false));
+E('scrim').addEventListener('click',()=>notesOpen(false));
+E('notesCopy').addEventListener('click',()=>{
+  if(navigator.clipboard)navigator.clipboard.writeText(E('notesTa').value).then(()=>toast('success','Οι σημειώσεις αντιγράφηκαν στο πρόχειρο.'),()=>toast('warn','Η αντιγραφή δεν υποστηρίζεται εδώ.'));
+  else toast('warn','Η αντιγραφή δεν υποστηρίζεται εδώ.');});
+E('notesRestore').addEventListener('click',()=>{const old=E('notesTa').value;E('notesTa').value=NOTES_SEED;notesSave();
+  toast('info','Το σενάριο αποκαταστάθηκε.',{label:'Αναίρεση',fn(){E('notesTa').value=old;notesSave();}});});
+
+/* ================= SOUND / FULLSCREEN ================= */
+function syncSound(){E('soundOnIc').hidden=!S.sound;E('soundOffIc').hidden=S.sound;
+  E('soundBtn').classList.toggle('on',S.sound);
+  E('soundBtn').title='Ήχος εργαστηρίου: '+(S.sound?'ενεργός':'σιγασημένος')+' (M)';
+  if(master)master.gain.value=S.sound?0.5:0;LS.set('ohmlab.sound',S.sound?'on':'off');}
+E('soundBtn').addEventListener('click',()=>{S.sound=!S.sound;syncSound();if(S.sound)sClick();});
+E('fsBtn').addEventListener('click',()=>{
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>toast('info','Η πλήρης οθόνη δεν είναι διαθέσιμη σε αυτή τη συσκευή.'));}
+  else document.exitFullscreen&&document.exitFullscreen();});
+document.addEventListener('fullscreenchange',()=>E('fsBtn').classList.toggle('on',!!document.fullscreenElement));
+
+/* ================= EXPORTS ================= */
+E('csvBtn').addEventListener('click',()=>{
+  if(!S.points.length){toast('warn','Δεν υπάρχουν μετρήσεις για εξαγωγή.');return;}
+  let csv='\uFEFFα/α;U (V);I (A);R = U/I (Ω);P (W)\r\n';
+  S.points.forEach((p,i)=>{csv+=`${i+1};${fmt(p.u,2)};${fmt(p.i,3)};${p.i>0.0005?fmt(p.u/p.i,2):''};${fmt(p.u*p.i,2)}\r\n`;});
+  if(S.fit)csv+=`\r\nΚλίση;${fmt(S.fit.m,S.axis==='IU'?4:3)};${S.axis==='IU'?'A/V':'V/A'}\r\nR από κλίση;${fmt(S.fit.R,2)};Ω\r\nR²;${fmt(S.fit.r2,5)}\r\n`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='ohm-metriseis.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast('success','Το CSV κατέβηκε (συμβατό με ελληνικό Excel: ; και υποδιαστολή κόμμα).');sOk();
+});
+E('pngBtn').addEventListener('click',()=>{
+  const c=E('chart'),d=S.dpr,hdr=56*d;
+  const t=document.createElement('canvas');t.width=c.width;t.height=c.height+hdr;
+  const x=t.getContext('2d');x.fillStyle='#0a1a14';x.fillRect(0,0,t.width,t.height);
+  x.fillStyle='#f2b544';x.font=`700 ${15*d}px 'Fira Sans Condensed',sans-serif`;
+  x.fillText('Χαρακτηριστική V–I · Νόμος του Ohm · Β΄ ΕΠΑΛ — Σταθμός 4',14*d,24*d);
+  x.fillStyle='#9fb4b6';x.font=`500 ${11*d}px 'JetBrains Mono',monospace`;
+  x.fillText(`${S.comp==='res'?'R = '+S.Rnom+' Ω':'Λαμπτήρας'} · άξονες ${S.axis==='IU'?'I–U':'U–I'} · ${new Date().toLocaleDateString('el-GR')}`,14*d,44*d);
+  x.drawImage(c,0,hdr);
+  const a=document.createElement('a');a.href=t.toDataURL('image/png');a.download='ohm-charaktiristiki.png';a.click();
+  toast('success','Το γράφημα εξήχθη ως PNG στην τρέχουσα κατάσταση.');sOk();
+});
+
+/* ================= CHART ================= */
+const chart=E('chart'),ctx=chart.getContext('2d'),wrap=E('screenWrap');
+function resizeChart(){S.dpr=Math.min(window.devicePixelRatio||1,2);
+  S.cw=wrap.clientWidth;S.ch=wrap.clientHeight;
+  chart.width=Math.round(S.cw*S.dpr);chart.height=Math.round(S.ch*S.dpr);}
+new ResizeObserver(resizeChart).observe(wrap);
+function niceMax(v){if(v<=0)return 1;const b=Math.pow(10,Math.floor(Math.log10(v)));
+  for(const m of[1,1.5,2,2.5,3,3.5,4,5,6,8,10])if(m*b>=v-1e-9)return m*b;return 10*b;}
+function niceStep(raw){for(const s of[0.1,0.2,0.25,0.5,1,2,5,10])if(s>=raw-1e-9)return s;return 10;}
+function drawChart(now){
+  const w=S.cw,h=S.ch;if(w<60||h<60)return;
+  ctx.setTransform(S.dpr,0,0,S.dpr,0,0);ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#081511';ctx.fillRect(0,0,w,h);
+  const L=56,Rm=14,T=16,B=42,pw=w-L-Rm,ph=h-T-B,IU=S.axis==='IU';
+  let maxI=0.4;
+  if(S.out)maxI=Math.max(maxI,S.dA);
+  for(const p of S.points)maxI=Math.max(maxI,p.i);
+  for(const g of S.ghosts)for(const p of g.pts)maxI=Math.max(maxI,p.i);
+  const target=niceMax(maxI*1.15);
+  if(target>S.iMax||target<S.iMax*0.6)S.iMax=target;
+  const xmax=IU?24:S.iMax,ymax=IU?S.iMax:24;
+  const X=p=>L+(IU?p.u:p.i)/xmax*pw, Y=p=>T+ph-(IU?p.i:p.u)/ymax*ph;
+  const ux=IU?6:niceStep(xmax/7),uy=IU?niceStep(ymax/7):6;
+  // grid
+  ctx.lineWidth=1;
+  for(let v=0;v<=xmax+1e-9;v+=ux/6){const x=L+v/xmax*pw;
+    ctx.strokeStyle=Math.abs(v/ux-Math.round(v/ux))<1e-6?'rgba(75,224,142,.17)':'rgba(75,224,142,.06)';
+    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+ph);ctx.stroke();}
+  for(let v=0;v<=ymax+1e-9;v+=uy/6){const y=T+ph-v/ymax*ph;
+    ctx.strokeStyle=Math.abs(v/uy-Math.round(v/uy))<1e-6?'rgba(75,224,142,.17)':'rgba(75,224,142,.06)';
+    ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(L+pw,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(75,224,142,.45)';ctx.strokeRect(L,T,pw,ph);
+  // labels
+  ctx.fillStyle='#7fd8a8';ctx.font='11px "JetBrains Mono",monospace';
+  ctx.textAlign='center';
+  for(let v=0;v<=xmax+1e-9;v+=ux)ctx.fillText(fmt(v,ux<1?1:0),L+v/xmax*pw,T+ph+16);
+  ctx.textAlign='right';
+  for(let v=0;v<=ymax+1e-9;v+=uy)ctx.fillText(fmt(v,uy<1?1:0),L-7,T+ph-v/ymax*ph+3.5);
+  ctx.fillStyle='#a8c5b4';ctx.font='600 12px "Fira Sans",sans-serif';ctx.textAlign='center';
+  ctx.fillText(IU?'Τάση U (V)':'Ένταση I (A)',L+pw/2,h-7);
+  ctx.save();ctx.translate(13,T+ph/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(IU?'Ένταση I (A)':'Τάση U (V)',0,0);ctx.restore();
+  // clip data region
+  ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();
+  // ghosts
+  for(const g of S.ghosts){
+    const pts=[...g.pts].sort((a,b)=>IU?a.u-b.u:a.i-b.i);
+    ctx.strokeStyle=g.color;ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();
+    pts.forEach((p,i)=>{const x=X(p),y=Y(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+    const lp=pts[pts.length-1];ctx.globalAlpha=.9;ctx.fillStyle=g.color;
+    ctx.font='600 10px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText(g.label,clamp(X(lp)+6,L+4,L+pw-58),clamp(Y(lp)-6,T+12,T+ph-6));ctx.globalAlpha=1;}
+  // fit line
+  if(S.fitOn&&S.fit){
+    ctx.strokeStyle='#f2b544';ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.beginPath();
+    ctx.moveTo(X(IU?{u:0,i:S.fit.b}:{u:S.fit.b,i:0}),Y(IU?{u:0,i:S.fit.b}:{u:S.fit.b,i:0}));
+    const xe=xmax*0.98,ye=S.fit.m*xe+S.fit.b;
+    ctx.lineTo(X(IU?{u:xe,i:ye}:{u:ye,i:xe}),Y(IU?{u:xe,i:ye}:{u:ye,i:xe}));
+    ctx.stroke();ctx.setLineDash([]);
+    if(S.triOn){
+      const x1=xmax*0.3,x2=xmax*0.62,y1=S.fit.m*x1+S.fit.b,y2=S.fit.m*x2+S.fit.b;
+      const P1=IU?{u:x1,i:y1}:{u:y1,i:x1},P2=IU?{u:x2,i:y1}:{u:y1,i:x2},P3=IU?{u:x2,i:y2}:{u:y2,i:x2};
+      ctx.strokeStyle='rgba(233,243,240,.65)';ctx.lineWidth=1.4;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(X(P1),Y(P1));ctx.lineTo(X(P2),Y(P2));ctx.lineTo(X(P3),Y(P3));ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#e9f3f0';ctx.font='600 10.5px "JetBrains Mono",monospace';ctx.textAlign='center';
+      const dxn=IU?'ΔU':'ΔI',dyn=IU?'ΔI':'ΔU',dxu=IU?'V':'A',dyu=IU?'A':'V';
+      ctx.fillText(`${dxn} = ${fmt(x2-x1,1)} ${dxu}`,(X(P1)+X(P2))/2,Y(P1)+15);
+      ctx.textAlign='left';
+      ctx.fillText(`${dyn} = ${fmt(y2-y1,2)} ${dyu}`,clamp(X(P3)+7,L+4,L+pw-92),(Y(P2)+Y(P3))/2);
+    }
+  }
+  // phosphor trail (3 age buckets)
+  const buckets=[[],[],[]];
+  for(let i=1;i<S.trail.length;i++){const a=(now-S.trail[i].t)/3000;if(a>=1)continue;
+    buckets[a<0.33?0:a<0.66?1:2].push(i);}
+  const alphas=[.5,.28,.12];
+  ctx.lineWidth=2.5;ctx.lineCap='round';
+  buckets.forEach((b,bi)=>{if(!b.length)return;
+    ctx.strokeStyle='#57ff9d';ctx.globalAlpha=alphas[bi];ctx.shadowColor='#57ff9d';ctx.shadowBlur=6;
+    ctx.beginPath();for(const i of b){ctx.moveTo(X(S.trail[i-1]),Y(S.trail[i-1]));ctx.lineTo(X(S.trail[i]),Y(S.trail[i]));}
+    ctx.stroke();});
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+  // recorded points
+  S.points.forEach(p=>{const x=X(p),y=Y(p);
+    ctx.shadowColor='#57ff9d';ctx.shadowBlur=8;ctx.fillStyle='#57ff9d';
+    ctx.beginPath();ctx.arc(x,y,3.6,0,7);ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(87,255,157,.8)';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(x-7,y);ctx.lineTo(x+7,y);ctx.moveTo(x,y-7);ctx.lineTo(x,y+7);ctx.stroke();});
+  // live operating point
+  if(S.out){const lp={u:S.dV,i:S.dA},x=X(lp),y=Y(lp),r=5+Math.sin(now/300)*1;
+    const g=ctx.createRadialGradient(x,y,0,x,y,14);
+    g.addColorStop(0,'rgba(180,255,210,.5)');g.addColorStop(1,'rgba(87,255,157,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,14,0,7);ctx.fill();
+    ctx.fillStyle='#eafff2';ctx.shadowColor='#57ff9d';ctx.shadowBlur=10;
+    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.shadowBlur=0;}
+  // crosshair
+  if(S.hover.in){const hx=clamp(S.hover.x,L,L+pw),hy=clamp(S.hover.y,T,T+ph);
+    ctx.strokeStyle='rgba(58,210,218,.4)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(hx,T);ctx.lineTo(hx,T+ph);ctx.moveTo(L,hy);ctx.lineTo(L+pw,hy);ctx.stroke();ctx.setLineDash([]);
+    const vu=(hx-L)/pw*xmax,vi=(T+ph-hy)/ph*ymax;
+    ctx.fillStyle='#3ad2da';ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText(IU?`U = ${fmt(vu,1)} V · I = ${fmt(vi,2)} A`:`I = ${fmt(vu,2)} A · U = ${fmt(vi,1)} V`,L+8,T+14);}
+  ctx.restore();
+}
+chart.addEventListener('pointermove',e=>{
+  const r=chart.getBoundingClientRect();S.hover={x:e.clientX-r.left,y:e.clientY-r.top,in:true};
+  const L=56,Rm=14,T=16,B=42,pw=S.cw-L-Rm,ph=S.ch-T-B,IU=S.axis==='IU';
+  const xmax=IU?24:S.iMax,ymax=IU?S.iMax:24;
+  let best=null,bd=16;
+  S.points.forEach((p,idx)=>{const x=L+(IU?p.u:p.i)/xmax*pw,y=T+ph-(IU?p.i:p.u)/ymax*ph;
+    const d=Math.hypot(x-S.hover.x,y-S.hover.y);if(d<bd){bd=d;best={p,idx,x,y};}});
+  const tip=E('chartTip');
+  if(best){tip.innerHTML=`#${best.idx+1} · U = ${fmt(best.p.u,2)} V · I = ${fmt(best.p.i,3)} A<br>R = ${best.p.i>0.0005?fmt(best.p.u/best.p.i,2):'—'} Ω`;
+    tip.classList.add('show');
+    tip.style.left=clamp(best.x+12,6,S.cw-tip.offsetWidth-6)+'px';
+    tip.style.top=clamp(best.y-tip.offsetHeight-10,6,S.ch-tip.offsetHeight-6)+'px';}
+  else tip.classList.remove('show');
+});
+chart.addEventListener('pointerleave',()=>{S.hover.in=false;E('chartTip').classList.remove('show');});
+
+/* ================= PHYSICS ================= */
+let noiseAcc=0,domAcc=0;
+function physics(dt){
+  const R0=S.Rnom*(1+tolFor(S.Rnom));
+  const lamp=S.comp==='lamp';
+  const alpha=lamp?0.0045:0.0004, Rth=lamp?700:6, tau=lamp?1.2:8;
+  if(S.heat){S.T+=((S.trueP*Rth)-(S.T-25))/tau*dt;S.T=clamp(S.T,25,lamp?3000:400);}
+  else S.T+=(25-S.T)*Math.min(1,dt*2);
+  const R=R0*(1+alpha*(S.T-25));S.Ract=R;
+  const r=S.rint?0.4:0,Rw=S.rint?0.1:0;
+  if(S.out){
+    let I=S.E/(r+Rw+R);
+    if(I>S.limit){I=S.limit;S.mode='CC';
+      if(!S.ccNoted){S.ccNoted=true;toast('info','Λειτουργία CC: το όριο ρεύματος σταθεροποιεί την έξοδο — η τάση «πέφτει» αυτόματα.');}}
+    else S.mode='CV';
+    S.trueI=I;S.trueUt=I*(Rw+R);S.trueUR=I*R;S.trueP=S.trueUR*I;
+  }else{S.trueI=0;S.trueUt=0;S.trueUR=0;S.trueP=0;S.mode='—';}
+  noiseAcc+=dt;
+  if(noiseAcc>0.25){noiseAcc=0;
+    const nz=S.noise;
+    S.mV=Math.max(0,S.trueUR+(nz?gauss()*0.003*S.trueUR+gauss()*0.006:0));
+    S.mA=Math.max(0,S.trueI+(nz?gauss()*0.003*S.trueI+gauss()*0.002:0));
+    if(!S.holdV)S.hV=S.mV;if(!S.holdA)S.hA=S.mA;
+  }
+  const k=1-Math.exp(-dt/0.13);
+  S.dV+=(S.hV-S.dV)*k;S.dA+=(S.hA-S.dA)*k;
+  S.pV+=(S.trueUt-S.pV)*k;S.pA+=(S.trueI-S.pA)*k;
+  if(S.out){S.trail.push({u:S.dV,i:S.dA,t:performance.now()});
+    if(S.trail.length>300)S.trail.shift();}
+  while(S.trail.length&&performance.now()-S.trail[0].t>3000)S.trail.shift();
+  if(S.comp==='res'&&S.trueP>50&&performance.now()-S.lastWarn>8000){
+    S.lastWarn=performance.now();sBad();
+    toast('danger','⚠ Υπέρβαση ονομαστικής ισχύος (>50 W) — η αντίσταση υπερθερμαίνεται! Μειώστε την τάση.');}
+}
+
+/* ================= DOM UPDATES ================= */
+function updateDom(){
+  segV.set(S.pV.toFixed(2));segA.set(S.pA.toFixed(3));
+  // DMM ranges (auto-range, dot decimal like real instruments)
+  const vR=S.dV<20?20:200,aR=S.dA<2?2:10;
+  E('vDigits').textContent=S.dV.toFixed(vR===20?2:1);
+  E('aDigits').textContent=S.dA.toFixed(aR===2?3:2);
+  E('vRangeLbl').textContent='Κλίμακα: '+vR+' V';E('aRangeLbl').textContent='Κλίμακα: '+aR+' A';
+  const vb=E('vBar').children,ab=E('aBar').children;
+  const vn=Math.round(clamp(S.dV/vR,0,1)*36),an=Math.round(clamp(S.dA/aR,0,1)*36);
+  for(let i=0;i<36;i++){vb[i].classList.toggle('on',i<vn);ab[i].classList.toggle('on',i<an);}
+  // LEDs
+  E('ledCV').classList.toggle('on',S.out&&S.mode==='CV');
+  E('ledCC').classList.toggle('on',S.out&&S.mode==='CC');
+  E('ledOut').classList.toggle('on',S.out);
+  // readouts
+  const ith=S.out?S.E/S.Rnom:0;
+  E('roIthV').textContent=fmt(ith,2)+' A';
+  E('roImV').textContent=fmt(S.dA,3)+' A';
+  E('roImS').textContent=S.out?`Δ = ${fmt(S.dA-ith,2)} A έναντι ιδανικού`:'κύκλωμα ανοικτό';
+  const rMeas=S.dA>0.005?S.dV/S.dA:NaN;
+  E('roRV').textContent=isFinite(rMeas)?fmt(rMeas,2)+' Ω':'—';
+  E('roRS').textContent=S.comp==='res'?`ονομαστική: ${S.Rnom} Ω ±5%`:`R₂₅ νήματος: ${S.Rnom} Ω`;
+  E('roPV').textContent=fmt(S.dV*S.dA,2)+' W';
+  E('roPS').textContent=`Θ = ${Math.round(S.T)} °C · λειτουργία ${S.mode}`;
+  // DUT temp + heat visuals
+  E('dutTempV').textContent=Math.round(S.T)+' °C';
+  const tc=E('dutTemp');tc.classList.toggle('warm',S.T>=60&&S.T<150);tc.classList.toggle('hot',S.T>=150);
+  const heatR=clamp((S.T-25)/250,0,1),glowL=clamp((S.T-25)/2200,0,1);
+  E('resHeatRect').setAttribute('opacity',(heatR*0.55).toFixed(2));
+  E('resHeatBig').setAttribute('opacity',(heatR*0.5).toFixed(2));
+  E('resBodyG').style.filter=heatR>0.05?`drop-shadow(0 0 ${(6+18*heatR).toFixed(0)}px rgba(255,90,40,${(0.55*heatR).toFixed(2)}))`:'none';
+  E('lampGlowC').setAttribute('opacity',glowL.toFixed(2));
+  E('lampGlowBig').setAttribute('opacity',glowL.toFixed(2));
+  E('filamentHot').setAttribute('opacity',glowL.toFixed(2));
+  E('eLabelSvg').textContent='E = '+fmt(S.E,1)+' V';
+  // timer
+  if(S.tRun){S.tLeft=Math.max(0,(S.tEnd-Date.now())/1000);
+    if(S.tLeft<=0){S.tRun=false;E('timerBtn').classList.remove('running');E('timerBtn').classList.add('done');
+      E('timerPlayIc').hidden=false;E('timerPauseIc').hidden=true;
+      sChime();toast('warn','⏰ Τέλος 12λέπτου — αλλαγή σταθμού!');
+      setTimeout(()=>E('timerBtn').classList.remove('done'),4200);}}
+  const tl=Math.ceil(S.tLeft),mm=Math.floor(tl/60),ss=tl%60;
+  E('timerTxt').textContent=mm+':'+String(ss).padStart(2,'0');
+  E('timerRingFg').style.strokeDashoffset=(62.83*(1-S.tLeft/720)).toFixed(1);
+  E('timerBtn').classList.toggle('urgent',S.tRun&&S.tLeft<=60);
+}
+
+/* ================= MAIN LOOP ================= */
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+  physics(dt);
+  // knob pointer easing
+  const targetA=-135+270*(S.E/24);
+  S.knobAng+=(targetA-S.knobAng)*Math.min(1,dt*12);
+  S._knobPtr.setAttribute('transform','rotate('+S.knobAng.toFixed(2)+')');
+  // switch lever easing
+  const targetSw=S.out?0:-26;
+  S.swAng+=(targetSw-S.swAng)*Math.min(1,dt*12);
+  E('swLever').setAttribute('transform','rotate('+S.swAng.toFixed(2)+' 148 30)');
+  // current flow dots
+  const I=S.trueI;
+  dotsG.style.opacity=(S.out&&I>0.02)?1:0;
+  if(S.out&&I>0.02){S.flowOff=(S.flowOff+(30+I*70)*dt)%loopLen;
+    for(let k=0;k<7;k++){const p=loopPath.getPointAtLength((S.flowOff+k*loopLen/7)%loopLen);
+      dotEls[k].setAttribute('cx',p.x.toFixed(1));dotEls[k].setAttribute('cy',p.y.toFixed(1));}}
+  drawChart(now);
+  domAcc+=dt;if(domAcc>0.12){domAcc=0;updateDom();}
+  requestAnimationFrame(loop);
+}
+
+/* ================= WIRING ================= */
+E('vSlider').addEventListener('input',()=>{setE(+E('vSlider').value);sDetent();});
+E('vInput').addEventListener('change',()=>{const v=parseFloat(E('vInput').value.replace(',','.'));setE(isFinite(v)?v:S.E);});
+E('vMinus1').addEventListener('click',()=>{setE(S.E-1);sDetent();});
+E('vPlus1').addEventListener('click',()=>{setE(S.E+1);sDetent();});
+E('vMinus01').addEventListener('click',()=>{setE(S.E-0.1);sDetent();});
+E('vPlus01').addEventListener('click',()=>{setE(S.E+0.1);sDetent();});
+E('limMinus').addEventListener('click',()=>{setLimit(S.limit-0.1);sClick();});
+E('limPlus').addEventListener('click',()=>{setLimit(S.limit+0.1);sClick();});
+E('outBtn').addEventListener('click',()=>toggleOut());
+E('swHit').addEventListener('click',()=>toggleOut());
+E('compRes').addEventListener('click',()=>{setComp('res');sClick();});
+E('compLamp').addEventListener('click',()=>{setComp('lamp');sClick();});
+PRESETS.forEach(r=>{const b=document.createElement('button');b.type='button';b.className='rchip';b.dataset.r=r;b.textContent=r+' Ω';
+  b.title='Τοποθέτηση αντίστασης '+r+' Ω';
+  b.addEventListener('click',()=>{setR(r);sClick();});E('rChips').appendChild(b);});
+E('rSlider').addEventListener('input',()=>{setR(+E('rSlider').value,true);sDetent();});
+E('rSlider').addEventListener('change',()=>{interrupt();archiveIfMixed();});
+E('randBtn').addEventListener('click',()=>{
+  const opts=PRESETS.filter(r=>r!==S.Rnom);const r=opts[Math.floor(Math.random()*opts.length)];
+  setR(r);sClick();
+  toast('info','Τοποθετήθηκε νέα «άγνωστη» αντίσταση — μετρήστε την και βρείτε την πραγματική τιμή από την κλίση!');});
+E('axisIU').addEventListener('click',()=>{setAxis('IU');sClick();});
+E('axisUI').addEventListener('click',()=>{setAxis('UI');sClick();});
+E('fitTgl').addEventListener('click',()=>{S.fitOn=!S.fitOn;syncFitBtns();sClick();});
+E('triTgl').addEventListener('click',()=>{S.triOn=!S.triOn;syncFitBtns();sClick();
+  if(S.triOn&&!S.fit)toast('info','Καταγράψτε ≥ 2 σημεία για να εμφανιστεί το τρίγωνο κλίσης.');});
+E('ghostBtn').addEventListener('click',()=>saveGhost());
+E('infoBtn').addEventListener('click',()=>toast('info',S.axis==='IU'
+  ?'Στο γράφημα I–U η κλίση ισούται με 1/R (A/V). Αντιστρέψτε τους άξονες (U–I) για κλίση = R (Ω). Μεγαλύτερο R → πιο επίπεδη ευθεία στο I–U.'
+  :'Στο γράφημα U–I η κλίση ισούται με R (Ω). Μεγαλύτερο R → πιο απότομη ευθεία. Στο I–I η κλίση είναι 1/R.'));
+E('recordBtn').addEventListener('click',()=>record());
+E('sweepBtn').addEventListener('click',()=>{if(S.sweep){stopSweep(true);return;}interrupt();startSweep();});
+E('clearBtn').addEventListener('click',()=>{interrupt();clearPoints();});
+E('demoBtn').addEventListener('click',()=>{if(S.demo){endDemo(true);return;}if(S.sweep)stopSweep(true);startDemo();});
+E('aHoldBtn').addEventListener('click',()=>{S.holdA=!S.holdA;E('aHoldBtn').classList.toggle('on',S.holdA);
+  E('aHoldTag').style.visibility=S.holdA?'visible':'hidden';sClick();});
+E('vHoldBtn').addEventListener('click',()=>{S.holdV=!S.holdV;E('vHoldBtn').classList.toggle('on',S.holdV);
+  E('vHoldTag').style.visibility=S.holdV?'visible':'hidden';sClick();});
+E('aBlBtn').addEventListener('click',()=>{E('aLcd').classList.toggle('backlit');E('aBlBtn').classList.toggle('on');sClick();});
+E('vBlBtn').addEventListener('click',()=>{E('vLcd').classList.toggle('backlit');E('vBlBtn').classList.toggle('on');sClick();});
+E('resetBtn').addEventListener('click',()=>{
+  interrupt();setComp('res',true);setR(6,true);setE(12,true);setLimit(3,true);setAxis('IU',true);
+  S.noise=S.heat=S.rint=S.tolOn=true;['noiseTgl','heatTgl','rintTgl','tolTgl'].forEach(id=>syncSwitch(id,true));
+  E('rInternTxt').style.visibility='visible';
+  S.out=true;E('outBtn').classList.add('on');
+  S.holdA=S.holdV=false;E('aHoldBtn').classList.remove('on');E('vHoldBtn').classList.remove('on');
+  E('aHoldTag').style.visibility='hidden';E('vHoldTag').style.visibility='hidden';
+  S.ghosts=[];renderLegend();S.trail=[];S.ccNoted=false;
+  clearPoints(true);seedPoints();renderTable();computeFit();resetQuiz();
+  S.tRun=false;S.tLeft=720;E('timerBtn').classList.remove('running','urgent');
+  E('timerPlayIc').hidden=false;E('timerPauseIc').hidden=true;
+  [...E('demoList').children].forEach(li=>li.classList.remove('active','done'));
+  sOk();toast('success','Το εργαστήριο επανήλθε στην αρχική κατάσταση (R = 6 Ω, U = 12 V).');});
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,textarea,select,[contenteditable]')){
+    if(e.key==='Escape'&&E('notesDrawer').classList.contains('open'))notesOpen(false);return;}
+  const k=e.key.toLowerCase();
+  if(k==='n')notesOpen(!E('notesDrawer').classList.contains('open'));
+  else if(k==='f')E('fsBtn').click();
+  else if(k==='m')E('soundBtn').click();
+  else if(k==='r')record();
+  else if(k===' '){e.preventDefault();toggleOut();}
+  else if(e.key==='Escape'){if(E('notesDrawer').classList.contains('open'))notesOpen(false);else interrupt();}
+  else if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();setE(S.E+(e.shiftKey?1:0.1));sDetent();}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();setE(S.E-(e.shiftKey?1:0.1));sDetent();}
+});
+
+/* ================= BOOT ================= */
+function seedPoints(){
+  const R=S.Rnom*(1+tolFor(S.Rnom)),r=0.5;
+  [6,12,18].forEach(u=>{const I=u/(r+R),U=I*R;
+    S.points.push({u:U+gauss()*0.01,i:I+gauss()*0.003,r:S.Rnom,comp:'res'});});
+}
+notesInit();syncSound();renderBands();sliderFill(E('vSlider'));sliderFill(E('rSlider'));
+setE(12,true);setLimit(3,true);syncFitBtns();
+seedPoints();renderTable();computeFit();resizeChart();
+updateDom();
+requestAnimationFrame(t=>{lastT=t;loop(t);});
+})();
+</script>
+
+<script>
+/* deck-sim-nav-bridge: arrow keys still change slides while the sim has focus */
+if (window.self !== window.top) window.addEventListener('keydown', function (e) {
+  if (e.target && e.target.closest && e.target.closest('input,select,textarea')) return;
+  var d = /ArrowRight|PageDown/.test(e.key) ? 1 : /ArrowLeft|PageUp/.test(e.key) ? -1 : 0;
+  if (d) { e.preventDefault(); try { parent.postMessage({ nav: d }, '*'); } catch (err) {} }
+});
+</script>
+</body>
+</html>

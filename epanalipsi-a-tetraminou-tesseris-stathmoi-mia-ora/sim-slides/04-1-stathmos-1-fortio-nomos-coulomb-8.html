@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<script>
+/* ── deck-pause bridge ────────────────────────────────────────────────────────
+   Όταν η διαφάνεια αυτού του εξομοιωτή δεν φαίνεται, το deck στέλνει
+   {deckPause:true} και κάθε animation frame παρακάμπτεται — το loop μένει
+   ζωντανό, οπότε η συνέχεια είναι ακαριαία. Χωρίς αυτό, 5 κρυμμένα sims
+   ζωγραφίζουν συνεχώς (αισθητό σε αργό σχολικό PC). ─────────────────────── */
+(function () {
+  var paused = false, raf = window.requestAnimationFrame.bind(window);
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.deckPause === 'boolean') paused = e.data.deckPause;
+  });
+  window.requestAnimationFrame = function (cb) {
+    return raf(function (t) {
+      if (paused) { window.requestAnimationFrame(cb); return; }
+      cb(t);
+    });
+  };
+  /* χειραψία με το deck: «είμαι εδώ» — ξεχωρίζει «φορτώνει» από «λείπει το αρχείο» */
+  window.addEventListener('load', function () {
+    try { parent.postMessage({ simReady: true }, '*'); } catch (e) {}
+  });
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Σταθμός 1 — Προσομοιωτής Νόμου Coulomb · Β΄ ΕΠΑΛ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#060a14; --bg1:#0b1222;
+  --surface:#0f172b; --surface2:#151f38; --overlay:#182642;
+  --line:#22304f; --line2:#31446c;
+  --text:#e9eef9; --muted:#93a0bf; --warm:#f4ede2;
+  --pos:#ff5a3c; --pos2:#ff8a5c;
+  --neg:#3f7dff; --neg2:#43c6ff;
+  --amber:#ffb020; --green:#3ddc84; --cyan:#25d4ee; --magenta:#e359ff;
+  --danger:#ff4d6d;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --sans:'Inter',system-ui,'Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#2e4066 #0b1222}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0b1222;border-radius:8px}
+::-webkit-scrollbar-thumb{background:#2e4066;border-radius:8px;border:2px solid #0b1222}
+::-webkit-scrollbar-thumb:hover{background:#3f7dff}
+::selection{background:var(--amber);color:#14100a}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);background:var(--bg0);color:var(--text);
+  min-height:100vh;overflow-x:hidden;line-height:1.45;
+}
+body::before,body::after{
+  content:'';position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.55;
+}
+body::before{
+  background:
+    radial-gradient(42% 38% at 18% 22%, rgba(63,125,255,.16), transparent 70%),
+    radial-gradient(40% 36% at 84% 78%, rgba(255,90,60,.13), transparent 70%);
+  animation:drift1 26s ease-in-out infinite alternate;
+}
+body::after{
+  background:
+    radial-gradient(34% 30% at 70% 15%, rgba(37,212,238,.10), transparent 70%),
+    radial-gradient(30% 30% at 25% 85%, rgba(227,89,255,.07), transparent 70%);
+  animation:drift2 34s ease-in-out infinite alternate;
+}
+@keyframes drift1{from{transform:translate(-2%,-1%) rotate(-1deg)}to{transform:translate(2%,2%) rotate(1deg)}}
+@keyframes drift2{from{transform:translate(2%,1%)}to{transform:translate(-2%,-2%)}}
+.grain{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");}
+header{
+  position:fixed;top:0;left:0;right:0;z-index:50;height:62px;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(8,12,24,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neg) 25%,var(--cyan) 50%,var(--pos) 75%,transparent);opacity:.6}
+.logo{width:36px;height:36px;flex:none}
+.logo .orb{transform-origin:18px 18px;animation:spin 14s linear infinite}
+.logo .orb2{transform-origin:18px 18px;animation:spin 14s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.titles{min-width:0}
+.titles h1{font-size:15px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titles h1 .st{color:var(--amber)}
+.titles p{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hspace{flex:1}
+.kchip{font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(37,212,238,.08);
+  border:1px solid rgba(37,212,238,.25);padding:5px 10px;border-radius:999px;white-space:nowrap}
+main{
+  position:relative;z-index:1;max-width:1440px;margin:0 auto;
+  padding:80px 18px 30px;display:grid;gap:18px;
+  grid-template-columns:minmax(0,1fr) 352px;
+  grid-template-areas:"stage side" "cards side";
+  align-items:start;
+}
+.rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* ---------- STAGE ---------- */
+.stage-col{grid-area:stage;min-width:0}
+.stage{
+  position:relative;height:clamp(420px,58vh,640px);border-radius:16px;overflow:hidden;
+  border:1px solid var(--line2);background:var(--bg1);
+  box-shadow:0 24px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.02);
+}
+#sim{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.hud{position:absolute;pointer-events:none;display:flex;flex-direction:column;gap:6px;z-index:5}
+.hud-tl{top:12px;left:12px}
+.chip{
+  font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;width:max-content;
+  background:rgba(10,15,30,.78);border:1px solid var(--line2);backdrop-filter:blur(6px);
+}
+.chip.green{color:var(--green);border-color:rgba(61,220,132,.35)}
+.chip.amber{color:var(--amber);border-color:rgba(255,176,32,.35)}
+.chip.dim{color:var(--muted)}
+.hud-bl{bottom:12px;left:12px}
+#fHud{font-family:var(--mono);font-size:21px;font-weight:700;color:var(--warm);
+  text-shadow:0 2px 12px rgba(0,0,0,.8)}
+#fHud b{color:var(--amber)}
+#wHud{font-size:11px;color:var(--muted);text-shadow:0 1px 6px #000}
+.hint{
+  position:absolute;top:12px;right:12px;z-index:5;font-size:11.5px;color:var(--warm);
+  background:rgba(10,15,30,.8);border:1px solid var(--line2);padding:7px 12px;border-radius:999px;
+  pointer-events:none;transition:opacity .6s;backdrop-filter:blur(6px);
+  animation:hintPulse 2.6s ease-in-out infinite;
+}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,0)}50%{box-shadow:0 0 0 5px rgba(255,176,32,.12)}}
+.hint.gone{opacity:0}
+.banner{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:6;max-width:min(560px,86%);
+  display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;color:#1c1204;
+  background:linear-gradient(120deg,var(--amber),#ffd166);padding:9px 12px 9px 16px;border-radius:12px;
+  box-shadow:0 10px 30px rgba(255,176,32,.3);
+}
+.banner.hidden{display:none}
+.banner button{border:none;background:rgba(0,0,0,.15);color:#1c1204;width:22px;height:22px;
+  border-radius:50%;cursor:pointer;font-weight:800;flex:none}
+.toolbar{position:absolute;bottom:12px;right:12px;z-index:6;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tb{
+  display:flex;align-items:center;gap:7px;border:1px solid var(--line2);cursor:pointer;
+  background:rgba(14,20,38,.88);color:var(--text);font-family:var(--sans);font-weight:700;font-size:12px;
+  padding:9px 13px;border-radius:11px;backdrop-filter:blur(8px);transition:.18s;
+}
+.tb:hover{border-color:var(--cyan);transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,212,238,.15)}
+.tb.play{background:linear-gradient(120deg,#1c8a4e,#2fbf71);border-color:#3ddc84;color:#04160c}
+.tb.play:hover{box-shadow:0 6px 20px rgba(61,220,132,.35)}
+.toasts{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:7;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92%}
+.toast{
+  font-size:12px;font-weight:600;padding:9px 15px;border-radius:11px;text-align:center;
+  background:rgba(12,18,36,.94);border:1px solid var(--line2);color:var(--warm);
+  box-shadow:0 12px 34px rgba(0,0,0,.5);animation:toastIn .3s cubic-bezier(.2,.9,.3,1.3) both;max-width:100%;
+}
+.toast.ok{border-color:rgba(61,220,132,.5)} .toast.info{border-color:rgba(37,212,238,.5)}
+.toast.warn{border-color:rgba(255,176,32,.55)}
+.toast.out{animation:toastOut .3s ease both}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px) scale(.96)}}
+/* presets */
+.presets{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.preset{
+  border:1px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer;
+  font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 13px;border-radius:999px;transition:.18s;
+}
+.preset:hover{transform:translateY(-1px)}
+.preset.p1:hover{border-color:var(--neg);box-shadow:0 5px 16px rgba(63,125,255,.2)}
+.preset.p2:hover{border-color:var(--pos);box-shadow:0 5px 16px rgba(255,90,60,.2)}
+.preset.p3:hover{border-color:var(--amber);box-shadow:0 5px 16px rgba(255,176,32,.2)}
+.preset.p4:hover{border-color:var(--green);box-shadow:0 5px 16px rgba(61,220,132,.2)}
+.preset.p5:hover{border-color:var(--magenta);box-shadow:0 5px 16px rgba(227,89,255,.2)}
+/* ---------- SIDE PANEL ---------- */
+aside{
+  grid-area:side;position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 16px 20px;
+  box-shadow:0 18px 50px rgba(0,0,0,.4);
+}
+.sec{margin-bottom:18px}
+.sec-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+.sec-h .dot{width:8px;height:8px;border-radius:50%;background:var(--acc,var(--cyan));
+  box-shadow:0 0 10px var(--acc,var(--cyan))}
+.ctl{margin-bottom:12px}
+.ctl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.ctl-head label{font-size:12.5px;font-weight:600}
+.val{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--warm)}
+.val.pos{color:var(--pos2)} .val.neg{color:var(--neg2)} .val.zero{color:var(--muted)}
+.ctl-row{display:flex;align-items:center;gap:8px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:22px;background:transparent;cursor:pointer;min-width:0}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:4px;background:var(--trk,#26314f)}
+input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:var(--trk,#26314f)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#fff;border:3px solid var(--acc,var(--cyan));margin-top:-6px;transition:transform .15s;
+  box-shadow:0 2px 8px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;
+  border:3px solid var(--acc,var(--acc,var(--cyan)));box-shadow:0 2px 8px rgba(0,0,0,.5)}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.18)}
+input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
+.r-q{--trk:linear-gradient(90deg,var(--neg),#26314f 50%,var(--pos))}
+.r-r{--trk:linear-gradient(90deg,#3a2c10,var(--amber));--acc:var(--amber)}
+.r-m{--trk:linear-gradient(90deg,#1c2742,#5b6c94);--acc:#9db0d8}
+.r-d{--trk:linear-gradient(90deg,#12303a,var(--cyan));--acc:var(--cyan)}
+.r-t{--trk:linear-gradient(90deg,#2c1230,var(--magenta));--acc:var(--magenta)}
+.mini{
+  flex:none;width:30px;height:26px;border-radius:8px;border:1px solid var(--line2);cursor:pointer;
+  background:var(--surface2);color:var(--warm);font-weight:800;font-size:12px;transition:.15s;
+}
+.mini:hover{border-color:var(--amber);color:var(--amber)}
+select{
+  width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--line2);
+  border-radius:10px;padding:9px 10px;font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;
+}
+select:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.note b{color:var(--cyan);font-family:var(--mono);font-weight:600}
+.switch{display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:10px;user-select:none}
+.switch input{position:absolute;opacity:0;width:0}
+.switch .track{flex:none;width:36px;height:20px;border-radius:999px;background:#26314f;
+  border:1px solid var(--line2);position:relative;transition:.2s;margin-top:1px}
+.switch .track::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+  background:#8b96b3;transition:.2s}
+.switch input:checked + .track{background:color-mix(in srgb,var(--acc,var(--cyan)) 30%, #1a2440);border-color:var(--acc,var(--cyan))}
+.switch input:checked + .track::after{left:18px;background:var(--acc,var(--cyan));box-shadow:0 0 8px var(--acc,var(--cyan))}
+.switch input:focus-visible + .track{outline:2px solid var(--amber);outline-offset:2px}
+.switch .lbl{font-size:12.5px;font-weight:600;line-height:1.35}
+.switch .lbl small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.chip-toggle{cursor:pointer;user-select:none}
+.chip-toggle input{position:absolute;opacity:0;width:0}
+.chip-toggle span{
+  display:block;text-align:center;font-size:11.5px;font-weight:600;padding:8px 6px;border-radius:10px;
+  border:1px solid var(--line2);background:var(--surface2);color:var(--muted);transition:.15s;
+}
+.chip-toggle input:checked + span{
+  color:var(--warm);border-color:var(--acc,var(--cyan));
+  background:color-mix(in srgb,var(--acc,var(--cyan)) 14%, var(--surface2));
+  box-shadow:inset 0 0 12px color-mix(in srgb,var(--acc,var(--cyan)) 12%, transparent);
+}
+.chip-toggle input:focus-visible + span{outline:2px solid var(--amber);outline-offset:2px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{
+  border:1px solid var(--line2);background:var(--surface2);color:var(--text);cursor:pointer;
+  font-family:var(--sans);font-size:12px;font-weight:700;padding:10px 8px;border-radius:11px;transition:.16s;
+}
+.btn:hover{transform:translateY(-1px);border-color:var(--cyan)}
+.btn.wide{grid-column:1/-1}
+.btn.run{background:linear-gradient(120deg,#1c8a4e,#2fbf71);border-color:#3ddc84;color:#04160c}
+.btn.warnb:hover{border-color:var(--amber)}
+.btn.mag:hover{border-color:var(--magenta)}
+/* ---------- CARDS ---------- */
+.cards{grid-area:cards;display:grid;grid-template-columns:1.15fr 1fr;gap:14px;min-width:0}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  box-shadow:0 14px 40px rgba(0,0,0,.35);min-width:0;
+}
+.card-h{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.card-h .ic{font-size:16px}
+.card-h h2{font-size:13.5px;font-weight:800;letter-spacing:.2px}
+.card-h .tag{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line2);padding:3px 8px;border-radius:999px}
+.card.trap{border-color:rgba(255,176,32,.4);box-shadow:0 14px 40px rgba(0,0,0,.35),0 0 30px rgba(255,176,32,.06)}
+.eq{font-family:var(--mono);font-size:14px;color:var(--cyan);margin-bottom:8px;font-weight:600}
+.eq-sub{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-bottom:8px;word-break:break-word}
+.eq-sub .sq{color:var(--amber);font-weight:700;background:rgba(255,176,32,.1);
+  padding:1px 5px;border-radius:6px;border-bottom:2px solid var(--amber)}
+.r2line{font-family:var(--mono);font-size:12px;color:var(--amber);margin-bottom:12px}
+.r2line .badge{font-family:var(--sans);font-size:10px;font-weight:800;background:var(--amber);color:#1c1204;
+  padding:2px 7px;border-radius:999px;margin-left:6px;letter-spacing:.4px}
+.result-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+#eqResult{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--warm)}
+#eqResult sup{font-size:14px}
+.nature{font-size:11px;font-weight:800;letter-spacing:1px;padding:5px 12px;border-radius:999px}
+.nature.att{color:var(--neg2);background:rgba(63,125,255,.12);border:1px solid rgba(63,125,255,.45)}
+.nature.rep{color:var(--pos2);background:rgba(255,90,60,.12);border:1px solid rgba(255,90,60,.45)}
+.nature.zero{color:var(--muted);background:rgba(147,160,191,.1);border:1px solid var(--line2)}
+.meta{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted)}
+.meta .mono{font-family:var(--mono)}
+.meta .pos{color:var(--pos2)} .meta .neg{color:var(--neg2)}
+.meta .grn{color:var(--green)} .meta .cyn{color:var(--cyan)}
+sup{font-size:.68em}
+#trapChart{width:100%;height:172px;display:block;border-radius:10px;background:rgba(6,10,20,.5);
+  border:1px solid var(--line)}
+.trap-btns{display:flex;gap:8px;margin:11px 0}
+.trap-btns .btn{flex:1;border-color:rgba(255,176,32,.4)}
+.trap-btns .btn:hover:not(:disabled){border-color:var(--amber);box-shadow:0 5px 16px rgba(255,176,32,.15)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+.trap-out{display:flex;align-items:center;gap:10px;min-height:38px}
+#trapCallout{font-family:var(--mono);font-size:11.5px;color:var(--muted);flex:1;line-height:1.55}
+#trapCallout b{color:var(--warm)}
+#trapRatio{font-family:var(--mono);font-size:20px;font-weight:800;color:#1c1204;background:var(--amber);
+  padding:4px 13px;border-radius:10px;opacity:0;transform:scale(.6);transition:.25s cubic-bezier(.2,.9,.3,1.4)}
+#trapRatio.show{opacity:1;transform:scale(1)}
+.trap-note{font-size:11px;color:var(--amber);margin-top:9px;font-weight:600}
+.card.four{grid-column:1/-1}
+.four-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.four-item{background:var(--surface2);border:1px solid var(--line2);border-radius:12px;padding:11px 12px;
+  font-size:11.5px;line-height:1.5;color:var(--text)}
+.four-item .n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:50%;font-weight:800;font-size:11px;margin-bottom:6px;color:#0a0e1a}
+.four-item:nth-child(1) .n{background:var(--pos2)} .four-item:nth-child(2) .n{background:var(--neg2)}
+.four-item:nth-child(3) .n{background:var(--amber)} .four-item:nth-child(4) .n{background:var(--green)}
+.four-item b{color:var(--warm)}
+footer{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:0 18px 26px;
+  font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+footer .mono{font-family:var(--mono)}
+kbd{font-family:var(--mono);font-size:10px;background:var(--surface2);border:1px solid var(--line2);
+  border-bottom-width:2px;padding:1px 6px;border-radius:5px;color:var(--warm)}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+@media (max-width:1120px){
+  main{grid-template-columns:1fr;grid-template-areas:"stage" "side" "cards"}
+  aside{position:static;max-height:none}
+  .cards{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .cards{grid-template-columns:1fr}
+  .four-grid{grid-template-columns:1fr 1fr}
+  .stage{height:clamp(340px,52vh,520px)}
+  .titles p{display:none}
+  .kchip{display:none}
+  #fHud{font-size:16px}
+  .tb .tb-label{display:none}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  body::before,body::after,.logo .orb,.logo .orb2,.hint{animation:none}
+  .rise{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
+    <g class="orb"><ellipse cx="18" cy="18" rx="15" ry="6.5" fill="none" stroke="#3f7dff" stroke-width="1.6" transform="rotate(30 18 18)"/></g>
+    <g class="orb2"><ellipse cx="18" cy="18" rx="15" ry="6.5" fill="none" stroke="#ff5a3c" stroke-width="1.6" transform="rotate(-30 18 18)"/></g>
+    <circle cx="18" cy="18" r="4" fill="#ffb020"/>
+    <circle cx="18" cy="18" r="7.5" fill="none" stroke="#ffb020" stroke-opacity=".3"/>
+  </svg>
+  <div class="titles">
+    <h1><span class="st">1️⃣ Σταθμός 1</span> — Φορτίο &amp; Νόμος Coulomb · Προσομοιωτής</h1>
+    <p>Επανάληψη Α΄ Τετραμήνου · Ενότητες 1.1 → 2.1 · Β΄ ΕΠΑΛ · ⏱ 6΄</p>
+  </div>
+  <div class="hspace"></div>
+  <span class="kchip">k = 9·10⁹ N·m²/C²</span>
+  <button class="tb" id="btnSound" aria-pressed="true" title="Ενεργοποίηση/σίγαση όλων των ήχων">
+    <span id="soundIcon">🔊</span><span class="tb-label">Ήχος</span>
+  </button>
+</header>
+
+<main>
+  <!-- ================= STAGE ================= -->
+  <section class="stage-col rise" style="--d:.05s">
+    <div class="stage" id="stage">
+      <canvas id="sim" aria-label="Διαδραστική προσομοίωση δύο φορτισμένων σφαιρών — σύρε τις σφαίρες για να αλλάξεις την απόσταση"></canvas>
+      <div class="hud hud-tl">
+        <span class="chip amber" id="modeChip">🔒 Στατική μέτρηση</span>
+        <span class="chip green" id="qChip">ΣQ = 0 μC · διατηρείται ✓</span>
+        <span class="chip dim" id="gridChip">Πλέγμα · 1 κελί = 10 cm</span>
+      </div>
+      <div class="hud hud-bl">
+        <div id="fHud">F = <b>0,225</b> N</div>
+        <div id="wHud">≈ βάρος αντικειμένου 22,9 g</div>
+      </div>
+      <div class="hint" id="hint">✋ Σύρε τις σφαίρες — όλα ενημερώνονται ζωντανά</div>
+      <div class="banner hidden" id="banner">
+        <span id="bannerText"></span>
+        <button id="bannerX" aria-label="Κλείσιμο">✕</button>
+      </div>
+      <div class="toolbar">
+        <button class="tb play" id="btnPlay" title="Space"><span id="playIcon">▶</span><span class="tb-label" id="playLabel">Κίνηση</span></button>
+        <button class="tb" id="btnStep" title="Βήμα προσομοίωσης (S)">⏭<span class="tb-label">Βήμα</span></button>
+        <button class="tb" id="btnLock" title="Κλείδωμα / ξεκλείδωμα θέσεων"><span id="lockIcon">🔒</span></button>
+        <button class="tb" id="btnResetT" title="Επαναφορά (R)">↺</button>
+      </div>
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+    </div>
+    <div class="presets">
+      <button class="preset p1" id="presetAttract">🧲 Έλξη ±</button>
+      <button class="preset p2" id="presetRepel">💥 Άπωση ++</button>
+      <button class="preset p3" id="presetDemo">🤯 1 C @ 1 m</button>
+      <button class="preset p4" id="presetContact">⚡ Επαφή &amp; διατήρηση</button>
+      <button class="preset p5" id="btnRand">🎲 Τυχαίο σενάριο</button>
+    </div>
+  </section>
+
+  <!-- ================= CONTROLS ================= -->
+  <aside class="rise" style="--d:.15s" aria-label="Πίνακας ελέγχου">
+    <div class="sec" style="--acc:var(--pos)">
+      <div class="sec-h"><span class="dot"></span>Φορτία</div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="q1Range">Φορτίο q₁</label><span class="val" id="q1Val">+2,0 μC</span></div>
+        <div class="ctl-row">
+          <input type="range" id="q1Range" class="r-q" min="-10" max="10" step="0.1" value="2" style="--acc:var(--pos)">
+          <button class="mini" id="q1Sign" title="Αλλαγή προσήμου q₁">±</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="q2Range">Φορτίο q₂</label><span class="val" id="q2Val">−2,0 μC</span></div>
+        <div class="ctl-row">
+          <input type="range" id="q2Range" class="r-q" min="-10" max="10" step="0.1" value="-2" style="--acc:var(--neg)">
+          <button class="mini" id="q2Sign" title="Αλλαγή προσήμου q₂">±</button>
+        </div>
+      </div>
+      <label class="switch" style="--acc:var(--green)">
+        <input type="checkbox" id="condToggle" checked><span class="track"></span>
+        <span class="lbl">Αγώγιμες σφαίρες<small>στην επαφή: ανακατανομή q₁′ = q₂′ = ΣQ/2</small></span>
+      </label>
+      <p class="note">Στοιχειώδες φορτίο <b>e = 1,6·10⁻¹⁹ C</b> · 1 μC ≈ <b>6,25·10¹²</b> ηλεκτρόνια</p>
+    </div>
+
+    <div class="sec" style="--acc:var(--amber)">
+      <div class="sec-h"><span class="dot"></span>Γεωμετρία &amp; Ύλη</div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="rRange">Απόσταση r</label><span class="val" id="rVal">40,0 cm</span></div>
+        <div class="ctl-row"><input type="range" id="rRange" class="r-r" min="10" max="100" step="0.5" value="40"></div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="m1Range">Μάζα m₁</label><span class="val" id="m1Val">10 g</span></div>
+        <div class="ctl-row"><input type="range" id="m1Range" class="r-m" min="1" max="50" step="1" value="10"></div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="m2Range">Μάζα m₂</label><span class="val" id="m2Val">10 g</span></div>
+        <div class="ctl-row"><input type="range" id="m2Range" class="r-m" min="1" max="50" step="1" value="10"></div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="medSelect">Μέσο (διηλεκτρικό)</label></div>
+        <select id="medSelect">
+          <option value="1" selected>Κενό · εᵣ = 1</option>
+          <option value="1.0006">Αέρας · εᵣ ≈ 1,0006</option>
+          <option value="2.2">Λάδι · εᵣ ≈ 2,2</option>
+          <option value="7">Γυαλί · εᵣ ≈ 7</option>
+          <option value="80">Νερό · εᵣ ≈ 80</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec" style="--acc:var(--cyan)">
+      <div class="sec-h"><span class="dot"></span>Ρεαλισμός &amp; Χρόνος</div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="dampRange">Αντίσταση αέρα</label><span class="val" id="dampVal">0,030 kg/s</span></div>
+        <div class="ctl-row"><input type="range" id="dampRange" class="r-d" min="0" max="0.2" step="0.005" value="0.03"></div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="timeRange">Ταχύτητα χρόνου</label><span class="val" id="timeVal">1,0×</span></div>
+        <div class="ctl-row"><input type="range" id="timeRange" class="r-t" min="0.1" max="2" step="0.05" value="1"></div>
+      </div>
+      <label class="switch" style="--acc:var(--amber)">
+        <input type="checkbox" id="lockToggle" checked><span class="track"></span>
+        <span class="lbl">🔒 Κλείδωμα θέσεων<small>στατική μέτρηση — πάτα ▶ για δυναμική κίνηση</small></span>
+      </label>
+    </div>
+
+    <div class="sec" style="--acc:var(--magenta)">
+      <div class="sec-h"><span class="dot"></span>Προβολή</div>
+      <div class="chips">
+        <label class="chip-toggle" style="--acc:var(--amber)"><input type="checkbox" id="viewForces" checked><span>➤ Δυνάμεις F</span></label>
+        <label class="chip-toggle" style="--acc:var(--green)"><input type="checkbox" id="viewVel"><span>➤ Ταχύτητες v</span></label>
+        <label class="chip-toggle" style="--acc:var(--cyan)"><input type="checkbox" id="viewField" checked><span>⚡ Πεδίο E</span></label>
+        <label class="chip-toggle" style="--acc:var(--neg2)"><input type="checkbox" id="viewTrails" checked><span>〰 Ίχνη</span></label>
+        <label class="chip-toggle" style="--acc:#9db0d8"><input type="checkbox" id="viewGrid" checked><span>▦ Πλέγμα</span></label>
+        <label class="chip-toggle" style="--acc:var(--pos2)"><input type="checkbox" id="viewGlow" checked><span>✦ Λάμψη</span></label>
+      </div>
+    </div>
+
+    <div class="sec" style="--acc:var(--green);margin-bottom:0">
+      <div class="sec-h"><span class="dot"></span>Ενέργειες</div>
+      <div class="actions">
+        <button class="btn run wide" id="btnRun">▶ Εκκίνηση κίνησης</button>
+        <button class="btn" id="btnStep2">⏭ Βήμα</button>
+        <button class="btn warnb" id="btnReset">↺ Επαναφορά</button>
+        <button class="btn mag" id="btnRand2">🎲 Τυχαίο</button>
+        <button class="btn" id="btnExport">📸 Λήψη PNG</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= CARDS ================= -->
+  <section class="cards">
+    <div class="card rise" style="--d:.25s">
+      <div class="card-h"><span class="ic">🧮</span><h2>Ο νόμος σε ζωντανούς αριθμούς</h2><span class="tag">live</span></div>
+      <div class="eq" id="eqFormula">F = k · |q₁·q₂| / r²</div>
+      <div class="eq-sub" id="eqSub"></div>
+      <div class="r2line" id="eqR2"></div>
+      <div class="result-row">
+        <div id="eqResult"></div>
+        <span class="nature att" id="natureBadge">ΕΛΞΗ →←</span>
+      </div>
+      <div class="meta">
+        <span id="n1Line" class="mono"></span>
+        <span id="n2Line" class="mono"></span>
+        <span id="qTotalLine" class="mono grn"></span>
+        <span id="weightLine"></span>
+        <span class="cyn">|F₁| = |F₂| — οι δυνάμεις είναι ίσες &amp; αντίθετες (3ος νόμος Νεύτωνα)</span>
+      </div>
+    </div>
+
+    <div class="card trap rise" style="--d:.35s">
+      <div class="card-h"><span class="ic">⚠️</span><h2>Η παγίδα του 1/r²</h2><span class="tag" style="color:var(--amber);border-color:rgba(255,176,32,.4)">προσοχή</span></div>
+      <canvas id="trapChart" aria-label="Γράφημα δύναμης F σε συνάρτηση με την απόσταση r"></canvas>
+      <div class="trap-btns">
+        <button class="btn" id="btnDouble">r → 2r&nbsp;&nbsp;(F ÷ 4;)</button>
+        <button class="btn" id="btnHalf">r → r/2&nbsp;&nbsp;(F × 4;)</button>
+      </div>
+      <div class="trap-out">
+        <div id="trapCallout">Πάτα ένα κουμπί για να δεις την παγίδα ζωντανά στη μέτρηση.</div>
+        <div id="trapRatio">÷4</div>
+      </div>
+      <p class="trap-note">Η απόσταση ×2 ⇒ η δύναμη ÷4 — ΟΧΙ ÷2. Το r είναι υψωμένο στο τετράγωνο!</p>
+    </div>
+
+    <div class="card four rise" style="--d:.45s">
+      <div class="card-h"><span class="ic">📌</span><h2>Τα 4 που πρέπει να ξέρετε</h2><span class="tag">σταθμός 1</span></div>
+      <div class="four-grid">
+        <div class="four-item"><span class="n">1</span><br>Φορτίο <b>Q σε C</b> (Κουλόμπ). Στοιχειώδες φορτίο <b>e = 1,6·10⁻¹⁹ C</b>.</div>
+        <div class="four-item"><span class="n">2</span><br><b>Ομώνυμα απωθούνται</b>, ετερώνυμα έλκονται — δες τα διανύσματα στη σκηνή.</div>
+        <div class="four-item"><span class="n">3</span><br>Δύναμη <b>ανάλογη των φορτίων</b>, αντιστρόφως ανάλογη του <b>r²</b> — δοκίμασε τα sliders.</div>
+        <div class="four-item"><span class="n">4</span><br>Το φορτίο <b>διατηρείται</b> — δεν εξαφανίζεται, μεταφέρεται. Πάτα «⚡ Επαφή &amp; διατήρηση».</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span><kbd>Space</kbd> Κίνηση/Παύση</span>
+  <span><kbd>S</kbd> Βήμα</span>
+  <span><kbd>R</kbd> Επαναφορά</span>
+  <span class="mono">Μοντέλο: σημειακά φορτία · κρούσεις με επαναφορά · ανακατανομή φορτίου σε αγώγιμες σφαίρες · F = k·q₁·q₂/(εᵣ·r²)</span>
+</footer>
+
+<noscript><p style="padding:90px 20px;color:#ffb020">Χρειάζεται JavaScript για την προσομοίωση.</p></noscript>
+
+<script>
+'use strict';
+/* ============================================================
+   ΣΤΑΘΜΟΣ 1 — COULOMB SIMULATOR · single rAF loop, real physics
+   ============================================================ */
+const K = 9e9, ECH = 1.6e-19, G = 9.81;
+const W = 1.2;                       // world width (m)
+const RMIN = 0.10, RMAX = 1.0;       // slider separation limits (m)
+const VMAX = 4;                      // stability speed cap (m/s)
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+
+/* ---------- state ---------- */
+function defaults(){ return {
+  q1: 2e-6, q2: -2e-6, m1: 0.010, m2: 0.010,
+  x1: 0.4, y1: 0.3, x2: 0.8, y2: 0.3,
+  v1x:0, v1y:0, v2x:0, v2y:0,
+  eps: 1, damp: 0.03, time: 1,
+  locked: true, running: true, conducting: true, demo: false
+};}
+let state = defaults();
+const view = { forces:true, vel:false, field:true, trails:true, grid:true, glow:true };
+const sound = { on:true, ctx:null, master:null, noise:null };
+let H = 0.7, ppm = 700, t = 0, last = performance.now();
+let drag = null, pointerHist = [], hoverIdx = -1;
+let trails = [[],[]], particles = [], rings = [];
+let lastHit = -1, lastShare = -1, lastWallSfx = -1;
+let trapAnim = null, hintGone = false, frameCount = 0;
+
+/* ---------- formatting ---------- */
+const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+const sup = n => String(n).split('').map(c => SUP[c] || c).join('');
+const num = (v,d=1) => v.toLocaleString('el-GR',{minimumFractionDigits:d,maximumFractionDigits:d});
+function sciParts(x){
+  if (!isFinite(x)) return {txt:'∞', html:'∞'};
+  if (x === 0) return {txt:'0', html:'0'};
+  const e = Math.floor(Math.log10(Math.abs(x)));
+  if (e >= -2 && e <= 2){
+    const p = Number(x.toPrecision(3)).toLocaleString('el-GR',{maximumFractionDigits:6});
+    return {txt:p, html:p};
+  }
+  const m = Number((x/Math.pow(10,e)).toPrecision(3));
+  const ms = m.toLocaleString('el-GR',{maximumFractionDigits:2});
+  return {txt:`${ms}·10${sup(e)}`, html:`${ms}·10<sup>${e}</sup>`};
+}
+const sciText = x => sciParts(x).txt;
+const sciHTML = x => sciParts(x).html;
+function fmtQ(q){
+  if (Math.abs(q) >= 0.01) return num(q,3)+' C';
+  const u = q/1e-6;
+  if (Math.abs(u) < 0.001) return '0 μC';
+  return (u>0?'+':'−') + num(Math.abs(u),1) + ' μC';
+}
+function weightText(F){
+  const kg = F/G;
+  if (kg <= 0) return 'μηδενική δύναμη';
+  if (kg < 1e-3) return '≈ βάρος αντικειμένου ' + num(kg*1e6,0) + ' mg';
+  if (kg < 1)    return '≈ βάρος αντικειμένου ' + num(kg*1000,1) + ' g';
+  if (kg < 1000) return '≈ βάρος αντικειμένου ' + num(kg,1) + ' kg';
+  return '≈ βάρος ' + num(kg/1000,0) + ' τόνων!';
+}
+
+/* ---------- geometry helpers ---------- */
+const rad = q => Math.min(0.09, 0.022 + 0.012*Math.cbrt(Math.min(Math.abs(q)/1e-6, 1000)));
+const R1 = () => rad(state.q1), R2 = () => rad(state.q2);
+const minSep = () => R1() + R2() + 0.004;
+const dist = () => Math.hypot(state.x2-state.x1, state.y2-state.y1);
+function forceMag(r){
+  const rr = Math.max(r !== undefined ? r : dist(), minSep());
+  return K/state.eps * state.q1*state.q2 / (rr*rr);
+}
+function placeAt(r){
+  r = Math.max(minSep(), Math.min(RMAX, r));
+  const r1 = R1(), r2 = R2();
+  let my = (state.y1+state.y2)/2, mx = (state.x1+state.x2)/2;
+  my = Math.max(Math.max(r1,r2)+0.02, Math.min(H-Math.max(r1,r2)-0.02, my));
+  mx = Math.max(r/2+r1+0.01, Math.min(W-r/2-r2-0.01, mx));
+  state.x1 = mx-r/2; state.x2 = mx+r/2; state.y1 = state.y2 = my;
+  state.v1x=state.v1y=state.v2x=state.v2y=0;
+}
+function clampBody(i){
+  const r = i===0?R1():R2();
+  const x = i===0?'x1':'x2', y = i===0?'y1':'y2';
+  const hh = (isFinite(H) && H > 0) ? H : 0.7;
+  if (!isFinite(state[x])) state[x] = W/2;
+  if (!isFinite(state[y])) state[y] = hh/2;
+  state[x] = Math.max(r, Math.min(W-r, state[x]));
+  state[y] = Math.max(r, Math.min(hh-r, state[y]));
+}
+
+/* ---------- audio ---------- */
+function initAudio(){
+  if (sound.ctx) { if (sound.ctx.state==='suspended') sound.ctx.resume(); return; }
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    sound.ctx = new AC();
+    sound.master = sound.ctx.createGain();
+    sound.master.gain.value = sound.on ? 0.5 : 0;
+    sound.master.connect(sound.ctx.destination);
+    const len = sound.ctx.sampleRate * 0.25;
+    sound.noise = sound.ctx.createBuffer(1, len, sound.ctx.sampleRate);
+    const d = sound.noise.getChannelData(0);
+    for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  }catch(e){}
+}
+const lastSfx = {};
+function sfx(type, vol=0.3){
+  if (!sound.on || !sound.ctx || sound.ctx.state !== 'running') return;
+  const now = performance.now();
+  if (lastSfx[type] && now - lastSfx[type] < (type==='thump'?150:90)) return;
+  lastSfx[type] = now;
+  const c = sound.ctx, t0 = c.currentTime;
+  const g = c.createGain(); g.connect(sound.master);
+  if (type==='thump'){
+    const o = c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(130,t0); o.frequency.exponentialRampToValueAtTime(42,t0+0.14);
+    g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.16);
+    o.connect(g); o.start(t0); o.stop(t0+0.18);
+    const n = c.createBufferSource(); n.buffer = sound.noise;
+    const f = c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=420; f.Q.value=1;
+    const ng = c.createGain(); ng.gain.setValueAtTime(vol*0.5,t0);
+    ng.gain.exponentialRampToValueAtTime(0.0001,t0+0.07);
+    n.connect(f); f.connect(ng); ng.connect(sound.master); n.start(t0); n.stop(t0+0.09);
+  } else if (type==='blip'){
+    [540,810].forEach((fr,i)=>{
+      const o=c.createOscillator(), og=c.createGain();
+      o.type='triangle'; o.frequency.value=fr;
+      og.gain.setValueAtTime(0.0001,t0+i*0.08);
+      og.gain.exponentialRampToValueAtTime(0.14,t0+i*0.08+0.015);
+      og.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.08+0.1);
+      o.connect(og); og.connect(sound.master); o.start(t0+i*0.08); o.stop(t0+i*0.08+0.12);
+    });
+  } else if (type==='tick'){
+    const n=c.createBufferSource(); n.buffer=sound.noise;
+    const f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=1900;
+    g.gain.setValueAtTime(0.09,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.03);
+    n.connect(f); f.connect(g); n.start(t0); n.stop(t0+0.04);
+  } else { // click
+    const o=c.createOscillator(); o.type='triangle'; o.frequency.value=640;
+    g.gain.setValueAtTime(0.08,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.05);
+    o.connect(g); o.start(t0); o.stop(t0+0.06);
+  }
+}
+window.addEventListener('pointerdown', initAudio, {once:false});
+window.addEventListener('keydown', initAudio, {once:false});
+
+/* ---------- toasts / banner ---------- */
+function toast(msg, tone='info'){
+  const box = $('toasts');
+  while (box.children.length >= 3) box.firstChild.remove();
+  const el = document.createElement('div');
+  el.className = 'toast ' + tone; el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 320); }, 3600);
+}
+function showBanner(msg){ $('bannerText').textContent = msg; $('banner').classList.remove('hidden'); }
+function hideBanner(){ $('banner').classList.add('hidden'); }
+$('bannerX').addEventListener('click', hideBanner);
+function clearDemo(){ if (state.demo){ state.demo = false; hideBanner(); } }
+
+/* ---------- canvas setup ---------- */
+const stage = $('stage'), canvas = $('sim'), ctx = canvas.getContext('2d');
+const chartCv = $('trapChart'), cctx = chartCv.getContext('2d');
+let cw = 0, chh = 0, dpr = 1;
+function resize(){
+  const r = stage.getBoundingClientRect();
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(r.width*dpr), h = Math.round(r.height*dpr);
+  /* Πριν ολοκληρωθεί το layout (ή σε iframe με μηδενικό πλάτος) το stage μετρά
+     0×0: τότε ppm = 0 και H = chh/ppm = Infinity. Κρατάμε τις τελευταίες έγκυρες
+     τιμές αντί να δηλητηριάσουμε το state με NaN/Infinity. */
+  if (r.width < 2 || r.height < 2) return;
+  if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
+  cw = r.width; chh = r.height;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ppm = cw / W; H = chh / ppm;
+  if (!isFinite(ppm) || ppm <= 0) ppm = 700;
+  if (!isFinite(H) || H <= 0) H = 0.7;
+  clampBody(0); clampBody(1);
+}
+new ResizeObserver(resize).observe(stage);
+window.addEventListener('resize', resize);
+resize();
+
+/* ---------- physics ---------- */
+function spark(x,y,n,base){
+  for (let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s = 0.15+Math.random()*0.9;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+      life:0.35+Math.random()*0.35, max:0.7,
+      color: Math.random()<0.4 ? '#ffd166' : (Math.random()<0.5 ? '#ffffff' : base),
+      size: 1+Math.random()*2.2});
+  }
+  if (particles.length > 140) particles.splice(0, particles.length-140);
+  rings.push({x,y,r:0.01,life:0.45,max:0.45});
+}
+function shareCharge(){
+  const avg = (state.q1+state.q2)/2;
+  state.q1 = avg; state.q2 = avg;
+  clearDemo(); syncChargeUI();
+  const mx=(state.x1+state.x2)/2, my=(state.y1+state.y2)/2;
+  spark(mx,my,22,'#3ddc84'); sfx('blip');
+  toast('⚡ Επαφή! Ανακατανομή: q₁′ = q₂′ = ΣQ/2 = ' + fmtQ(avg) + ' — το συνολικό φορτίο διατηρείται.', 'ok');
+}
+function physics(dt){
+  const s = state, r1 = R1(), r2 = R2();
+  let dx = s.x2-s.x1, dy = s.y2-s.y1;
+  let r = Math.hypot(dx,dy); if (r < 1e-9){ dx=1; dy=0; r=1; }
+  const nx = dx/r, ny = dy/r;
+  const rEff = Math.max(r, r1+r2);
+  const F = K/s.eps * s.q1*s.q2 / (rEff*rEff);   // signed: + repulsion
+  // forces on 1 = -n·F ; on 2 = +n·F ; plus linear air drag
+  const f1x = -nx*F - s.damp*s.v1x, f1y = -ny*F - s.damp*s.v1y;
+  const f2x =  nx*F - s.damp*s.v2x, f2y =  ny*F - s.damp*s.v2y;
+  if (drag !== 0){
+    s.v1x += f1x/s.m1*dt; s.v1y += f1y/s.m1*dt;
+    const sp1 = Math.hypot(s.v1x,s.v1y);
+    if (sp1 > VMAX){ s.v1x *= VMAX/sp1; s.v1y *= VMAX/sp1; }
+    s.x1 += s.v1x*dt; s.y1 += s.v1y*dt;
+  }
+  if (drag !== 1){
+    s.v2x += f2x/s.m2*dt; s.v2y += f2y/s.m2*dt;
+    const sp2 = Math.hypot(s.v2x,s.v2y);
+    if (sp2 > VMAX){ s.v2x *= VMAX/sp2; s.v2y *= VMAX/sp2; }
+    s.x2 += s.v2x*dt; s.y2 += s.v2y*dt;
+  }
+  // walls
+  [[0,r1],[1,r2]].forEach(([i,rr])=>{
+    const X=i?'x2':'x1', Y=i?'y2':'y1', VX=i?'v2x':'v1x', VY=i?'v2y':'v1y';
+    let hit = false;
+    if (s[X] < rr){ s[X]=rr; if (s[VX]<0){ s[VX]=-s[VX]*0.75; hit=true; } }
+    if (s[X] > W-rr){ s[X]=W-rr; if (s[VX]>0){ s[VX]=-s[VX]*0.75; hit=true; } }
+    if (s[Y] < rr){ s[Y]=rr; if (s[VY]<0){ s[VY]=-s[VY]*0.75; hit=true; } }
+    if (s[Y] > H-rr){ s[Y]=H-rr; if (s[VY]>0){ s[VY]=-s[VY]*0.75; hit=true; } }
+    if (hit && Math.hypot(s[VX],s[VY]) > 0.15 && t-lastWallSfx > 0.12){ lastWallSfx=t; sfx('tick'); }
+  });
+  // contact
+  dx = s.x2-s.x1; dy = s.y2-s.y1; r = Math.hypot(dx,dy);
+  const minD = r1+r2;
+  if (r < minD && r > 1e-9){
+    const cnx = dx/r, cny = dy/r, overlap = minD-r;
+    if (drag === 0){ s.x2 += cnx*overlap; s.y2 += cny*overlap; }
+    else if (drag === 1){ s.x1 -= cnx*overlap; s.y1 -= cny*overlap; }
+    else {
+      s.x1 -= cnx*overlap/2; s.y1 -= cny*overlap/2;
+      s.x2 += cnx*overlap/2; s.y2 += cny*overlap/2;
+    }
+    const vrel = (s.v2x-s.v1x)*cnx + (s.v2y-s.v1y)*cny;
+    if (vrel < 0){
+      const e = 0.8, j = -(1+e)*vrel/(1/s.m1+1/s.m2);
+      if (drag !== 0){ s.v1x -= j/s.m1*cnx; s.v1y -= j/s.m1*cny; }
+      if (drag !== 1){ s.v2x += j/s.m2*cnx; s.v2y += j/s.m2*cny; }
+      if (Math.abs(vrel) > 0.08 && t-lastHit > 0.25){
+        lastHit = t;
+        const mx=(s.x1+s.x2)/2, my=(s.y1+s.y2)/2;
+        spark(mx,my,14, s.q1*s.q2<0 ? '#43c6ff' : '#ff8a5c');
+        sfx('thump', Math.min(0.6, Math.max(0.12, Math.abs(vrel)/2.5)));
+      }
+    }
+    if (s.conducting && Math.abs(s.q1-s.q2) > 1e-12 && t-lastShare > 0.4){
+      lastShare = t; shareCharge();
+    }
+    // rest opposite insulating spheres gently instead of jittering
+    if (!s.conducting && s.q1*s.q2 < 0 &&
+        Math.hypot(s.v1x,s.v1y) < 0.04 && Math.hypot(s.v2x,s.v2y) < 0.04){
+      s.v1x=s.v1y=s.v2x=s.v2y=0;
+    }
+  }
+}
+function stepSim(simDt){
+  const n = Math.min(24, Math.max(4, Math.ceil(simDt/0.002)));
+  const dt = simDt/n;
+  for (let i=0;i<n;i++) physics(dt);
+}
+
+/* ---------- drawing helpers ---------- */
+function arrow(x1,y1,x2,y2,color,width){
+  const a = Math.atan2(y2-y1,x2-x1), hl = 7+width*1.6;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hl*Math.cos(a-0.42), y2-hl*Math.sin(a-0.42));
+  ctx.lineTo(x2-hl*Math.cos(a+0.42), y2-hl*Math.sin(a+0.42));
+  ctx.closePath(); ctx.fill();
+}
+function pill(text,x,y,color,fontPx=11){
+  ctx.font = `600 ${fontPx}px 'JetBrains Mono', monospace`;
+  const w = ctx.measureText(text).width + 14;
+  x = Math.max(w/2+4, Math.min(cw-w/2-4, x));
+  y = Math.max(12, Math.min(chh-12, y));
+  ctx.fillStyle = 'rgba(9,13,26,.82)';
+  ctx.strokeStyle = color; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x-w/2, y-10, w, 20, 9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e9eef9'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text, x, y+0.5);
+}
+const chargeColors = q => q > 1e-12 ? ['#ff8a5c','#c22a12','#ff5a3c']
+                    : q < -1e-12 ? ['#43c6ff','#1f4fd8','#3f7dff']
+                    : ['#aab6d4','#5a6a8f','#9aa7c4'];
+
+/* ---------- render ---------- */
+function render(){
+  /* Αυτο-ίαση: αν κάποια θέση έγινε NaN/Infinity (π.χ. από frame χωρίς layout
+     ή από διαίρεση με μηδενική μάζα), την επαναφέρουμε πριν σχεδιάσουμε. */
+  if (!isFinite(state.x1) || !isFinite(state.x2) || !isFinite(state.y1) || !isFinite(state.y2)){
+    clampBody(0); clampBody(1);
+  }
+  ctx.clearRect(0,0,cw,chh);
+  if (!(cw > 1) || !(chh > 1) || !isFinite(ppm) || ppm <= 0) return;
+  // vignette background
+  const bg = ctx.createRadialGradient(cw/2,chh/2,chh*0.15, cw/2,chh/2,Math.max(cw,chh)*0.75);
+  bg.addColorStop(0,'#0d1526'); bg.addColorStop(1,'#060a14');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,cw,chh);
+  // grid
+  if (view.grid){
+    ctx.lineWidth = 1;
+    for (let gx=0; gx<=W+1e-9; gx+=0.1){
+      const major = Math.round(gx*10)%5===0;
+      ctx.strokeStyle = major ? 'rgba(120,150,210,.10)' : 'rgba(120,150,210,.045)';
+      ctx.beginPath(); ctx.moveTo(gx*ppm,0); ctx.lineTo(gx*ppm,chh); ctx.stroke();
+    }
+    for (let gy=0; gy<=H+1e-9; gy+=0.1){
+      const major = Math.round(gy*10)%5===0;
+      ctx.strokeStyle = major ? 'rgba(120,150,210,.10)' : 'rgba(120,150,210,.045)';
+      ctx.beginPath(); ctx.moveTo(0,gy*ppm); ctx.lineTo(cw,gy*ppm); ctx.stroke();
+    }
+  }
+  const s = state;
+  const p1 = {x:s.x1*ppm, y:s.y1*ppm}, p2 = {x:s.x2*ppm, y:s.y2*ppm};
+  const r1 = R1()*ppm, r2 = R2()*ppm;
+  // E-field arrow grid
+  if (view.field && (Math.abs(s.q1)>1e-12 || Math.abs(s.q2)>1e-12)){
+    const step = cw/22;
+    for (let px=step/2; px<cw; px+=step){
+      for (let py=step/2; py<chh; py+=step){
+        const wx=px/ppm, wy=py/ppm;
+        let ex=0, ey=0, skip=false;
+        [[s.x1,s.y1,s.q1,R1()],[s.x2,s.y2,s.q2,R2()]].forEach(([qx,qy,q,rr])=>{
+          const dx=wx-qx, dy=wy-qy, d2=dx*dx+dy*dy;
+          if (d2 < (rr*1.35)*(rr*1.35)){ skip=true; return; }
+          const d=Math.sqrt(d2), f=K/s.eps*q/(d2*d);
+          ex+=f*dx; ey+=f*dy;
+        });
+        if (skip) continue;
+        const mag = Math.hypot(ex,ey); if (mag < 1) continue;
+        const lg = Math.log10(mag);
+        const len = Math.max(3, Math.min(15, 2.6*lg-8));
+        let al = Math.max(0.06, Math.min(0.5, 0.08+0.055*(lg-3)));
+        if (!reduceMotion) al *= 0.85 + 0.15*Math.sin(t*1.3 + (px+py)*0.012);
+        const ux=ex/mag, uy=ey/mag;
+        ctx.strokeStyle = `rgba(37,212,238,${al})`; ctx.fillStyle = `rgba(37,212,238,${al})`;
+        ctx.lineWidth = 1.2;
+        const x2=px+ux*len, y2=py+uy*len;
+        ctx.beginPath(); ctx.moveTo(px-ux*len*0.4, py-uy*len*0.4); ctx.lineTo(x2,y2); ctx.stroke();
+        const a=Math.atan2(uy,ux);
+        ctx.beginPath(); ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-4*Math.cos(a-0.5), y2-4*Math.sin(a-0.5));
+        ctx.lineTo(x2-4*Math.cos(a+0.5), y2-4*Math.sin(a+0.5));
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+  // trails
+  if (view.trails){
+    trails.forEach((tr,i)=>{
+      if (tr.length < 2) return;
+      const col = chargeColors(i?s.q2:s.q1)[2];
+      for (let j=1;j<tr.length;j++){
+        ctx.strokeStyle = col; ctx.globalAlpha = (j/tr.length)*0.35;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(tr[j-1].x*ppm, tr[j-1].y*ppm);
+        ctx.lineTo(tr[j].x*ppm, tr[j].y*ppm); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    });
+  }
+  // ruler between centers
+  const dx = p2.x-p1.x, dy = p2.y-p1.y, d = Math.hypot(dx,dy)||1;
+  const nx=dx/d, ny=dy/d;
+  ctx.strokeStyle = 'rgba(255,176,32,.55)'; ctx.lineWidth = 1.5;
+  ctx.setLineDash([6,6]); ctx.lineDashOffset = reduceMotion ? 0 : -t*12;
+  ctx.beginPath(); ctx.moveTo(p1.x+nx*r1, p1.y+ny*r1); ctx.lineTo(p2.x-nx*r2, p2.y-ny*r2); ctx.stroke();
+  ctx.setLineDash([]);
+  [[p1,r1],[p2,r2]].forEach(([p,rr])=>{
+    ctx.strokeStyle='rgba(255,176,32,.7)';
+    ctx.beginPath(); ctx.moveTo(p.x+nx*rr-ny*6, p.y+ny*rr+nx*6);
+    ctx.lineTo(p.x+nx*rr+ny*6, p.y+ny*rr-nx*6); ctx.stroke();
+  });
+  pill('r = ' + num(dist()*100,1) + ' cm', (p1.x+p2.x)/2 - ny*24, (p1.y+p2.y)/2 + nx*24, 'rgba(255,176,32,.6)');
+  // spheres
+  [[p1,r1,s.q1,'q₁',0],[p2,r2,s.q2,'q₂',1]].forEach(([p,rr,q,name,i])=>{
+    if (!isFinite(p.x) || !isFinite(p.y) || !isFinite(rr) || rr <= 0) return;
+    const [c1,c2,glow] = chargeColors(q);
+    const pulse = reduceMotion ? 1 : 0.8+0.2*Math.sin(t*2+i*2.1);
+    if (view.glow && Math.abs(q)>1e-12){
+      ctx.shadowColor = glow; ctx.shadowBlur = 26*pulse;
+    }
+    const g = ctx.createRadialGradient(p.x-rr*0.35, p.y-rr*0.4, rr*0.1, p.x, p.y, rr);
+    g.addColorStop(0,'#ffffff'); g.addColorStop(0.18,c1); g.addColorStop(1,c2);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,Math.PI*2); ctx.stroke();
+    if (hoverIdx===i || drag===i){
+      ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 2; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.arc(p.x,p.y,rr+6,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    }
+    const sym = q>1e-12?'+':q<-1e-12?'−':'0';
+    ctx.font = `800 ${Math.max(13, rr*0.95)}px 'Inter', sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,.95)';
+    ctx.fillText(sym, p.x, p.y+1);
+    pill(name+' = '+fmtQ(q), p.x, p.y+rr+18, glow, 11);
+  });
+  // force vectors
+  const F = forceMag();
+  if (view.forces && Math.abs(F) > 1e-12){
+    const len = Math.max(20, Math.min(120, 22 + 24*Math.log10(Math.abs(F)/1e-4)));
+    const sgn = F > 0 ? -1 : 1;   // repulsion pushes 1 along -n
+    [[p1,r1,sgn,'F₁'],[p2,r2,-sgn,'F₂']].forEach(([p,rr,dir,lab])=>{
+      const sx=p.x+nx*dir*(rr+5), sy=p.y+ny*dir*(rr+5);
+      const ex=p.x+nx*dir*(rr+5+len), ey=p.y+ny*dir*(rr+5+len);
+      arrow(sx,sy,ex,ey,'#ffb020',3);
+      pill(lab+' = '+sciText(Math.abs(F))+' N', ex-ny*20, ey+nx*20, 'rgba(255,176,32,.6)', 10.5);
+    });
+  }
+  // velocity vectors
+  if (view.vel){
+    [[p1,s.v1x,s.v1y,'v₁'],[p2,s.v2x,s.v2y,'v₂']].forEach(([p,vx,vy,lab])=>{
+      const sp = Math.hypot(vx,vy); if (sp < 0.02) return;
+      const len = Math.min(70, sp*ppm*0.22);
+      const ux=vx/sp, uy=vy/sp;
+      arrow(p.x,p.y,p.x+ux*len,p.y+uy*len,'#3ddc84',2);
+      ctx.font="600 10px 'JetBrains Mono', monospace"; ctx.fillStyle='#3ddc84';
+      ctx.textAlign='center'; ctx.fillText(lab+' '+num(sp,2)+' m/s', p.x+ux*(len+16), p.y+uy*(len+16));
+    });
+  }
+  // particles & rings (additive)
+  ctx.globalCompositeOperation = 'lighter';
+  particles.forEach(p=>{
+    ctx.globalAlpha = Math.max(0, p.life/p.max);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x*ppm, p.y*ppm, p.size, 0, Math.PI*2); ctx.fill();
+  });
+  rings.forEach(rg=>{
+    ctx.globalAlpha = Math.max(0, rg.life/rg.max)*0.7;
+    ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(rg.x*ppm, rg.y*ppm, rg.r*ppm, 0, Math.PI*2); ctx.stroke();
+  });
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ---------- trap chart ---------- */
+function drawChart(){
+  const w = chartCv.clientWidth, h = chartCv.clientHeight;
+  if (chartCv.width !== Math.round(w*dpr)){ chartCv.width = Math.round(w*dpr); chartCv.height = Math.round(h*dpr); }
+  cctx.setTransform(dpr,0,0,dpr,0,0);
+  cctx.clearRect(0,0,w,h);
+  const L=48, R=12, T=12, B=26;
+  const prod = Math.abs(state.q1*state.q2);
+  const xOf = rcm => L + (rcm-4)/(100-4)*(w-L-R);
+  cctx.font = "500 9.5px 'JetBrains Mono', monospace";
+  // x axis ticks
+  cctx.fillStyle = 'rgba(147,160,191,.8)'; cctx.textAlign='center';
+  [20,40,60,80,100].forEach(rc=>{
+    const x = xOf(rc);
+    cctx.strokeStyle='rgba(120,150,210,.12)';
+    cctx.beginPath(); cctx.moveTo(x,T); cctx.lineTo(x,h-B); cctx.stroke();
+    cctx.fillText(rc+'', x, h-B+13);
+  });
+  cctx.fillText('r (cm)', (L+w-R)/2, h-4);
+  if (prod < 1e-24){
+    cctx.strokeStyle='rgba(147,160,191,.5)'; cctx.setLineDash([5,5]);
+    cctx.beginPath(); cctx.moveTo(L,h-B-6); cctx.lineTo(w-R,h-B-6); cctx.stroke(); cctx.setLineDash([]);
+    cctx.fillStyle='rgba(147,160,191,.9)'; cctx.textAlign='center';
+    cctx.font="600 11px 'Inter', sans-serif";
+    cctx.fillText('F = 0 — βάλε μη μηδενικά φορτία', (L+w-R)/2, h/2);
+    return;
+  }
+  const Fat = rcm => K/state.eps*prod/Math.pow(rcm/100,2);
+  const lo = Math.log10(Fat(100))-0.2, hi = Math.log10(Fat(4))+0.2;
+  const yOf = F => T + (1-(Math.log10(F)-lo)/(hi-lo))*(h-T-B);
+  // decade gridlines
+  cctx.textAlign='right';
+  for (let d=Math.ceil(lo); d<=Math.floor(hi); d++){
+    const y = yOf(Math.pow(10,d));
+    cctx.strokeStyle='rgba(120,150,210,.12)';
+    cctx.beginPath(); cctx.moveTo(L,y); cctx.lineTo(w-R,y); cctx.stroke();
+    cctx.fillStyle='rgba(147,160,191,.8)';
+    cctx.fillText(sciText(Math.pow(10,d)), L-5, y+3);
+  }
+  cctx.save(); cctx.translate(11,(T+h-B)/2); cctx.rotate(-Math.PI/2);
+  cctx.textAlign='center'; cctx.fillStyle='rgba(147,160,191,.8)'; cctx.fillText('F (N)',0,0); cctx.restore();
+  // curve
+  const grad = cctx.createLinearGradient(L,0,w-R,0);
+  grad.addColorStop(0,'#ff5a3c'); grad.addColorStop(1,'#ffb020');
+  cctx.beginPath();
+  for (let i=0;i<=90;i++){
+    const rc = 4+(100-4)*i/90, x=xOf(rc), y=yOf(Fat(rc));
+    i?cctx.lineTo(x,y):cctx.moveTo(x,y);
+  }
+  cctx.strokeStyle=grad; cctx.lineWidth=2.2; cctx.stroke();
+  cctx.lineTo(xOf(100),h-B); cctx.lineTo(xOf(4),h-B); cctx.closePath();
+  cctx.fillStyle='rgba(255,176,32,.07)'; cctx.fill();
+  // ghost points r/2, 2r
+  const rcm = dist()*100;
+  [[rcm/2,'4F'],[rcm*2,'F/4']].forEach(([rc,lab])=>{
+    if (rc<4||rc>100) return;
+    const x=xOf(rc), y=yOf(Fat(rc));
+    cctx.strokeStyle='rgba(37,212,238,.85)'; cctx.lineWidth=1.5;
+    cctx.beginPath(); cctx.arc(x,y,4.5,0,Math.PI*2); cctx.stroke();
+    cctx.fillStyle='rgba(37,212,238,.95)'; cctx.textAlign='center';
+    cctx.font="700 9.5px 'JetBrains Mono', monospace";
+    cctx.fillText(lab, x, y-9);
+  });
+  // current point
+  const rc = Math.max(4, Math.min(100, rcm));
+  const x = xOf(rc), y = yOf(Fat(rc));
+  cctx.setLineDash([3,4]); cctx.strokeStyle='rgba(255,176,32,.5)';
+  cctx.beginPath(); cctx.moveTo(x,y); cctx.lineTo(x,h-B); cctx.moveTo(x,y); cctx.lineTo(L,y); cctx.stroke();
+  cctx.setLineDash([]);
+  const pulse = reduceMotion ? 5 : 5+Math.sin(t*3)*1.3;
+  cctx.fillStyle='#ffb020'; cctx.beginPath(); cctx.arc(x,y,pulse+3,0,Math.PI*2); cctx.globalAlpha=.25; cctx.fill();
+  cctx.globalAlpha=1; cctx.fillStyle='#fff'; cctx.beginPath(); cctx.arc(x,y,4,0,Math.PI*2); cctx.fill();
+  cctx.strokeStyle='#ffb020'; cctx.lineWidth=2; cctx.beginPath(); cctx.arc(x,y,4,0,Math.PI*2); cctx.stroke();
+}
+
+/* ---------- HUD & readouts ---------- */
+let hudKey = '';
+function updateHUD(){
+  const s = state, r = dist(), F = forceMag(), aF = Math.abs(F);
+  const key = [s.q1,s.q2,r.toFixed(4),s.eps,s.locked,s.running,view.grid].join('|');
+  // mode chip every frame (cheap)
+  const mc = $('modeChip');
+  if (s.locked){ mc.textContent='🔒 Στατική μέτρηση'; mc.className='chip amber'; }
+  else if (s.running){ mc.textContent='🟢 Δυναμική προσομοίωση'; mc.className='chip green'; }
+  else { mc.textContent='⏸ Παύση'; mc.className='chip dim'; }
+  $('gridChip').style.display = view.grid ? '' : 'none';
+  if (key === hudKey) return;
+  hudKey = key;
+  $('fHud').innerHTML = 'F = <b>' + sciHTML(aF) + '</b> N';
+  $('wHud').textContent = weightText(aF);
+  const Qtot = s.q1+s.q2;
+  $('qChip').textContent = 'ΣQ = ' + fmtQ(Qtot) + ' · διατηρείται ✓';
+  // equation card
+  const epsPart = Math.abs(s.eps-1) > 0.01 ? 'εᵣ·' : '';
+  $('eqFormula').innerHTML = 'F = k · |q₁·q₂| / (' + (epsPart?'εᵣ·':'') + 'r²)';
+  const r2 = r*r;
+  $('eqSub').innerHTML = 'F = 9·10⁹ · (' + sciHTML(Math.abs(s.q1)) + ' · ' + sciHTML(Math.abs(s.q2)) + ')'
+    + (epsPart ? ' / ' + num(s.eps, s.eps<2?4:0) : '')
+    + ' / <span class="sq">(' + num(r,3) + ')²</span>';
+  $('eqR2').innerHTML = 'r² = (' + num(r,3) + ' m)² = ' + num(r2,4) + ' m² <span="badge" class="badge">στο τετράγωνο!</span>';
+  $('eqResult').innerHTML = 'F = ' + sciHTML(aF) + ' N';
+  const nb = $('natureBadge'), prod = s.q1*s.q2;
+  if (prod > 1e-24){ nb.textContent='ΑΠΩΣΗ ↔'; nb.className='nature rep'; }
+  else if (prod < -1e-24){ nb.textContent='ΕΛΞΗ →←'; nb.className='nature att'; }
+  else { nb.textContent='ΜΗΔΕΝΙΚΗ ·'; nb.className='nature zero'; }
+  const eLine = (q,name) => {
+    if (Math.abs(q) < 1e-12) return name + ': ουδέτερη σφαίρα';
+    return name + ' = ' + fmtQ(q) + ' ⇒ ' + (q>0?'έλλειμμα ':'πλεόνασμα ')
+      + sciText(Math.abs(q)/ECH) + ' ηλεκτρονίων';
+  };
+  $('n1Line').textContent = eLine(s.q1,'q₁');
+  $('n1Line').className = 'mono ' + (s.q1>1e-12?'pos':s.q1<-1e-12?'neg':'');
+  $('n2Line').textContent = eLine(s.q2,'q₂');
+  $('n2Line').className = 'mono ' + (s.q2>1e-12?'pos':s.q2<-1e-12?'neg':'');
+  $('qTotalLine').textContent = 'ΣQ = q₁ + q₂ = ' + fmtQ(Qtot) + ' — σταθερό σε κάθε κρούση ✓';
+  $('weightLine').textContent = 'Ρεαλιστική αίσθηση: ' + weightText(aF);
+  // trap buttons availability
+  const canTrap = prod > 1e-24 && !trapAnim;
+  $('btnDouble').disabled = !canTrap || r*2 > RMAX + 1e-9;
+  $('btnHalf').disabled = !canTrap || r/2 < Math.max(RMIN, minSep()) - 1e-9;
+}
+
+/* ---------- UI sync ---------- */
+function syncChargeUI(){
+  const s = state;
+  $('q1Range').value = Math.max(-10, Math.min(10, s.q1/1e-6));
+  $('q2Range').value = Math.max(-10, Math.min(10, s.q2/1e-6));
+  const l1 = $('q1Val'), l2 = $('q2Val');
+  l1.textContent = fmtQ(s.q1); l2.textContent = fmtQ(s.q2);
+  l1.className = 'val ' + (s.q1>1e-12?'pos':s.q1<-1e-12?'neg':'zero');
+  l2.className = 'val ' + (s.q2>1e-12?'pos':s.q2<-1e-12?'neg':'zero');
+}
+function syncUI(){
+  const s = state;
+  syncChargeUI();
+  $('rRange').value = Math.max(10, Math.min(100, dist()*100));
+  $('rVal').textContent = num(dist()*100,1) + ' cm';
+  $('m1Range').value = s.m1*1000; $('m1Val').textContent = num(s.m1*1000,0)+' g';
+  $('m2Range').value = s.m2*1000; $('m2Val').textContent = num(s.m2*1000,0)+' g';
+  $('medSelect').value = String(s.eps);
+  $('dampRange').value = s.damp; $('dampVal').textContent = num(s.damp,3)+' kg/s';
+  $('timeRange').value = s.time; $('timeVal').textContent = num(s.time,2)+'×';
+  $('lockToggle').checked = s.locked;
+  $('condToggle').checked = s.conducting;
+  $('lockIcon').textContent = s.locked ? '🔒' : '🔓';
+  const running = s.running && !s.locked;
+  $('playIcon').textContent = running ? '⏸' : '▶';
+  $('playLabel').textContent = running ? 'Παύση' : 'Κίνηση';
+  $('btnRun').textContent = running ? '⏸ Παύση κίνησης' : '▶ Εκκίνηση κίνησης';
+  $('btnRun').className = 'btn wide' + (running ? '' : ' run');
+  hudKey = '';
+}
+
+/* ---------- actions ---------- */
+function toggleRun(){
+  if (state.locked){
+    state.locked = false; state.running = true;
+    toast('🔓 Ξεκλείδωμα — οι σφαίρες κινούνται υπό τη δύναμη Coulomb.', 'info');
+  } else state.running = !state.running;
+  sfx('click'); syncUI();
+}
+function doStep(){
+  if (state.locked){ state.locked = false; toast('🔓 Ξεκλείδωμα για βηματική κίνηση.', 'info'); }
+  state.running = false;
+  stepSim(1/60); syncUI(); sfx('click');
+}
+function toggleLock(){
+  state.locked = !state.locked;
+  if (state.locked){ state.v1x=state.v1y=state.v2x=state.v2y=0; }
+  sfx('click'); syncUI();
+}
+function resetAll(silent){
+  state = defaults();
+  const midY = (isFinite(H) && H > 0) ? H/2 : 0.35;
+  state.y1 = state.y2 = midY; state.x1 = 0.4; state.x2 = 0.8;
+  trails = [[],[]]; particles = []; rings = []; trapAnim = null;
+  hideBanner();
+  $('trapCallout').innerHTML = 'Πάτα ένα κουμπί για να δεις την παγίδα ζωντανά στη μέτρηση.';
+  $('trapRatio').classList.remove('show');
+  syncUI();
+  if (!silent){ toast('↺ Επαναφορά στο αρχικό σενάριο έλξης.', 'info'); sfx('click'); }
+}
+function randomize(){
+  const rq = () => (Math.random()<0.5?-1:1) * Math.round((0.5+Math.random()*4.5)*10)/10 * 1e-6;
+  state.q1 = rq(); state.q2 = rq();
+  state.m1 = (5+Math.round(Math.random()*20))/1000;
+  state.m2 = (5+Math.round(Math.random()*20))/1000;
+  clearDemo(); trapAnim = null;
+  placeAt(0.25+Math.random()*0.45);
+  trails = [[],[]];
+  syncUI(); toast('🎲 Νέο τυχαίο σενάριο — παρατήρησε δύναμη & φορά.', 'info'); sfx('click');
+}
+function applyPreset(name){
+  resetAll(true);
+  const s = state;
+  if (name === 'attract'){
+    s.q1 = 2e-6; s.q2 = -2e-6; placeAt(0.4);
+    toast('🧲 Ετερώνυμα φορτία: έλξη. Σύρε τις σφαίρες ή δοκίμασε την παγίδα 1/r².', 'info');
+  } else if (name === 'repel'){
+    s.q1 = 2e-6; s.q2 = 2e-6; placeAt(0.3);
+    toast('💥 Ομώνυμα φορτία: άπωση — τα διανύσματα δείχνουν προς τα έξω.', 'info');
+  } else if (name === 'demo'){
+    s.q1 = 1; s.q2 = 1; s.demo = true; s.locked = true;
+    placeAt(1.0);
+    showBanner('🤯 F = 9·10⁹ N ≈ βάρος 917.000 τόνων! Γι’ αυτό δεν συναντάμε φορτία 1 C στην καθημερινότητα.');
+    toast('Η ερώτηση του καθηγητή: δύο φορτία 1 C σε απόσταση 1 m.', 'warn');
+  } else if (name === 'contact'){
+    s.q1 = 2e-6; s.q2 = -2e-6; s.m1 = s.m2 = 0.03;
+    s.damp = 0.12; s.time = 0.6; s.conducting = true;
+    s.locked = false; s.running = true;
+    placeAt(0.5);
+    toast('⚡ Παρακολούθησε: έλξη → κρούση → ανακατανομή φορτίου → ουδετεροποίηση. Το ΣQ μένει 0!', 'ok');
+  }
+  syncUI(); sfx('click');
+}
+
+/* ---------- 1/r² trap ---------- */
+function trapAction(factor){
+  if (trapAnim) return;
+  const r0 = dist(), rT = r0*factor;
+  if (Math.abs(state.q1*state.q2) < 1e-24){ toast('Χρειάζονται μη μηδενικά φορτία.', 'warn'); return; }
+  if (rT > RMAX || rT < Math.max(RMIN, minSep())){
+    toast('Εκτός ορίων σκηνής — δοκίμασε την άλλη κατεύθυνση.', 'warn'); return;
+  }
+  const F0 = Math.abs(forceMag(r0));
+  if (!state.locked){ state.locked = true; toast('🔒 Κλείδωμα θέσεων για ακριβή μέτρηση.', 'info'); }
+  state.v1x=state.v1y=state.v2x=state.v2y=0;
+  trapAnim = { from:r0, to:rT, start:performance.now(), dur:750, F0, factor };
+  syncUI(); sfx('click');
+}
+function stepTrap(now){
+  const a = trapAnim, p = Math.min(1, (now-a.start)/a.dur);
+  const e = p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+  placeAt(a.from + (a.to-a.from)*e);
+  $('rRange').value = dist()*100; $('rVal').textContent = num(dist()*100,1)+' cm';
+  if (p >= 1){
+    const F1 = Math.abs(forceMag(a.to));
+    const ratio = a.factor === 2 ? '÷4' : '×4';
+    $('trapCallout').innerHTML =
+      'r: <b>' + num(a.from*100,0) + ' → ' + num(a.to*100,0) + ' cm</b><br>' +
+      'F: <b>' + sciText(a.F0) + ' → ' + sciText(F1) + ' N</b>';
+    const badge = $('trapRatio');
+    badge.textContent = ratio; badge.classList.remove('show');
+    void badge.offsetWidth; badge.classList.add('show');
+    toast(a.factor === 2
+      ? 'Η απόσταση διπλασιάστηκε ⇒ η δύναμη υποτετραπλασιάστηκε (÷4, όχι ÷2!).'
+      : 'Η απόσταση υποδιπλασιάστηκε ⇒ η δύναμη τετραπλασιάστηκε (×4!).', 'warn');
+    sfx('blip'); trapAnim = null; hudKey='';
+  }
+}
+
+/* ---------- export ---------- */
+function exportPNG(){
+  const fh = 64*dpr;
+  const off = document.createElement('canvas');
+  off.width = canvas.width; off.height = canvas.height + fh;
+  const o = off.getContext('2d');
+  o.drawImage(canvas, 0, 0);
+  o.fillStyle = '#0f172b'; o.fillRect(0, canvas.height, off.width, fh);
+  o.fillStyle = '#ffb020'; o.fillRect(0, canvas.height, off.width, 2*dpr);
+  o.setTransform(dpr,0,0,dpr,0,0);
+  const w = off.width/dpr, yB = canvas.height/dpr;
+  o.font = "800 13px 'Inter', sans-serif"; o.fillStyle = '#e9eef9'; o.textAlign='left'; o.textBaseline='middle';
+  o.fillText('Σταθμός 1 — Νόμος Coulomb · Β΄ ΕΠΑΛ', 14, yB+20);
+  o.font = "600 11.5px 'JetBrains Mono', monospace"; o.fillStyle = '#93a0bf';
+  o.fillText('q₁ = '+fmtQ(state.q1)+'   q₂ = '+fmtQ(state.q2)+'   r = '+num(dist()*100,1)+' cm   F = '+sciText(Math.abs(forceMag()))+' N', 14, yB+44);
+  const done = url => {
+    const a = document.createElement('a');
+    a.href = url; a.download = 'coulomb-prosomoiwsh.png'; a.click();
+    toast('📸 Το στιγμιότυπο PNG αποθηκεύτηκε.', 'ok'); sfx('click');
+  };
+  if (off.toBlob) off.toBlob(b => { if (b) done(URL.createObjectURL(b)); else done(off.toDataURL('image/png')); });
+  else done(off.toDataURL('image/png'));
+}
+
+/* ---------- pointer interaction ---------- */
+function evtWorld(e){
+  const r = canvas.getBoundingClientRect();
+  return { x:(e.clientX-r.left)/ppm, y:(e.clientY-r.top)/ppm };
+}
+function hitSphere(p){
+  if (Math.hypot(p.x-state.x1, p.y-state.y1) < R1()+12/ppm) return 0;
+  if (Math.hypot(p.x-state.x2, p.y-state.y2) < R2()+12/ppm) return 1;
+  return -1;
+}
+canvas.addEventListener('pointerdown', e => {
+  if (drag !== null) return;
+  const p = evtWorld(e), i = hitSphere(p);
+  if (i < 0) return;
+  drag = i; trapAnim = null;
+  pointerHist = [{x:p.x, y:p.y, t:performance.now()}];
+  canvas.setPointerCapture(e.pointerId);
+  canvas.style.cursor = 'grabbing';
+  if (!hintGone){ hintGone = true; $('hint').classList.add('gone'); }
+  e.preventDefault();
+});
+canvas.addEventListener('pointermove', e => {
+  const p = evtWorld(e);
+  if (drag === null){
+    hoverIdx = hitSphere(p);
+    canvas.style.cursor = hoverIdx >= 0 ? 'grab' : 'default';
+    return;
+  }
+  const i = drag, oi = 1-i;
+  const rr = i?R2():R1(), or = oi?R2():R1();
+  let x = Math.max(rr, Math.min(W-rr, p.x));
+  let y = Math.max(rr, Math.min(H-rr, p.y));
+  const ox = oi?state.x2:state.x1, oy = oi?state.y2:state.y1;
+  let dx = x-ox, dy = y-oy, d = Math.hypot(dx,dy);
+  const minD = rr+or+0.002;
+  if (d < minD){
+    if (d < 1e-9){ dx=1; dy=0; d=1; }
+    x = ox+dx/d*minD; y = oy+dy/d*minD;
+    x = Math.max(rr, Math.min(W-rr, x)); y = Math.max(rr, Math.min(H-rr, y));
+  }
+  if (i===0){ state.x1=x; state.y1=y; } else { state.x2=x; state.y2=y; }
+  const now = performance.now();
+  pointerHist.push({x,y,t:now});
+  while (pointerHist.length > 6) pointerHist.shift();
+  if (state.locked){ if(i===0){state.v1x=state.v1y=0;}else{state.v2x=state.v2y=0;} }
+  $('rRange').value = Math.max(10, Math.min(100, dist()*100));
+  $('rVal').textContent = num(dist()*100,1)+' cm';
+});
+function endDrag(e){
+  if (drag === null) return;
+  const i = drag;
+  if (!state.locked && pointerHist.length >= 2){
+    const a = pointerHist[0], b = pointerHist[pointerHist.length-1];
+    const dt = Math.max(0.016, (b.t-a.t)/1000);
+    let vx = (b.x-a.x)/dt, vy = (b.y-a.y)/dt;
+    const sp = Math.hypot(vx,vy);
+    if (sp > VMAX){ vx*=VMAX/sp; vy*=VMAX/sp; }
+    if (i===0){ state.v1x=vx; state.v1y=vy; } else { state.v2x=vx; state.v2y=vy; }
+  } else {
+    if (i===0){ state.v1x=state.v1y=0; } else { state.v2x=state.v2y=0; }
+  }
+  drag = null; canvas.style.cursor = 'default';
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+/* ---------- bindings ---------- */
+$('q1Range').addEventListener('input', e => { state.q1 = parseFloat(e.target.value)*1e-6; clearDemo(); trapAnim=null; syncChargeUI(); hudKey=''; });
+$('q2Range').addEventListener('input', e => { state.q2 = parseFloat(e.target.value)*1e-6; clearDemo(); trapAnim=null; syncChargeUI(); hudKey=''; });
+$('q1Sign').addEventListener('click', () => { state.q1 = state.q1===0 ? 1e-6 : -state.q1; clearDemo(); syncChargeUI(); sfx('click'); });
+$('q2Sign').addEventListener('click', () => { state.q2 = state.q2===0 ? -1e-6 : -state.q2; clearDemo(); syncChargeUI(); sfx('click'); });
+$('rRange').addEventListener('input', e => { trapAnim=null; placeAt(parseFloat(e.target.value)/100); $('rVal').textContent = num(dist()*100,1)+' cm'; hudKey=''; });
+$('m1Range').addEventListener('input', e => { state.m1 = parseFloat(e.target.value)/1000; $('m1Val').textContent = num(state.m1*1000,0)+' g'; });
+$('m2Range').addEventListener('input', e => { state.m2 = parseFloat(e.target.value)/1000; $('m2Val').textContent = num(state.m2*1000,0)+' g'; });
+$('medSelect').addEventListener('change', e => {
+  state.eps = parseFloat(e.target.value); hudKey=''; sfx('click');
+  if (state.eps === 80) toast('💧 Στο νερό (εᵣ ≈ 80) η δύναμη εξασθενεί 80 φορές!', 'info');
+  else if (state.eps > 1.01) toast('Το διηλεκτρικό μέσο μειώνει τη δύναμη κατά εᵣ.', 'info');
+});
+$('dampRange').addEventListener('input', e => { state.damp = parseFloat(e.target.value); $('dampVal').textContent = num(state.damp,3)+' kg/s'; });
+$('timeRange').addEventListener('input', e => { state.time = parseFloat(e.target.value); $('timeVal').textContent = num(state.time,2)+'×'; });
+$('lockToggle').addEventListener('change', e => { state.locked = e.target.checked; if (state.locked){state.v1x=state.v1y=state.v2x=state.v2y=0;} syncUI(); sfx('click'); });
+$('condToggle').addEventListener('change', e => { state.conducting = e.target.checked; sfx('click');
+  toast(state.conducting ? 'Αγώγιμες σφαίρες: στην επαφή το φορτίο μοιράζεται.' : 'Μονωτικές σφαίρες: τα φορτία μένουν σταθερά στην κρούση.', 'info'); });
+[['viewForces','forces'],['viewVel','vel'],['viewField','field'],['viewTrails','trails'],['viewGrid','grid'],['viewGlow','glow']]
+.forEach(([id,key]) => $(id).addEventListener('change', e => { view[key] = e.target.checked; hudKey=''; sfx('click'); }));
+$('btnPlay').addEventListener('click', toggleRun);
+$('btnRun').addEventListener('click', toggleRun);
+$('btnStep').addEventListener('click', doStep);
+$('btnStep2').addEventListener('click', doStep);
+$('btnLock').addEventListener('click', toggleLock);
+$('btnResetT').addEventListener('click', () => resetAll(false));
+$('btnReset').addEventListener('click', () => resetAll(false));
+$('btnRand').addEventListener('click', randomize);
+$('btnRand2').addEventListener('click', randomize);
+$('btnExport').addEventListener('click', exportPNG);
+$('presetAttract').addEventListener('click', () => applyPreset('attract'));
+$('presetRepel').addEventListener('click', () => applyPreset('repel'));
+$('presetDemo').addEventListener('click', () => applyPreset('demo'));
+$('presetContact').addEventListener('click', () => applyPreset('contact'));
+$('btnDouble').addEventListener('click', () => trapAction(2));
+$('btnHalf').addEventListener('click', () => trapAction(0.5));
+$('btnSound').addEventListener('click', () => {
+  sound.on = !sound.on;
+  if (sound.master) sound.master.gain.value = sound.on ? 0.5 : 0;
+  $('soundIcon').textContent = sound.on ? '🔊' : '🔇';
+  $('btnSound').setAttribute('aria-pressed', String(sound.on));
+  if (sound.on) sfx('click');
+});
+window.addEventListener('keydown', e => {
+  const tag = (e.target.tagName||'').toLowerCase();
+  if (tag==='input'||tag==='select'||tag==='textarea') return;
+  if (e.code === 'Space'){ e.preventDefault(); toggleRun(); }
+  else if (e.code === 'KeyR'){ resetAll(false); }
+  else if (e.code === 'KeyS'){ doStep(); }
+});
+setTimeout(() => { if (!hintGone){ hintGone = true; $('hint').classList.add('gone'); } }, 9000);
+
+/* ---------- trails & particles ---------- */
+function updateTrails(){
+  [[state.x1,state.y1,0],[state.x2,state.y2,1]].forEach(([x,y,i])=>{
+    const tr = trails[i], lastP = tr[tr.length-1];
+    if (!lastP || Math.hypot(x-lastP.x, y-lastP.y) > 0.002){
+      tr.push({x,y});
+      if (tr.length > 90) tr.shift();
+    } else if (state.locked && drag !== i && frameCount % 3 === 0 && tr.length){
+      tr.shift();
+    }
+  });
+}
+function updateParticles(dt){
+  particles.forEach(p => { p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=0.96; p.vy*=0.96; p.life-=dt; });
+  particles = particles.filter(p => p.life > 0);
+  rings.forEach(rg => { rg.r += dt*0.35; rg.life -= dt; });
+  rings = rings.filter(rg => rg.life > 0);
+}
+
+/* ---------- main loop ---------- */
+function frame(now){
+  const dt = Math.min((now-last)/1000, 0.05);
+  last = now; t += dt; frameCount++;
+  if (trapAnim) stepTrap(now);
+  if (!state.locked && state.running && !trapAnim) stepSim(dt*state.time);
+  updateParticles(dt);
+  updateTrails();
+  render();
+  drawChart();
+  updateHUD();
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange', () => { last = performance.now(); });
+
+/* ---------- init ---------- */
+state.y1 = state.y2 = (isFinite(H) && H > 0) ? H/2 : 0.35;
+syncUI();
+requestAnimationFrame(frame);
+</script>
+
+<script>
+/* deck-sim-nav-bridge: arrow keys still change slides while the sim has focus */
+if (window.self !== window.top) window.addEventListener('keydown', function (e) {
+  if (e.target && e.target.closest && e.target.closest('input,select,textarea')) return;
+  var d = /ArrowRight|PageDown/.test(e.key) ? 1 : /ArrowLeft|PageUp/.test(e.key) ? -1 : 0;
+  if (d) { e.preventDefault(); try { parent.postMessage({ nav: d }, '*'); } catch (err) {} }
+});
+</script>
+</body>
+</html>

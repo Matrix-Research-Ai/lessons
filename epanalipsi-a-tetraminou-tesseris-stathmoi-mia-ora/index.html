@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Επανάληψη Α΄ Τετραμήνου — Τέσσερις Σταθμοί, Μία Ώρα | Ηλεκτροτεχνία Β΄ ΕΠΑΛ</title>
+<style>
+  :root{
+    --primary:#003366; --secondary:#00509e; --accent:#d0e3f5;
+    --bg:#ffffff; --text:#111111;
+    --warning-bg:#fff7e6; --warning-border:#f0c36d;
+    --success-bg:#e8f5e9; --success-border:#a5d6a7;
+    --info-bg:#e3f2fd; --info-border:#90caf9;
+    --ped-bg:#f3e9ff; --ped-border:#b39ddb;
+    --sim-bg:#f1f8e9; --sim-border:#8bc34a;
+    --danger-bg:#ffebee; --danger-border:#ef9a9a;
+    --station:#00695c;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:"Segoe UI",Arial,sans-serif; margin:0 auto; max-width:1150px; color:var(--text);
+       line-height:1.65; background:var(--bg); padding:20px 25px;}
+  .skip-link{position:absolute; left:-9999px; top:0; background:var(--primary); color:#fff;
+             padding:8px 14px; z-index:1000; border-radius:0 0 8px 0; font-weight:bold;}
+  .skip-link:focus{left:0;}
+  h1{color:var(--primary); font-size:1.9em; border-bottom:3px solid var(--primary); padding-bottom:8px; margin-bottom:10px;}
+  h2{color:var(--secondary); border-bottom:2px solid var(--accent); padding-bottom:4px; margin-top:38px; font-size:1.45em;}
+  h3{color:var(--primary); margin-top:24px; font-size:1.15em; border-left:4px solid var(--secondary); padding-left:10px;}
+  h4{color:var(--secondary); margin-top:16px; margin-bottom:5px; font-size:1.05em;}
+  table{border-collapse:collapse; width:100%; margin:15px 0; font-size:0.93em; box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  th,td{border:1px solid #ccc; padding:9px 10px; vertical-align:top; text-align:left;}
+  th{background:var(--accent); color:var(--primary); font-weight:600;}
+  tr:nth-child(even){background:#f9f9f9;}
+  tr:hover{background:#f1f7fc;}
+  .alert{background:var(--warning-bg); border:1px solid var(--warning-border); padding:15px; border-radius:8px; margin:20px 0; font-size:0.95em;}
+  .alert strong{color:#b36b00;}
+  .danger-box{background:var(--danger-bg); border:1px solid var(--danger-border); padding:15px; border-radius:8px; margin:20px 0; font-size:0.95em;}
+  .danger-box strong{color:#b71c1c;}
+  .info-box{background:var(--info-bg); border:1px solid var(--info-border); padding:15px; border-radius:8px; margin:15px 0; font-size:0.95em;}
+  .success-box{background:var(--success-bg); border:1px solid var(--success-border); padding:15px; border-radius:8px; margin:15px 0; font-size:0.95em;}
+  .sim-box{background:var(--sim-bg); border:2px solid var(--sim-border); padding:15px; border-radius:8px; margin:20px 0; font-size:0.95em;}
+  .sim-box strong{color:#33691e;}
+  .ped-box{background:var(--ped-bg); border:1px solid var(--ped-border); border-left:6px solid #7e57c2; padding:14px 16px; border-radius:8px; margin:16px 0; font-size:0.94em;}
+  .ped-box .ped-title{font-weight:bold; color:#4527a0; display:block; margin-bottom:4px;}
+  .worked-box{background:#fafafa; border:1px solid #bdbdbd; border-left:6px solid #616161; padding:14px 18px; border-radius:8px; margin:16px 0; font-size:0.94em;}
+  .worked-box .worked-title{font-weight:bold; color:#212121; display:block; margin-bottom:6px;}
+  .worked-box ol{margin:6px 0; padding-left:22px;}
+  .worked-box ol li{margin-bottom:4px;}
+  .mistake-box{background:#fff3e0; border:1px solid #ffb74d; border-left:6px solid #e65100; padding:14px 16px; border-radius:8px; margin:16px 0; font-size:0.94em;}
+  .mistake-box .mistake-title{font-weight:bold; color:#bf360c; display:block; margin-bottom:6px;}
+  .mistake-box ul{margin:6px 0; padding-left:22px;}
+  .station-box{background:#e0f2f1; border:2px solid var(--station); border-left:8px solid var(--station); padding:14px 18px; border-radius:8px; margin:16px 0; font-size:0.95em;}
+  .station-box .st-title{font-weight:bold; color:var(--station); display:block; margin-bottom:6px; font-size:1.1em;}
+  .tag{display:inline-block; padding:1px 8px; border-radius:10px; font-size:0.78em; font-weight:600; margin-right:4px;}
+  .sim-tag{background:#dcedc8; color:#33691e;}
+  .time-tag{background:#003366; color:#fff; font-weight:bold;}
+  .data-tag{background:#f3e5f5; color:#6a1b9a;}
+  .tips{background:#e6f3ff; border-left:5px solid var(--secondary); padding:15px; margin:20px 0;}
+  a{color:var(--secondary); text-decoration:none; font-weight:bold;}
+  a:hover{text-decoration:underline;}
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid #ff9800; outline-offset:2px;}
+  .print-note{text-align:right; font-size:0.85em; color:#666; margin-bottom:10px;}
+  ul.links{margin:5px 0; padding-left:20px;}
+  ul.links li{margin-bottom:4px;}
+  .toc{background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:15px 25px; margin:20px 0;}
+  .toc ol{margin:5px 0; padding-left:20px;}
+  .toc li{margin-bottom:4px;}
+  .quote{border-left:5px solid var(--secondary); background:#f5f9ff; padding:10px 16px; margin:14px 0; font-style:italic; color:#333; font-size:0.95em;}
+  .worksheet{border:2px dashed #9e9e9e; border-radius:10px; padding:16px 20px; margin:18px 0; background:#fdfdfd;}
+  .worksheet h4{margin-top:0; color:var(--primary);}
+  .fill-line{display:inline-block; border-bottom:1px dotted #666; min-width:200px; height:1.1em;}
+  .block-line{border-bottom:1px dotted #888; height:1.4em; margin:10px 0;}
+  input[type="checkbox"],input[type="radio"]{cursor:pointer;}
+  input[type="checkbox"]{width:16px; height:16px;}
+  .formula-box{display:inline-block; background:#f0f7ff; border:2px solid var(--primary); border-radius:6px;
+               padding:8px 16px; margin:8px 4px; font-size:1.05em; font-weight:bold; color:var(--primary);
+               font-family:"Cambria Math",Georgia,serif;}
+  .formula-line{text-align:center; margin:14px 0;}
+  .quick-ref{background:#fff8e1; border:2px solid #ffb300; border-radius:10px; padding:14px 18px; margin:18px 0; font-size:0.92em;}
+  .quick-ref .qr-title{font-weight:bold; color:#e65100; display:block; margin-bottom:6px; font-size:1.02em;}
+  .quick-ref ol{margin:6px 0; padding-left:22px;}
+  .rubric td{vertical-align:middle;}
+
+  /* ============ SIMULATION STYLES ============ */
+  .sim-container{background:linear-gradient(135deg,#f0f7ff 0%,#f1f8e9 100%);
+    border:2px solid var(--secondary); border-radius:12px; padding:20px; margin:25px 0;}
+  .sim-container h3{margin-top:0; border-left:none; padding-left:0; color:var(--primary);}
+  .sim-tabs{display:flex; gap:4px; border-bottom:2px solid var(--secondary); margin-bottom:16px; flex-wrap:wrap;}
+  .sim-tab{background:#e8f0fe; border:1px solid #ccc; border-bottom:none; border-radius:8px 8px 0 0;
+    padding:8px 16px; cursor:pointer; font-family:inherit; font-size:0.9em; font-weight:600;
+    color:#555; transition:all 0.15s;}
+  .sim-tab:hover{background:#d0e3f5;}
+  .sim-tab.active{background:var(--secondary); color:#fff; border-color:var(--secondary);}
+  .sim-tab-content{display:none;}
+  .sim-tab-content.active{display:block;}
+  .sim-grid{display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;}
+  @media (max-width:900px){.sim-grid{grid-template-columns:1fr;}}
+  .sim-stage{background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-bottom:10px;}
+  .sim-svg{width:100%; height:auto; display:block;}
+  .sim-sidebar{background:#fff; border:1px solid #ddd; border-radius:10px; padding:15px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+  .sim-sidebar h4{margin-top:0;}
+  .sim-control{margin-bottom:12px;}
+  .sim-control label{display:block; font-size:0.9em; margin-bottom:4px; font-weight:600; color:var(--primary);}
+  .sim-control input[type="range"]{width:100%;}
+  .sim-control select{width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;
+    font-family:inherit; font-size:0.95em;}
+  .sim-control .val{font-weight:bold; color:var(--secondary); font-family:"Courier New",monospace;}
+  .sim-buttons{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .sim-btn{background:#fff; border:2px solid var(--secondary); color:var(--secondary);
+    padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85em;
+    transition:all 0.15s; font-family:inherit;}
+  .sim-btn:hover{background:var(--accent);}
+  .sim-btn.active{background:var(--secondary); color:#fff;}
+  .sim-btn.danger{border-color:#c62828; color:#c62828;}
+  .sim-btn.danger:hover{background:#ffebee;}
+  .sim-btn.success{border-color:#2e7d32; color:#2e7d32;}
+  .sim-btn.success:hover{background:#e8f5e9;}
+  .sim-btn:disabled{opacity:0.45; cursor:not-allowed;}
+  .sim-formula-display{background:#fff; border:1px solid #1565c0; border-radius:6px;
+    padding:10px 14px; font-family:"Courier New",monospace; font-size:0.92em; color:#0d47a1;
+    margin-top:10px; line-height:1.7; overflow-x:auto;}
+  .sim-formula-display .formula-line-live{display:block;}
+  .sim-formula-display .formula-highlight{background:#fff9c4; padding:0 3px; border-radius:2px;}
+  .sim-readings{background:#fafafa; border-radius:8px; padding:10px; margin-top:14px;
+    font-size:0.9em; border:1px solid #e0e0e0;}
+  .sim-readings table{margin:0; box-shadow:none; font-size:0.95em;}
+  .sim-readings table td{padding:5px 8px; border:none; border-bottom:1px solid #eee;}
+  .sim-readings table tr:last-child td{border-bottom:none;}
+  .sim-readings table tr:nth-child(even){background:transparent;}
+  .sim-readings .read-val{font-weight:bold; color:var(--primary); font-family:"Courier New",monospace;
+    font-size:1.02em; text-align:right;}
+  .sim-readings .read-name{color:#555;}
+  .sim-note{background:var(--warning-bg); border:1px solid var(--warning-border);
+    border-radius:6px; padding:10px 14px; font-size:0.87em; margin-top:15px;}
+  .sim-instruction{background:#e8f0fe; border-left:4px solid var(--secondary);
+    border-radius:6px; padding:10px 14px; font-size:0.92em; margin-bottom:14px;}
+  .sim-instruction strong{color:var(--primary);}
+  .status-indicator{display:inline-block; padding:3px 12px; border-radius:12px;
+    font-weight:bold; font-size:0.85em;}
+  .status-safe{background:#c8e6c9; color:#1b5e20;}
+  .status-caution{background:#fff9c4; color:#f57f17;}
+  .status-danger{background:#ffcdd2; color:#b71c1c;}
+  .status-info{background:#bbdefb; color:#0d47a1;}
+
+  /* Instrument panel */
+  .instrument-panel{background:#fafafa; border:1px solid #ddd; border-radius:8px; padding:14px; margin-top:10px;}
+
+  @media print{
+    body{margin:0; padding:0; max-width:100%; font-size:10.5pt;}
+    .print-note,.skip-link,.sim-btn,.sim-tabs,.sim-buttons{display:none;}
+    table{box-shadow:none; page-break-inside:avoid;}
+    tr{page-break-inside:avoid;}
+    .alert,.tips,.info-box,.success-box,.ped-box,.worksheet,.quote,.sim-container,
+    .worked-box,.mistake-box,.quick-ref,.danger-box,.station-box{page-break-inside:avoid;}
+    h2{page-break-before:always;}
+    h1{page-break-after:avoid;}
+    .toc{page-break-after:always;}
+    .sim-container{background:#fff; border:1px solid #999;}
+    .sim-tab-content{display:block !important;}
+    @page{margin:1.5cm; @bottom-center{content:"Ηλεκτροτεχνία Β΄ ΕΠΑΛ — Επανάληψη Α΄ Τετραμήνου — " counter(page); font-size:8pt; color:#666;}}
+  }
+  @media (max-width:700px){body{padding:12px 14px;} h1{font-size:1.4em;} table{font-size:0.82em;} .sim-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Μετάβαση στο κύριο περιεχόμενο</a>
+<p class="print-note">* Πατήστε Ctrl+P (ή Cmd+P) για εκτύπωση σε PDF / Χαρτί.</p>
+
+<h1>Επανάληψη Α΄ Τετραμήνου: «Τέσσερις σταθμοί, μία ώρα»</h1>
+<p><strong>Ηλεκτροτεχνία</strong> (Κυκλώματα Συνεχούς και Εναλλασσόμενου Ρεύματος) · Β΄ ΕΠΑ.Λ. · Τομέας Ηλεκτρολογίας, Ηλεκτρονικής και Αυτοματισμού · Πρωινό</p>
+<p><strong>Διάρκεια:</strong> 1 διδακτική ώρα (45΄) · <strong>Τύπος:</strong> Επανάληψη / εμπέδωση με καθοδηγούμενη ανάκληση και αυθεντικά θέματα εξέτασης · <strong>Ύλη:</strong> Ενότητες 1.1, 1.2, 1.3, 2.1</p>
+
+<div class="quick-ref">
+  <span class="qr-title">⚡ 5-ΛΕΠΤΟ ΓΡΗΓΟΡΟ ΞΕΚΙΝΗΜΑ ΓΙΑ ΤΟΝ ΕΚΠΑΙΔΕΥΤΙΚΟ (πριν μπουν οι μαθητές)</span>
+  <ol>
+    <li>Άνοιξε το <strong>HTML αρχείο της προσομοίωσης</strong> (Ενότητα 7) — πάτησε στις 4 καρτέλες και επιβεβαίωσε ότι φορτώνουν.</li>
+    <li>Εκτύπωσε το <strong>Φύλλο Επανάληψης</strong> — 1 αντίτυπο ανά μαθητή (Φύλλα Α, Β, Γ, Δ, Ε).</li>
+    <li>Γράψε στον πίνακα <strong>μόνο</strong>: <em>«Τέσσερις σταθμοί — μία ώρα. Τι θυμόμαστε;»</em></li>
+    <li>Έχε πρόχειρο πραγματικό πολύμετρο (προαιρετικά, για 60΄΄ επίδειξη στον Σταθμό 3).</li>
+    <li>Προετοίμασε τον <strong>πίνακα καταγραφής</strong> για το κουίζ 6 ερωτήσεων στο τέλος.</li>
+  </ol>
+</div>
+
+<div class="info-box">
+  <strong>📌 Σύνδεση με την προηγούμενη ύλη — τι θα επαναληφθεί σε 45΄:</strong><br>
+  Η ώρα δεν εισάγει νέα ύλη — αυτό λέγεται στους μαθητές στην πρώτη διαφάνεια, ώστε να μειωθεί το άγχος.
+  Επανεξετάζουμε <strong>4 σταθμούς</strong> που καλύπτουν ολόκληρο το Α΄ τετράμηνο:
+  <ul style="margin:6px 0;">
+    <li><strong>Σταθμός 1:</strong> Φορτίο &amp; Νόμος Coulomb — F = k·q₁·q₂/r² (Ενότητα 1.1)</li>
+    <li><strong>Σταθμός 2:</strong> Ρεύμα &amp; πυκνότητα ρεύματος — I = Q/t, J = I/S (Ενότητα 1.2)</li>
+    <li><strong>Σταθμός 3:</strong> Τάση, ΗΕΔ και όργανα μέτρησης — U = W/q, U<sub>πολ</sub> = E − I·r (Ενότητα 1.3)</li>
+    <li><strong>Σταθμός 4:</strong> Νόμος Ohm, ειδική αντίσταση, αγωγιμότητα, θερμοκρασία (Ενότητα 2.1)</li>
+  </ul>
+</div>
+
+<div class="sim-box">
+  <strong>🧪 Νέα προσθήκη — 4 Διαδραστικές Προσομοιώσεις (Ενότητα 7):</strong>
+  <ul style="margin:6px 0;">
+    <li><strong>Καρτέλα Α — Ρεύμα:</strong> Sliders Q, t, S — βλέπεις I = Q/t και J = I/S σε πραγματικό χρόνο, με κινούμενες κουκκίδες-φορτία.</li>
+    <li><strong>Καρτέλα Β — Όργανα:</strong> 4 συνδεσμολογίες αμπερομέτρου/βολτομέτρου — βλέπεις <em>γιατί</em> η λάθος σύνδεση είναι καταστροφική.</li>
+    <li><strong>Καρτέλα Γ — Χαρακτηριστική V–I:</strong> Γράφημα με κλίση R — δείχνει γιατί η κλίση στο V-I είναι η R, όχι το 1/R.</li>
+    <li><strong>Καρτέλα Δ — Αγωγιμότητα:</strong> Υλικό, μήκος, διατομή → R, G, ρ, σ — με ζωντανή πράξη.</li>
+  </ul>
+</div>
+
+<div class="toc">
+  <h3>📋 Πίνακας Περιεχομένων</h3>
+  <ol>
+    <li><a href="#identity">Ταυτότητα &amp; Διδακτικοί Στόχοι</a></li>
+    <li><a href="#misconceptions">Χάρτης Παρανοήσεων</a></li>
+    <li><a href="#materials">Μέσα, Υλικά &amp; Προετοιμασία</a></li>
+    <li><a href="#overview">Επισκόπηση Πορείας (Πίνακας Φάσεων)</a></li>
+    <li><a href="#phases">Αναλυτική Περιγραφή των Φάσεων</a></li>
+    <li><a href="#worked">Λυμένα Παραδείγματα &amp; Συχνά Λάθη</a></li>
+    <li><a href="#simulation">Διαδραστικές Προσομοιώσεις (4 καρτέλες)</a></li>
+    <li><a href="#worksheets">Φύλλα Εργασίας (Α–Ε)</a></li>
+    <li><a href="#pedagogy">Παιδαγωγική Τεκμηρίωση</a></li>
+    <li><a href="#differentiation">Διαφοροποίηση</a></li>
+    <li><a href="#assessment">Αξιολόγηση &amp; Αξιοποίηση Δεδομένων</a></li>
+    <li><a href="#bank">Τράπεζα Θεμάτων ΙΕΠ</a></li>
+    <li><a href="#next">Σύνδεση με το Επόμενο Μάθημα (Τεστ)</a></li>
+    <li><a href="#biblio">Βιβλιογραφία</a></li>
+  </ol>
+</div>
+
+<main id="main-content">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 1. ΤΑΥΤΟΤΗΤΑ                                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="identity">1. Ταυτότητα &amp; Διδακτικοί Στόχοι</h2>
+
+<table>
+  <tr><th style="width:26%;">Θέση στο πρόγραμμα</th><td>Μετά το Μάθημα 12ο (2.1 Εφαρμογή) — κλείσιμο του Α΄ τετραμήνου</td></tr>
+  <tr><th>Ύλη</th><td>Ενότητες <strong>1.1</strong> (φορτίο, νόμος Coulomb), <strong>1.2</strong> (ρεύμα, I = Q/t, πυκνότητα), <strong>1.3</strong> (τάση, ΗΕΔ, όργανα μέτρησης), <strong>2.1</strong> (νόμος Ohm, ειδική αντίσταση, αγωγιμότητα, θερμοκρασία)</td></tr>
+  <tr><th>Τύπος μαθήματος</th><td>Επανάληψη / εμπέδωση με <strong>καθοδηγούμενη ανάκληση</strong> και αυθεντικά θέματα εξέτασης</td></tr>
+  <tr><th>Τρόπος διδασκαλίας</th><td><strong>Εκπαιδευτικός-οδηγός σε έναν υπολογιστή</strong>· η τάξη βλέπει σε μεγάλη οθόνη. Οι μαθητές γράφουν στο Φύλλο Επανάληψης και απαντούν προφορικά.</td></tr>
+  <tr><th>Κεντρική ιδέα</th><td>«Δεν μαθαίνουμε καινούργια πράγματα — <strong>θυμόμαστε</strong> τι ξέρουμε, ελέγχουμε τι καταλάβαμε, και βλέπουμε τι θα πέσει στο τεστ.»</td></tr>
+  <tr><th>Κρίσιμο ερώτημα</th><td>«Ποιοι από τους 6 τύπους του τετραμήνου μπορώ να εφαρμόσω χωρίς λάθη — και πού θα με “παγιδέψει” το τεστ;»</td></tr>
+</table>
+
+<h3>Διδακτικοί Στόχοι — μετά το μάθημα ο μαθητής μπορεί να:</h3>
+<table>
+  <thead><tr><th style="width:6%;">#</th><th style="width:58%;">Στόχος</th><th>Πώς ελέγχεται</th></tr></thead>
+  <tbody>
+    <tr><td class="week-num" style="text-align:center;font-weight:700;color:var(--primary);">1</td><td>Υπολογίζει δύναμη Coulomb με σωστή μετατροπή μC → C και r²</td><td>Άσκηση 1 φύλλου · Θέμα 1.Β του κουίζ</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">2</td><td>Υπολογίζει I = Q/t και J = I/S με σωστές μονάδες (s, A/mm²)</td><td>Άσκηση 2 · διαφάνεια Σταθμού 2</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">3</td><td>Ξεχωρίζει ΗΕΔ από πολική τάση και τοποθετεί σωστά αμπερόμετρο/βολτόμετρο</td><td>Προσομοιωτής οργάνων · Άσκηση 3 · Θέμα 2ο κουίζ</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">4</td><td>Διαβάζει χαρακτηριστική V–I και υπολογίζει R από κλίση/λόγο</td><td>Προσομοιωτής V–I · Άσκηση 4</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">5</td><td>Εφαρμόζει R = ρ·ℓ/S, G = 1/R, σ = 1/ρ χωρίς να μετατρέπει mm²</td><td>Προσομοιωτής αγωγού · Άσκηση 5 · Θέμα 18639</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">6</td><td>Ονομάζει τις 5 παγίδες μονάδων και τις αποφεύγει σε θέμα εξέτασης</td><td>Μέρος Γ φύλλου · θέμα 18639</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  <strong>Προαπαιτούμενες γνώσεις:</strong> όλη η ύλη των μαθημάτων 1–12. Η ώρα <strong>δεν εισάγει νέα ύλη</strong>.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 2. ΠΑΡΑΝΟΗΣΕΙΣ                                 -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="misconceptions">2. Χάρτης Παρανοήσεων</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:32%;">❌ Τι λένε οι μαθητές</th><th style="width:30%;">✔ Γιατί είναι λάθος</th><th style="width:38%;">➜ Πού το αντιμετωπίζουμε</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>«Διπλάσια απόσταση → μισή δύναμη»</td><td>Ο νόμος έχει r<strong>²</strong> — η δύναμη πέφτει στο 1/4</td><td>Σταθμός 1 · Άσκηση 1 · προσομοίωση αν χρειαστεί</td></tr>
+    <tr><td>«Η ΗΕΔ είναι η τάση της μπαταρίας»</td><td>Η ΗΕΔ είναι τάση <strong>χωρίς</strong> ρεύμα· με ρεύμα μετράμε πολική U = E − I·r</td><td>Σταθμός 3 · θέμα 1ο κουίζ</td></tr>
+    <tr><td>«Το βολτόμετρο μπαίνει σε σειρά»</td><td>Μετρά διαφορά δυναμικού → παράλληλα· σε σειρά κόβει το ρεύμα</td><td>Προσομοιωτής οργάνων (Καρτέλα Β)</td></tr>
+    <tr><td>«5 min = 5 s» στο I = Q/t</td><td>Το SI θέλει δευτερόλεπτα — 5 min = 300 s</td><td>Άσκηση 2 · Σταθμός 2</td></tr>
+    <tr><td>«Η κλίση στο V–I είναι 1/R»</td><td>Με V στον κάθετο άξονα η κλίση <strong>είναι</strong> R</td><td>Προσομοιωτής V–I (Καρτέλα Γ)</td></tr>
+    <tr><td>«G = R» ή «G σε Ω»</td><td>G = 1/R, μονάδα το ζίμενς (S)</td><td>Σταθμός 4 · προσομοιωτής αγωγιμότητας</td></tr>
+    <tr><td>«Αμπερόμετρο παράλληλα είναι εντάξει»</td><td>Βραχυκυκλώνει την αντίσταση — μεγάλο ρεύμα, κίνδυνος ζημιάς</td><td>Προσομοιωτής οργάνων — και ρητός κανόνας ασφαλείας</td></tr>
+    <tr><td>«Ο χαλκός έχει αντίσταση μηδέν»</td><td>Έχει <em>μικρή</em> αντίσταση (~0,0175 μΩ·m) — όχι μηδέν</td><td>Σταθμός 4 · σύγκριση με NiCr</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 3. ΜΕΣΑ                                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="materials">3. Μέσα, Υλικά &amp; Προετοιμασία</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:24%;">Μέσο</th><th style="width:44%;">Χρήση</th><th>Έλεγχος πριν το μάθημα</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>epanallipsi-a-tetraminou.html</code> (αυτό το αρχείο)</td><td>Προβολή σε μεγάλη οθόνη· πλοήγηση με κύλιση· οι 4 προσομοιωτές δουλεύουν με ποντίκι</td><td>Ανοίγει offline (χωρίς internet). Οι 4 καρτέλες λειτουργούν.</td></tr>
+    <tr><td>Φύλλο Επανάληψης (Φύλλα Α–Ε)</td><td>1 αντίτυπο ανά μαθητή· τα κλειδιά <strong>δεν</strong> μοιράζονται πριν</td><td>Εκτύπωση A4</td></tr>
+    <tr><td>Πίνακας</td><td>Καταγραφή απαντήσεων κουίζ, σημεία που ζητά η τάξη</td><td>Μαρκαδόρος/κιμωλία</td></tr>
+    <tr><td>Προαιρετικά: πραγματικό πολύμετρο + αντίσταση</td><td>60΄΄ επίδειξη στον Σταθμό 3</td><td>Μπαταρία 9V, αντίσταση 100Ω, δύο καλώδια</td></tr>
+  </tbody>
+</table>
+
+<div class="danger-box">
+  <strong>🔒 Κανόνας ασφαλείας:</strong> Οι μετρήσεις με πραγματικό πολύμετρο γίνονται <strong>μόνο</strong> με επίβλεψη. Ποτέ ωμόμετρο σε ενεργό κύκλωμα.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4. ΕΠΙΣΚΟΠΗΣΗ                                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="overview">4. Επισκόπηση Πορείας — Πίνακας Φάσεων</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:6%;">Φάση</th><th style="width:32%;">Τίτλος / δραστηριότητα</th><th style="width:8%;">Χρόνος</th><th style="width:18%;">Κοινωνική μορφή</th><th>Κυρίαρχη αρχή</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="week-num" style="text-align:center;font-weight:700;color:var(--primary);">1</td><td>Προθέρμανση: το σχέδιο της ώρας &amp; ο χάρτης των 6 τύπων</td><td>3΄</td><td>Ολομέλεια</td><td>Ενεργοποίηση πρότερης γνώσης · σαφής διαφάνεια στόχων</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">2</td><td>Σταθμός 1 — Φορτίο &amp; νόμος Coulomb</td><td>8΄</td><td>Ολομέλεια → ατομικά</td><td>Ανάκληση · άμεση εξάσκηση</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">3</td><td>Σταθμός 2 — Ρεύμα: I = Q/t, J = I/S <span class="tag sim-tag">+ sim</span></td><td>8΄</td><td>Ολομέλεια + ατομικά</td><td>Πολλαπλή αναπαράσταση (τύπος + κινούμενη εικόνα)</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">4</td><td>Σταθμός 3 — Τάση, ΗΕΔ, όργανα <span class="tag sim-tag">+ sim</span></td><td>9΄</td><td>Ολομέλεια · ψηφοφορία με χέρια</td><td>Γνωστική σύγκρουση · παρατήρηση–εξήγηση</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">5</td><td>Σταθμός 4 — Ohm, R = ρ·ℓ/S, G, θερμοκρασία <span class="tag sim-tag">+ 2 sim</span></td><td>12΄</td><td>Ολομέλεια + δυάδες</td><td>Παραδείγματα-λύσεις · διαβαθμισμένη εξάσκηση</td></tr>
+    <tr><td style="text-align:center;font-weight:700;color:var(--primary);">6</td><td>Κουίζ 6 ερωτήσεων, exit ticket, «τι θα πέσει στο τεστ»</td><td>5΄</td><td>Ολομέλεια → ατομικά</td><td>Αξιολόγηση ΩΣ μάθηση · μεταγνώση</td></tr>
+    <tr style="background:#e8f0fe; font-weight:bold;"><td colspan="2">ΣΥΝΟΛΟ</td><td>45΄</td><td colspan="2">—</td></tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  <strong>⏱️ Ευελιξία χρόνου:</strong>
+  <ul style="margin:6px 0;">
+    <li><strong>Αργό τμήμα:</strong> ο Σταθμός 1 κρατά μόνο τη λύση (χωρίς συζήτηση για 1/r²) και το exit ticket συμπτύσσεται σε 2 ερωτήσεις → κερδίζονται 3΄ για τον Σταθμό 4.</li>
+    <li><strong>Γρήγορο τμήμα:</strong> +3΄ στον Σταθμό 4 για το θέμα 18639 (4.3), το πιο απαιτητικό.</li>
+    <li><strong>Χωρίς υπολογιστή:</strong> οι προσομοιωτές αντικαθίστανται από τους πίνακες του φύλλου (Άσκηση 4 &amp; 5) — η δομή δεν αλλάζει.</li>
+    <li><strong>Ποτέ μη κόψεις</strong> τον Σταθμό 4 — είναι η ενότητα με το μεγαλύτερο βάρος στο τεστ (25/100) και η πιο πρόσφατη ύλη.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 5. ΑΝΑΛΥΤΙΚΗ ΠΕΡΙΓΡΑΦΗ                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="phases">5. Αναλυτική Περιγραφή των Φάσεων</h2>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">1</span>Προθέρμανση: το σχέδιο &amp; ο χάρτης <span class="tag time-tag">3΄</span></h3>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Να ξέρει η τάξη τι θα γίνει και να ανακληθούν οι 6 τύποι του τετραμήνου.</td></tr>
+  <tr><th>Εκπαιδευτικός</th><td>Δείχνει το σχέδιο της ώρας (4 σταθμοί) και τον κώδικα 👀/✍️. Γράφει στον πίνακα τον χάρτη των 6 τύπων και αφήνει 90΄΄ σιωπής. Ρωτά: «Ποιος τύπος λείπει από το κεφάλι σου;» — <strong>δεν διαβάζει</strong> τον χάρτη δυνατά.</td></tr>
+  <tr><th>Μαθητές</th><td>Παρακολουθούν, απαντούν προφορικά. Μοιράζεται το Φύλλο Επανάληψης <strong>τώρα</strong> (όχι αργότερα).</td></tr>
+  <tr><th>Δείκτης επιτυχίας</th><td>Η τάξη ονομάζει προφορικά τουλάχιστον 4 από τους 6 τύπους χωρίς βοήθεια.</td></tr>
+</table>
+
+<div class="formula-line">
+  <span class="formula-box">F = k·q₁·q₂/r²</span>
+  <span class="formula-box">I = Q/t</span>
+  <span class="formula-box">J = I/S</span><br>
+  <span class="formula-box">U = W/q</span>
+  <span class="formula-box">V = I·R</span>
+  <span class="formula-box">R = ρ·ℓ/S</span>
+</div>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">2</span>Σταθμός 1 — Φορτίο &amp; Νόμος Coulomb <span class="tag time-tag">8΄</span></h3>
+
+<div class="station-box">
+  <span class="st-title">🔬 ΣΤΑΘΜΟΣ 1: Φορτίο &amp; Νόμος Coulomb</span>
+  <p><strong>Τα 4 σημεία θεωρίας:</strong></p>
+  <ol style="margin:6px 0;">
+    <li>Ο νόμος Coulomb: F = k·q₁·q₂/r², με k = 9×10⁹ N·m²/C²</li>
+    <li>Οι μονάδες στο SI: q σε C (1 μC = 10⁻⁶ C), r σε m</li>
+    <li>Η δύναμη είναι διανυσματικό μέγεθος — έχει κατεύθυνση (έλξη ή άπωση)</li>
+    <li>Το r στον παρονομαστή υψώνεται στο <strong>τετράγωνο</strong> — κρίσιμη παγίδα</li>
+  </ol>
+</div>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Σωστή εφαρμογή του F = k·q₁·q₂/r² με μετατροπή μονάδων και ερμηνεία του είδους της δύναμης.</td></tr>
+  <tr><th>Εκφώνηση άσκησης</th><td>Δύο σημειακά φορτία q₁ = 2 μC και q₂ = 3 μC απέχουν r = 30 cm. Πόση είναι η δύναμη Coulomb μεταξύ τους; Είναι έλξη ή άπωση;</td></tr>
+  <tr><th>Εκπαιδευτικός</th><td>Δείχνει τη λύση βήμα-βήμα. Ρωτά: «Ποιος έβαλε 0,3 αντί για 0,09;» — χωρίς κριτική.</td></tr>
+  <tr><th>Μαθητές</th><td>Γράφουν στο <strong>Μέρος Α, Άσκηση 1</strong> (βήματα: μετατροπή → τύπος → είδος δύναμης).</td></tr>
+  <tr><th>Δείκτης επιτυχίας</th><td>Τουλάχιστον τα 2/3 της τάξης γράφουν 0,6 N με μονάδα και «άπωση».</td></tr>
+</table>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Λύση — Άσκηση 1 (Νόμος Coulomb)</span>
+  <ol>
+    <li>Μετατροπή: q₁ = 2 μC = 2×10⁻⁶ C, q₂ = 3 μC = 3×10⁻⁶ C, r = 30 cm = 0,3 m</li>
+    <li>Τύπος: F = k·q₁·q₂/r² = 9×10⁹ × 2×10⁻⁶ × 3×10⁻⁶ / (0,3)²</li>
+    <li>Υπολογισμός: F = 54×10⁻³ / 0,09 = <strong>0,6 N</strong></li>
+    <li>Είδος δύναμης: <strong>άπωση</strong> (ομόσημα φορτία — και τα δύο θετικά)</li>
+    <li><em>Έλεγχος:</em> 0,6 N ≈ 60 g δύναμη — λογικό για μικρά φορτία</li>
+  </ol>
+</div>
+
+<div class="mistake-box">
+  <span class="mistake-title">⚠️ Τα 3 λάθη που κοστίζουν</span>
+  <ul>
+    <li><strong>1/r αντί 1/r²:</strong> Αν ξεχάσεις το τετράγωνο, βγαίνει 0,18 N — 10 φορές λάθος.</li>
+    <li><strong>Δεν μετατρέπεις σε C:</strong> Αν βάλεις 2 και 3 αντί για 2×10⁻⁶, βγαίνει 5,4×10¹¹ N — άτοπο.</li>
+    <li><strong>Δεν μετατρέπεις cm → m:</strong> Αν βάλεις 30 αντί για 0,3, βγαίνει 6×10⁻⁵ N — 4 τάξεις μεγέθους λάθος.</li>
+  </ul>
+</div>
+
+<div class="ped-box">
+  <span class="ped-title">🧠 Παιδαγωγική τεκμηρίωση</span>
+  <ul>
+    <li><strong>Ανάκληση (Roediger &amp; Karpicke, 2006):</strong> Ο μαθητής <em>προσπαθεί</em> πριν δει τη λύση.</li>
+    <li><strong>Παραδείγματα-λύσεις (Sweller &amp; Cooper, 1985):</strong> Η λύση είναι δομημένη σε βήματα.</li>
+    <li><strong>Μεταγνώση (Flavell, 1979):</strong> «Ποιος έκανε αυτό το λάθος;» — αναγνώριση χωρίς ενοχή.</li>
+  </ul>
+</div>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">3</span>Σταθμός 2 — Ρεύμα: I = Q/t, J = I/S <span class="tag time-tag">8΄</span> <span class="tag sim-tag">+ sim</span></h3>
+
+<div class="station-box">
+  <span class="st-title">🔬 ΣΤΑΘΜΟΣ 2: Ρεύμα &amp; Πυκνότητα Ρεύματος</span>
+  <p>Το ρεύμα I είναι ο <strong>ρυθμός ροής φορτίου</strong>: I = Q/t (A = C/s). Η πυκνότητα J = I/S δείχνει πόσο «στριμωγμένο» είναι το ρεύμα στη διατομή. <strong>Χρήσιμη σχέση:</strong> αν το S διπλασιαστεί, το J υποδιπλασιάζεται (το I μένει σταθερό).</p>
+</div>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Να συνδέσουν το ρεύμα με φορτίο/χρόνο και να δουν ότι η πυκνότητα εξαρτάται από τη διατομή.</td></tr>
+  <tr><th>Επίδειξη</th><td>Ο εκπαιδευτικός ανοίγει την <strong>Καρτέλα Α — Ρεύμα</strong> και δείχνει: «ίδιο Q, μισός χρόνος → διπλάσιο I» και «ίδιο I, διπλάσια διατομή → μισό J». Αφήνει έναν μαθητή να χειριστεί τα sliders.</td></tr>
+  <tr><th>Εκφώνηση άσκησης</th><td>Σε έναν αγωγό περνούν Q = 600 C σε χρόνο t = 5 min. Η διατομή είναι S = 2,5 mm². Ποια είναι η ένταση I και η πυκνότητα J;</td></tr>
+  <tr><th>Μαθητές</th><td>Παρατηρούν (👀)· γράφουν στο <strong>Μέρος Α, Άσκηση 2</strong>.</td></tr>
+  <tr><th>Δείκτης επιτυχίας</th><td>Κανείς δεν γράφει 120 A (δηλ. έγινε η μετατροπή του χρόνου σε s).</td></tr>
+</table>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Λύση — Άσκηση 2 (Ρεύμα &amp; πυκνότητα)</span>
+  <ol>
+    <li>Μετατροπή χρόνου: t = 5 min = 5 × 60 = <strong>300 s</strong></li>
+    <li>Ένταση: I = Q/t = 600 / 300 = <strong>2 A</strong></li>
+    <li>Πυκνότητα: J = I/S = 2 / 2,5 = <strong>0,8 A/mm²</strong></li>
+    <li><em>Έλεγχος:</em> 0,8 A/mm² είναι τυπικό για αγωγούς οικιακής εγκατάστασης — λογικό.</li>
+  </ol>
+</div>
+
+<div class="mistake-box">
+  <span class="mistake-title">⚠️ Συχνά λάθη</span>
+  <ul>
+    <li><strong>5 min = 5 s:</strong> Βγαίνει 120 A — 60× λάθος. Το SI θέλει δευτερόλεπτα.</li>
+    <li><strong>J σε A/m² αντί A/mm²:</strong> Αν δεν προσέξεις τη μονάδα, βγαίνει 800.000 A/m² — σωστό νούμερο, λάθος μονάδα.</li>
+    <li><strong>J = I·S:</strong> Λάθος τύπος — η πυκνότητα είναι I/S, όχι I·S.</li>
+  </ul>
+</div>
+
+<div class="ped-box">
+  <span class="ped-title">🧠 Παιδαγωγική τεκμηρίωση</span>
+  <ul>
+    <li><strong>Πολλαπλή αναπαράσταση (Ainsworth, 2006):</strong> Τύπος + προσομοίωση με κινούμενα φορτία + αριθμητική άσκηση.</li>
+    <li><strong>Ενεργός συμμετοχή (Chi &amp; Wylie, 2014):</strong> Ο μαθητής χειρίζεται τα sliders και βλέπει τις συνέπειες.</li>
+    <li><strong>Γνωστική σύγκρουση (Piaget, 1977):</strong> «120 A — είναι δυνατόν;» — αναγκάζει τον μαθητή να ξανασκεφτεί.</li>
+  </ul>
+</div>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">4</span>Σταθμός 3 — Τάση, ΗΕΔ &amp; Όργανα <span class="tag time-tag">9΄</span> <span class="tag sim-tag">+ sim</span></h3>
+
+<div class="station-box">
+  <span class="st-title">🔬 ΣΤΑΘΜΟΣ 3: Τάση, ΗΕΔ &amp; Όργανα Μέτρησης</span>
+  <p><strong>Κρίσιμη διάκριση:</strong> Η <strong>ΗΕΔ (E)</strong> είναι η τάση της πηγής <em>χωρίς</em> ρεύμα. Η <strong>πολική τάση (U<sub>πολ</sub>)</strong> είναι η τάση στους πόλους <em>όταν</em> το κύκλωμα διαρρέεται από ρεύμα: <strong>U<sub>πολ</sub> = E − I·r</strong>, όπου r η εσωτερική αντίσταση της πηγής. Στην πράξη, όταν λέμε «τάση της μπαταρίας» και μετράμε με βολτόμετρο, μετράμε την πολική τάση.</p>
+</div>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Διάκριση ΗΕΔ / πολικής τάσης και σωστή σύνδεση αμπερομέτρου–βολτομέτρου.</td></tr>
+  <tr><th>Επίδειξη — προσομοιωτής</th><td>Ο εκπαιδευτικός ανοίγει την <strong>Καρτέλα Β — Όργανα</strong> και δείχνει και τις 4 επιλογές: (1) σωστή, (2) αμπερόμετρο παράλληλα, (3) βολτόμετρο σε σειρά, (4) και τα δύο λάθος. Εξηγεί <em>γιατί</em> καταστρέφεται/νεκρώνει το κύκλωμα. Αν υπάρχει πραγματικό πολύμετρο, 60΄΄ επίδειξη.</td></tr>
+  <tr><th>Εκφώνηση άσκησης</th><td>Η πηγή έχει ΗΕΔ E = 12 V και εσωτερική αντίσταση r = 0,5 Ω. Το κύκλωμα διαρρέεται από ρεύμα I = 2 A. Ποια είναι η πολική τάση U<sub>πολ</sub>;</td></tr>
+  <tr><th>Μαθητές</th><td>Ψηφίζουν με χέρια πριν αποκαλυφθεί η απάντηση. Γράφουν στο <strong>Μέρος Α, Άσκηση 3</strong>.</td></tr>
+  <tr><th>Δείκτης επιτυχίας</th><td>Η πλειοψηφία ψηφίζει «παράλληλα» για το βολτόμετρο και εξηγεί σε μία πρόταση.</td></tr>
+</table>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Λύση — Άσκηση 3 (Πολική τάση)</span>
+  <ol>
+    <li>Τύπος: U<sub>πολ</sub> = E − I·r</li>
+    <li>Αντικαθιστούμε: U<sub>πολ</sub> = 12 − 2 × 0,5 = 12 − 1 = <strong>11 V</strong></li>
+    <li><em>Ερμηνεία:</em> Μετρώντας με βολτόμετρο, θα δείξει 11 V — όχι 12 V. Τα 12 V είναι η ΗΕΔ (χωρίς φορτίο).</li>
+  </ol>
+</div>
+
+<div class="mistake-box">
+  <span class="mistake-title">⚠️ Συχνά λάθη οργάνων</span>
+  <ul>
+    <li><strong>Αμπερόμετρο παράλληλα:</strong> Έχει σχεδόν μηδενική αντίσταση — βραχυκυκλώνει το κύκλωμα, μεγάλο ρεύμα, κίνδυνος καταστροφής.</li>
+    <li><strong>Βολτόμετρο σε σειρά:</strong> Έχει πολύ μεγάλη αντίσταση — κόβει το ρεύμα, το κύκλωμα «νεκρώνει».</li>
+    <li><strong>«ΗΕΔ = τάση της μπαταρίας»:</strong> Λάθος — με ρεύμα, η τάση είναι μικρότερη από την ΗΕΔ κατά I·r.</li>
+  </ul>
+</div>
+
+<div class="ped-box">
+  <span class="ped-title">🧠 Παιδαγωγική τεκμηρίωση</span>
+  <ul>
+    <li><strong>Γνωστική σύγκρουση (Piaget, 1977):</strong> Οι 4 προσομοιώσεις δείχνουν <em>αμέσως</em> γιατί η λάθος σύνδεση είναι καταστροφική.</li>
+    <li><strong>Πρόβλεψη–Παρατήρηση–Εξήγηση (White &amp; Gunstone, 1992):</strong> Οι μαθητές ψηφίζουν πριν δουν την απάντηση.</li>
+    <li><strong>Ψυχολογική ασφάλεια (Edmondson, 1999):</strong> Καμία λάθος ψήφος δεν σχολιάζεται αρνητικά.</li>
+  </ul>
+</div>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">5</span>Σταθμός 4 — Ohm, R = ρ·ℓ/S, G, θερμοκρασία <span class="tag time-tag">12΄</span> <span class="tag sim-tag">+ 2 sim</span></h3>
+
+<div class="station-box">
+  <span class="st-title">🔬 ΣΤΑΘΜΟΣ 4: Νόμος Ohm, Ειδική Αντίσταση, Αγωγιμότητα</span>
+  <p>Η <strong>χαρακτηριστική V–I</strong> είναι ευθεία γραμμή που περνά από την αρχή — η κλίση της είναι η R. Η <strong>ειδική αντίσταση ρ</strong> είναι ιδιότητα του υλικού. Η <strong>αγωγιμότητα G = 1/R</strong> μετριέται σε Siemens (S). Η <strong>ειδική αγωγιμότητα σ = 1/ρ</strong> μετριέται σε S/m (ή MS/m).</p>
+</div>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Να διαβάζουν V–I, να υπολογίζουν R = ρ·ℓ/S και να μετατρέπουν σε G — η ενότητα με το μεγαλύτερο βάρος στο τεστ.</td></tr>
+  <tr><th>Επίδειξη — προσομοιωτής V–I</th><td>Ο εκπαιδευτικός ανοίγει την <strong>Καρτέλα Γ — V–I</strong>. Αλλάζει μόνο το I (η κλίση μένει σταθερή). Μετά αλλάζει το R (η κλίση αλλάζει). Δείχνει γιατί η κλίση <strong>είναι</strong> R, όχι το 1/R.</td></tr>
+  <tr><th>Επίδειξη — προσομοιωτής αγωγιμότητας</th><td>Ανοίγει την <strong>Καρτέλα Δ — Αγωγιμότητα</strong>. Δείχνει: Cu → NiCr (ίδια γεωμετρία, 64× διαφορά R). Αλλάζει ℓ και S — βλέπει R και G να κινούνται αντίστροφα.</td></tr>
+  <tr><th>Εκφώνηση άσκησης 4 (V–I)</th><td>Σε ένα γραμμικό αντιστάτη, στα 10 V το ρεύμα είναι 0,5 A. Ποια είναι η αντίστασή του;</td></tr>
+  <tr><th>Εκφώνηση άσκησης 5 (αγωγός)</th><td>Σύρμα χαλκού: ℓ = 80 m, S = 1 mm², ρ<sub>Cu</sub> = 0,017 Ω·mm²/m. Ποια είναι τα R, G και σ;</td></tr>
+  <tr><th>Μαθητές</th><td>Γράφουν στο <strong>Μέρος Α, Ασκήσεις 4 και 5</strong>. Στο θέμα 18639 (Μέρος Β) δουλεύουν σε δυάδες.</td></tr>
+  <tr><th>Δείκτης επιτυχίας</th><td>Σωστό R με mm² (χωρίς μετατροπή σε m²) και σωστή αντιστροφή G = 1/R.</td></tr>
+</table>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Λύση — Άσκηση 4 (Από V–I)</span>
+  <ol>
+    <li>Τύπος: V = I·R → R = V/I</li>
+    <li>Αντικαθιστούμε: R = 10 / 0,5 = <strong>20 Ω</strong></li>
+    <li><em>Έλεγχος:</em> Γραμμικός αντιστάτης — η κλίση στο V–I είναι 20 Ω.</li>
+  </ol>
+</div>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Λύση — Άσκηση 5 (Αγωγός Cu)</span>
+  <ol>
+    <li>Αντίσταση: R = ρ·ℓ/S = 0,017 × 80 / 1 = <strong>1,36 Ω</strong></li>
+    <li>Αγωγιμότητα: G = 1/R = 1/1,36 ≈ <strong>0,735 S</strong></li>
+    <li>Ειδική αγωγιμότητα: σ = 1/ρ = 1/0,017 ≈ <strong>58,8 MS/m</strong></li>
+    <li><em>Έλεγχος:</em> Ο χαλκός έχει σ ≈ 58 MS/m στη βιβλιογραφία — συμφωνεί ✓</li>
+  </ol>
+</div>
+
+<div class="mistake-box">
+  <span class="mistake-title">⚠️ Συχνά λάθη</span>
+  <ul>
+    <li><strong>Μετατροπή mm² → m²:</strong> Δεν χρειάζεται — ο τύπος R = ρ·ℓ/S έχει «ενσωματωμένη» τη μονάδα Ω·mm²/m. Αν μετατρέψεις, βγαίνει 10⁶ φορές λάθος.</li>
+    <li><strong>«G = R» ή «G σε Ω»:</strong> G = 1/R, μονάδα S. Το Ω είναι μονάδα αντίστασης.</li>
+    <li><strong>Κλίση V–I:</strong> Η κλίση είναι R (με V στον άξονα y), όχι 1/R.</li>
+  </ul>
+</div>
+
+<div class="ped-box">
+  <span class="ped-title">🧠 Παιδαγωγική τεκμηρίωση</span>
+  <ul>
+    <li><strong>Διαβαθμισμένη εξάσκηση (Vygotsky, 1978):</strong> Από απλή (R = V/I) σε σύνθετη (G = 1/R, σ = 1/ρ, R = ρℓ/S).</li>
+    <li><strong>Παραδείγματα-λύσεις (Sweller &amp; Cooper, 1985):</strong> Κάθε βήμα εξηγείται.</li>
+    <li><strong>Έλεγχος τάξης μεγέθους (Kahneman, 2011):</strong> «Συμφωνεί με τη βιβλιογραφία;» — καλλιεργεί επιστημονική σκέψη.</li>
+  </ul>
+</div>
+
+<h3><span style="display:inline-block;background:var(--primary);color:#fff;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:bold;margin-right:8px;font-size:0.9em;">6</span>Κουίζ, exit ticket &amp; «τι θα πέσει» <span class="tag time-tag">5΄</span></h3>
+
+<table>
+  <tr><th style="width:22%;">Στόχος</th><td>Γρήγορος έλεγχος κατανόησης και μεταγνωστική αποτύπωση πριν το τεστ.</td></tr>
+  <tr><th>Δομή γραπτού</th><td>Δείχνει τη δομή: 4 θέματα × 25 μονάδες. Ζητά να αντιγράψουν τις 5 παγίδες στο Μέρος Γ του φύλλου.</td></tr>
+  <tr><th>Κουίζ 6 ερωτήσεων</th><td>
+    <ol style="margin:6px 0;">
+      <li>Σε διπλάσια απόσταση, η δύναμη Coulomb γίνεται: Α) μισή, Β) ένα τέταρτο, Γ) διπλάσια → <strong>Β</strong></li>
+      <li>600 C σε 5 min → I = : Α) 2 A, Β) 120 A, Γ) 0,5 A → <strong>Α</strong></li>
+      <li>Το βολτόμετρο συνδέεται: Α) σε σειρά, Β) παράλληλα, Γ) όπως να 'ναι → <strong>Β</strong></li>
+      <li>Η ΗΕΔ είναι: Α) η τάση με ρεύμα, Β) η τάση χωρίς ρεύμα, Γ) το ίδιο → <strong>Β</strong></li>
+      <li>Η αγωγιμότητα G μετριέται σε: Α) Siemens, Β) Ohm, Γ) Volt → <strong>Α</strong></li>
+      <li>Σε έναν αντιστάτη, διπλάσια τάση σημαίνει: Α) ίδιο ρεύμα, Β) διπλάσιο ρεύμα, Γ) μισό ρεύμα → <strong>Β</strong></li>
+    </ol>
+  </td></tr>
+  <tr><th>Exit ticket</th><td>Διανομή Φύλλου Γ — 2,5΄ σιωπής. Παραδίδεται στην πόρτα. Δεν βαθμολογείται.</td></tr>
+</table>
+
+<div class="ped-box">
+  <span class="ped-title">🧠 Παιδαγωγική τεκμηρίωση</span>
+  <ul>
+    <li><strong>Αξιολόγηση ΩΣ μάθηση (Earl, 2003):</strong> Το κουίζ και το exit ticket δείχνουν <em>τι κατάλαβαν</em>.</li>
+    <li><strong>Μεταγνώση (Flavell, 1979):</strong> «Ένα πράγμα που κατάλαβα, ένα που δεν κατάλαβα».</li>
+    <li><strong>Μείωση άγχους (Edmondson, 1999):</strong> Ο μαθητής ξέρει τι να περιμένει στο τεστ.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 6. ΛΥΜΕΝΑ ΠΑΡΑΔΕΙΓΜΑΤΑ                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="worked">6. Λυμένα Παραδείγματα &amp; Συχνά Λάθη</h2>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Παράδειγμα — Νόμος Coulomb με αντίθετα φορτία</span>
+  <p>q₁ = +4 μC, q₂ = −2 μC, r = 20 cm. Ποια η δύναμη; Είναι έλξη ή άπωση;</p>
+  <ol>
+    <li>Μετατροπή: 4×10⁻⁶, −2×10⁻⁶, 0,2 m</li>
+    <li>F = 9×10⁹ × 4×10⁻⁶ × 2×10⁻⁶ / (0,2)² = 72×10⁻³ / 0,04 = <strong>1,8 N</strong></li>
+    <li>Είδος: <strong>έλξη</strong> (ετερόσημα φορτία)</li>
+  </ol>
+</div>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Παράδειγμα — Πολική τάση με μεγαλύτερο ρεύμα</span>
+  <p>Μπαταρία E = 9 V, r = 1 Ω, I = 3 A. Ποια η U<sub>πολ</sub>;</p>
+  <ol>
+    <li>U<sub>πολ</sub> = E − I·r = 9 − 3·1 = <strong>6 V</strong></li>
+    <li><em>Ερμηνεία:</em> Χάνουμε 3 V στην εσωτερική αντίσταση — γιατί η μπαταρία ζεσταίνεται όταν τραβάει πολύ ρεύμα.</li>
+  </ol>
+</div>
+
+<div class="worked-box">
+  <span class="worked-title">📐 Παράδειγμα — Σύγκριση δύο αγωγών</span>
+  <p>Σύρμα Cu: ℓ = 100 m, S = 2 mm², ρ = 0,0175 μΩ·m. Σύρμα NiCr: ℓ = 100 m, S = 2 mm², ρ = 1,10 μΩ·m. Ποια η διαφορά R και G;</p>
+  <ol>
+    <li>R<sub>Cu</sub> = 0,0175 × 100 / 2 = <strong>0,875 Ω</strong></li>
+    <li>R<sub>NiCr</sub> = 1,10 × 100 / 2 = <strong>55 Ω</strong></li>
+    <li>Διαφορά: 55 / 0,875 ≈ <strong>63×</strong></li>
+    <li>G<sub>Cu</sub> = 1/0,875 ≈ <strong>1,14 S</strong>, G<sub>NiCr</sub> = 1/55 ≈ <strong>0,018 S</strong></li>
+    <li><em>Συμπέρασμα:</em> Γι' αυτό NiCr σε θερμαντικά στοιχεία, Cu σε καλώδια.</li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 7. ΠΡΟΣΟΜΟΙΩΣΕΙΣ                               -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="simulation">7. Διαδραστικές Προσομοιώσεις — 4 Καρτέλες</h2>
+
+<div class="sim-box">
+  <strong>🧪 Πώς χρησιμοποιούνται:</strong>
+  <ul style="margin:6px 0;">
+    <li><strong>Σταθμός 2:</strong> Καρτέλα Α — Ρεύμα (I = Q/t, J = I/S με sliders)</li>
+    <li><strong>Σταθμός 3:</strong> Καρτέλα Β — Όργανα (4 συνδεσμολογίες αμπερομέτρου/βολτομέτρου)</li>
+    <li><strong>Σταθμός 4:</strong> Καρτέλες Γ (V–I) και Δ (Αγωγιμότητα)</li>
+  </ul>
+  Όλες λειτουργούν <strong>offline</strong> — χωρίς σύνδεση στο Internet.
+</div>
+
+<div class="sim-container" id="sim-app">
+  <h3>🔌 Προσομοιώσεις: Ρεύμα · Όργανα · V–I · Αγωγιμότητα</h3>
+
+  <div class="sim-tabs" role="tablist" aria-label="Καρτέλες προσομοίωσης">
+    <button class="sim-tab active" data-tab="current" role="tab" aria-selected="true">⚡ Ρεύμα</button>
+    <button class="sim-tab" data-tab="instruments" role="tab" aria-selected="false">🔧 Όργανα</button>
+    <button class="sim-tab" data-tab="vi" role="tab" aria-selected="false">📈 Χαρακτηριστική V–I</button>
+    <button class="sim-tab" data-tab="cond" role="tab" aria-selected="false">📊 Αγωγιμότητα</button>
+  </div>
+
+  <!-- ═══ TAB Α: ΡΕΥΜΑ ═══ -->
+  <div class="sim-tab-content active" id="tab-current" role="tabpanel">
+    <div class="sim-instruction">
+      <strong>Δοκιμάστε:</strong> Αλλάξτε το <strong>Q</strong> ή τον <strong>χρόνο t</strong> — δείτε το ρεύμα I να αλλάζει. Αλλάξτε τη <strong>διατομή S</strong> — δείτε την πυκνότητα J. Οι κουκκίδες-φορτία κινούνται πιο γρήγορα όταν το I είναι μεγαλύτερο.
+    </div>
+    <div class="sim-grid">
+      <div>
+        <div class="sim-stage">
+          <svg viewBox="0 0 700 200" class="sim-svg" id="cur-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Αγωγός με κινούμενα φορτία">
+            <rect id="cur-wire" x="80" y="80" width="540" height="40" fill="#b87333" stroke="#5a3d1e" stroke-width="2" rx="4"/>
+            <g id="cur-charges"></g>
+            <text x="350" y="60" font-size="14" text-anchor="middle" fill="#333" font-weight="bold">Αγωγός με κινούμενα φορτία</text>
+            <text x="350" y="155" font-size="13" text-anchor="middle" fill="#555">S = <tspan id="cur-s-display">2.5</tspan> mm²</text>
+          </svg>
+        </div>
+        <div class="sim-formula-display" id="cur-live-formula"></div>
+      </div>
+      <div class="sim-sidebar">
+        <h4>🎛️ Χειριστήρια</h4>
+        <div class="sim-control">
+          <label for="cur-q">Φορτίο Q: <span class="val" id="cur-q-val">600 C</span></label>
+          <input type="range" id="cur-q" min="10" max="2000" step="10" value="600">
+        </div>
+        <div class="sim-control">
+          <label for="cur-t">Χρόνος t: <span class="val" id="cur-t-val">300 s</span></label>
+          <input type="range" id="cur-t" min="10" max="600" step="5" value="300">
+        </div>
+        <div class="sim-control">
+          <label for="cur-s">Διατομή S: <span class="val" id="cur-s-val">2.5 mm²</span></label>
+          <input type="range" id="cur-s" min="0.5" max="10" step="0.1" value="2.5">
+        </div>
+        <div class="sim-buttons">
+          <button class="sim-btn" id="cur-preset-1">600C / 5min / 2.5</button>
+          <button class="sim-btn" id="cur-preset-2">300C / 1min / 1</button>
+          <button class="sim-btn danger" id="cur-reset">↺</button>
+        </div>
+        <div class="sim-readings">
+          <table>
+            <tr><td class="read-name">Ένταση I:</td><td class="read-val" id="cur-read-I">2.00 A</td></tr>
+            <tr><td class="read-name">Πυκνότητα J:</td><td class="read-val" id="cur-read-J">0.80 A/mm²</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB Β: ΟΡΓΑΝΑ ═══ -->
+  <div class="sim-tab-content" id="tab-instruments" role="tabpanel">
+    <div class="sim-instruction">
+      <strong>Δοκιμάστε:</strong> Δείτε πώς αλλάζει το κύκλωμα με 4 διαφορετικές συνδεσμολογίες. Μόνο <strong>μία</strong> είναι σωστή: αμπερόμετρο <strong>σε σειρά</strong>, βολτόμετρο <strong>παράλληλα</strong> στα άκρα της αντίστασης.
+    </div>
+    <div class="sim-grid">
+      <div>
+        <div class="sim-stage">
+          <svg viewBox="0 0 700 340" class="sim-svg" id="ins-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Κύκλωμα με αμπερόμετρο και βολτόμετρο">
+            <!-- Battery (left) -->
+            <line x1="60" y1="40" x2="60" y2="300" stroke="#333" stroke-width="3"/>
+            <line x1="120" y1="40" x2="120" y2="300" stroke="#333" stroke-width="3"/>
+            <line x1="60" y1="170" x2="120" y2="170" stroke="#333" stroke-width="0" />
+            <text x="90" y="30" font-size="12" text-anchor="middle" fill="#333">Πηγή</text>
+            <!-- Top wire -->
+            <line x1="120" y1="40" x2="600" y2="40" stroke="#333" stroke-width="2"/>
+            <!-- Right wire -->
+            <line x1="600" y1="40" x2="600" y2="300" stroke="#333" stroke-width="2"/>
+            <!-- Bottom wire back to battery -->
+            <line x1="600" y1="300" x2="60" y2="300" stroke="#333" stroke-width="2"/>
+            <!-- Resistor (R) in the middle -->
+            <rect id="ins-resistor" x="310" y="180" width="80" height="40" fill="#e8c89a" stroke="#8b6f47" stroke-width="2" rx="4"/>
+            <text x="350" y="205" font-size="14" text-anchor="middle" fill="#333" font-weight="bold">R</text>
+            <!-- Wire to R -->
+            <line x1="310" y1="200" x2="200" y2="200" stroke="#333" stroke-width="2"/>
+            <line x1="200" y1="200" x2="200" y2="40" stroke="#333" stroke-width="2"/>
+            <line x1="390" y1="200" x2="600" y2="200" stroke="#333" stroke-width="2"/>
+            <!-- Instrument locations -->
+            <g id="ins-ammeter" style="display:none;">
+              <circle cx="500" cy="200" r="22" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+              <text x="500" y="207" font-size="14" text-anchor="middle" fill="#1565c0" font-weight="bold">A</text>
+            </g>
+            <g id="ins-voltmeter" style="display:none;">
+              <circle cx="350" cy="270" r="22" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+              <text x="350" y="277" font-size="14" text-anchor="middle" fill="#1565c0" font-weight="bold">V</text>
+              <line x1="310" y1="200" x2="310" y2="270" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <line x1="390" y1="200" x2="390" y2="270" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="3,2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="instrument-panel">
+          <div class="sim-buttons" style="justify-content:center;">
+            <button class="sim-btn active" data-ins="correct">✅ Σωστή</button>
+            <button class="sim-btn danger" data-ins="a-parallel">✗ Αμπερόμετρο ║</button>
+            <button class="sim-btn danger" data-ins="v-series">✗ Βολτόμετρο σειρά</button>
+            <button class="sim-btn danger" data-ins="both">✗ Και τα δύο λάθος</button>
+          </div>
+          <div id="ins-status" class="status-indicator status-safe" style="display:block; text-align:center; margin-top:10px; padding:10px;">
+            ✅ Σωστή μέτρηση — το αμπερόμετρο σε σειρά, το βολτόμετρο παράλληλα
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB Γ: V-I ═══ -->
+  <div class="sim-tab-content" id="tab-vi" role="tabpanel">
+    <div class="sim-instruction">
+      <strong>Δοκιμάστε:</strong> Αλλάξτε την <strong>αντίσταση R</strong> — δείτε την κλίση της γραμμής να αλλάζει. Το γράφημα δείχνει V στον κατακόρυφο άξονα, I στον οριζόντιο. Η κλίση <strong>είναι</strong> R — όχι 1/R.
+    </div>
+    <div class="sim-grid">
+      <div>
+        <div class="sim-stage">
+          <svg viewBox="0 0 700 400" class="sim-svg" id="vi-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Χαρακτηριστική V-I">
+            <!-- Grid -->
+            <g stroke="#eee" stroke-width="1">
+              <line x1="80" y1="50" x2="660" y2="50"/>
+              <line x1="80" y1="130" x2="660" y2="130"/>
+              <line x1="80" y1="210" x2="660" y2="210"/>
+              <line x1="80" y1="290" x2="660" y2="290"/>
+              <line x1="80" y1="360" x2="660" y2="360"/>
+              <line x1="80" y1="50" x2="80" y2="360"/>
+              <line x1="220" y1="50" x2="220" y2="360"/>
+              <line x1="360" y1="50" x2="360" y2="360"/>
+              <line x1="500" y1="50" x2="500" y2="360"/>
+              <line x1="640" y1="50" x2="640" y2="360"/>
+            </g>
+            <!-- Axes -->
+            <line x1="80" y1="360" x2="660" y2="360" stroke="#333" stroke-width="2"/>
+            <line x1="80" y1="50" x2="80" y2="360" stroke="#333" stroke-width="2"/>
+            <text x="370" y="392" font-size="14" text-anchor="middle" fill="#333" font-weight="bold">I (A)</text>
+            <text x="40" y="205" font-size="14" text-anchor="middle" fill="#333" font-weight="bold" transform="rotate(-90 40 205)">V (V)</text>
+            <!-- Line V = R*I -->
+            <line id="vi-line" x1="80" y1="360" x2="600" y2="200" stroke="#1565c0" stroke-width="3"/>
+            <!-- Interactive point -->
+            <circle id="vi-point" cx="360" cy="280" r="7" fill="#c62828" stroke="#fff" stroke-width="2"/>
+            <text id="vi-point-label" x="372" y="276" font-size="12" fill="#c62828" font-weight="bold">(2 A, 20 V)</text>
+          </svg>
+        </div>
+        <div class="sim-formula-display" id="vi-formula"></div>
+      </div>
+      <div class="sim-sidebar">
+        <h4>🎛️ Χειριστήρια</h4>
+        <div class="sim-control">
+          <label for="vi-r">Αντίσταση R: <span class="val" id="vi-r-val">20 Ω</span></label>
+          <input type="range" id="vi-r" min="5" max="100" step="1" value="20">
+        </div>
+        <div class="sim-control">
+          <label for="vi-i">Ρεύμα I: <span class="val" id="vi-i-val">2.0 A</span></label>
+          <input type="range" id="vi-i" min="0.1" max="5" step="0.1" value="2">
+        </div>
+        <div class="sim-readings">
+          <table>
+            <tr><td class="read-name">Τάση V:</td><td class="read-val" id="vi-read-V">40.0 V</td></tr>
+            <tr><td class="read-name">Κλίση (R):</td><td class="read-val" id="vi-read-slope">20 Ω</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB Δ: ΑΓΩΓΙΜΟΤΗΤΑ ═══ -->
+  <div class="sim-tab-content" id="tab-cond" role="tabpanel">
+    <div class="sim-instruction">
+      <strong>Δοκιμάστε:</strong> Αλλάξτε <strong>υλικό</strong> — δείτε πόσο διαφέρει η G. Αλλάξτε <strong>μήκος</strong> και <strong>διατομή</strong> — δείτε R και G να κινούνται αντίστροφα.
+    </div>
+    <div class="sim-grid">
+      <div>
+        <div class="sim-stage">
+          <svg viewBox="0 0 700 200" class="sim-svg" id="cond-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Αγωγός με ρυθμιζόμενες διαστάσεις">
+            <g stroke="#f0f0f0" stroke-width="1">
+              <line x1="50" y1="50" x2="650" y2="50"/>
+              <line x1="50" y1="100" x2="650" y2="100"/>
+              <line x1="50" y1="150" x2="650" y2="150"/>
+            </g>
+            <rect id="cond-wire" x="80" y="80" width="400" height="40" fill="#b87333" stroke="#5a3d1e" stroke-width="2"/>
+            <text id="cond-label" x="280" y="170" font-size="13" text-anchor="middle" fill="#333" font-weight="bold">Cu: ℓ = 1.0 m, S = 1.5 mm²</text>
+          </svg>
+        </div>
+        <div class="sim-formula-display" id="cond-formula"></div>
+      </div>
+      <div class="sim-sidebar">
+        <h4>🎛️ Χειριστήρια</h4>
+        <div class="sim-control">
+          <label for="cond-mat">Υλικό:</label>
+          <select id="cond-mat">
+            <option value="cu" selected>Χαλκός (Cu) — σ = 58 MS/m</option>
+            <option value="ag">Άργυρος (Ag) — σ = 62.5 MS/m</option>
+            <option value="al">Αλουμίνιο (Al) — σ = 35.7 MS/m</option>
+            <option value="nicr">Νικέλιο-χρώμιο — σ = 0.91 MS/m</option>
+          </select>
+        </div>
+        <div class="sim-control">
+          <label for="cond-l">Μήκος ℓ: <span class="val" id="cond-l-val">1.0 m</span></label>
+          <input type="range" id="cond-l" min="0.1" max="2" step="0.1" value="1">
+        </div>
+        <div class="sim-control">
+          <label for="cond-s">Διατομή S: <span class="val" id="cond-s-val">1.5 mm²</span></label>
+          <input type="range" id="cond-s" min="0.2" max="5" step="0.1" value="1.5">
+        </div>
+        <div class="sim-readings">
+          <table>
+            <tr><td class="read-name">R:</td><td class="read-val" id="cond-R">0.0117 Ω</td></tr>
+            <tr><td class="read-name">G:</td><td class="read-val" id="cond-G">85.5 S</td></tr>
+            <tr><td class="read-name">ρ:</td><td class="read-val" id="cond-rho">0.0175 μΩ·m</td></tr>
+            <tr><td class="read-name">σ:</td><td class="read-val" id="cond-sigma">58.0 MS/m</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sim-note">
+    <strong>💡 Σημείωση:</strong> Οι προσομοιώσεις υποστηρίζουν πλοήγηση με πλήκτρα βέλους στις καρτέλες. Όλες λειτουργούν offline. Η μονάδα μέτρησης της αγωγιμότητας είναι το Siemens (S), της ειδικής αγωγιμότητας το S/m ή MS/m.
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== Tab management =====
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.sim-tab'));
+  var tabContents = Array.prototype.slice.call(document.querySelectorAll('.sim-tab-content'));
+  function activateTab(idx){
+    tabs.forEach(function(t,i){t.classList.toggle('active', i===idx); t.setAttribute('aria-selected', i===idx?'true':'false');});
+    tabContents.forEach(function(c,i){c.classList.toggle('active', i===idx);});
+  }
+  tabs.forEach(function(t,idx){
+    t.addEventListener('click', function(){activateTab(idx);});
+    t.addEventListener('keydown', function(e){
+      if(e.key==='ArrowRight'){e.preventDefault(); activateTab((idx+1)%tabs.length); tabs[(idx+1)%tabs.length].focus();}
+      else if(e.key==='ArrowLeft'){e.preventDefault(); activateTab((idx-1+tabs.length)%tabs.length); tabs[(idx-1+tabs.length)%tabs.length].focus();}
+    });
+  });
+
+  // ===== Tab A: Current =====
+  var cur = {Q: 600, t: 300, S: 2.5};
+  var curSVG = {
+    q: document.getElementById('cur-q'),
+    t: document.getElementById('cur-t'),
+    s: document.getElementById('cur-s'),
+    qv: document.getElementById('cur-q-val'),
+    tv: document.getElementById('cur-t-val'),
+    sv: document.getElementById('cur-s-val'),
+    sdisp: document.getElementById('cur-s-display'),
+    readI: document.getElementById('cur-read-I'),
+    readJ: document.getElementById('cur-read-J'),
+    formula: document.getElementById('cur-live-formula'),
+    charges: document.getElementById('cur-charges'),
+    wire: document.getElementById('cur-wire')
+  };
+  var chargeDots = [];
+  for(var i=0; i<10; i++){
+    var c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cy', '100');
+    c.setAttribute('r', '5');
+    c.setAttribute('fill', '#1565c0');
+    c.setAttribute('opacity', '0.85');
+    curSVG.charges.appendChild(c);
+    chargeDots.push({el: c, x: 80 + (i*50)});
+  }
+  function fmt(v, d){return v.toFixed(d);}
+  function updateCur(){
+    var I = cur.Q / cur.t;
+    var J = I / cur.S;
+    curSVG.qv.textContent = cur.Q + ' C';
+    curSVG.tv.textContent = cur.t + ' s';
+    curSVG.sv.textContent = cur.S.toFixed(1) + ' mm²';
+    curSVG.sdisp.textContent = cur.S.toFixed(1);
+    curSVG.readI.textContent = I.toFixed(2) + ' A';
+    curSVG.readJ.textContent = J.toFixed(2) + ' A/mm²';
+    curSVG.formula.innerHTML =
+      '<span class="formula-line-live"><strong>I = Q / t</strong> = ' + cur.Q + ' C / ' + cur.t + ' s = <span class="formula-highlight">' + I.toFixed(2) + ' A</span></span>' +
+      '<span class="formula-line-live"><strong>J = I / S</strong> = ' + I.toFixed(2) + ' A / ' + cur.S.toFixed(1) + ' mm² = <span class="formula-highlight">' + J.toFixed(2) + ' A/mm²</span></span>';
+    // speed proportional to I
+    var speed = Math.min(8, I * 0.8);
+    chargeDots.forEach(function(d){d.speed = speed;});
+  }
+  function animateCur(){
+    chargeDots.forEach(function(d){
+      d.x += (d.speed || 2);
+      if(d.x > 620) d.x = 80;
+      d.el.setAttribute('cx', d.x);
+      d.el.setAttribute('cy', 100);
+    });
+    requestAnimationFrame(animateCur);
+  }
+  curSVG.q.addEventListener('input', function(e){cur.Q = parseFloat(e.target.value); updateCur();});
+  curSVG.t.addEventListener('input', function(e){cur.t = parseFloat(e.target.value); updateCur();});
+  curSVG.s.addEventListener('input', function(e){cur.S = parseFloat(e.target.value); updateCur();});
+  document.getElementById('cur-reset').addEventListener('click', function(){
+    cur = {Q: 600, t: 300, S: 2.5};
+    curSVG.q.value = 600; curSVG.t.value = 300; curSVG.s.value = 2.5;
+    updateCur();
+  });
+  document.getElementById('cur-preset-1').addEventListener('click', function(){
+    cur = {Q: 600, t: 300, S: 2.5};
+    curSVG.q.value = 600; curSVG.t.value = 300; curSVG.s.value = 2.5;
+    updateCur();
+  });
+  document.getElementById('cur-preset-2').addEventListener('click', function(){
+    cur = {Q: 300, t: 60, S: 1};
+    curSVG.q.value = 300; curSVG.t.value = 60; curSVG.s.value = 1;
+    updateCur();
+  });
+  updateCur();
+  animateCur();
+
+  // ===== Tab B: Instruments =====
+  var insMode = 'correct';
+  var insAmmeter = document.getElementById('ins-ammeter');
+  var insVoltmeter = document.getElementById('ins-voltmeter');
+  var insStatus = document.getElementById('ins-status');
+  function setInsMode(m){
+    insMode = m;
+    document.querySelectorAll('[data-ins]').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-ins') === m);
+    });
+    if(m === 'correct'){
+      insAmmeter.style.display = 'block';
+      insVoltmeter.style.display = 'block';
+      insStatus.className = 'status-indicator status-safe';
+      insStatus.textContent = '✅ Σωστή μέτρηση — το αμπερόμετρο σε σειρά, το βολτόμετρο παράλληλα.';
+    } else if(m === 'a-parallel'){
+      insAmmeter.style.display = 'block';
+      insVoltmeter.style.display = 'none';
+      insStatus.className = 'status-indicator status-danger';
+      insStatus.textContent = '❌ Το αμπερόμετρο είναι παράλληλα — βραχυκυκλώνει την R. Κίνδυνος καταστροφής!';
+    } else if(m === 'v-series'){
+      insAmmeter.style.display = 'none';
+      insVoltmeter.style.display = 'block';
+      insStatus.className = 'status-indicator status-danger';
+      insStatus.textContent = '❌ Το βολτόμετρο είναι σε σειρά — η μεγάλη του αντίσταση νεκρώνει το κύκλωμα.';
+    } else {
+      insAmmeter.style.display = 'none';
+      insVoltmeter.style.display = 'none';
+      insStatus.className = 'status-indicator status-danger';
+      insStatus.textContent = '❌ Λάθος και τα δύο — καμία ένδειξη, κανένα νόημα.';
+    }
+  }
+  document.querySelectorAll('[data-ins]').forEach(function(b){
+    b.addEventListener('click', function(){setInsMode(b.getAttribute('data-ins'));});
+  });
+
+  // ===== Tab Γ: V-I =====
+  var vi = {R: 20, I: 2};
+  var viR = document.getElementById('vi-r');
+  var viI = document.getElementById('vi-i');
+  var viRV = document.getElementById('vi-r-val');
+  var viIV = document.getElementById('vi-i-val');
+  var viLine = document.getElementById('vi-line');
+  var viPoint = document.getElementById('vi-point');
+  var viPointLabel = document.getElementById('vi-point-label');
+  var viFormula = document.getElementById('vi-formula');
+  var viReadV = document.getElementById('vi-read-V');
+  var viReadSlope = document.getElementById('vi-read-slope');
+
+  // Graph coordinates: x = 80 + 110*I (I 0..5), y = 360 - 15.5*V (V 0..20)
+  function updateVI(){
+    var V = vi.R * vi.I;
+    viRV.textContent = vi.R + ' Ω';
+    viIV.textContent = vi.I.toFixed(1) + ' A';
+    viReadV.textContent = V.toFixed(1) + ' V';
+    viReadSlope.textContent = vi.R + ' Ω';
+    // draw line from I=0,V=0 to I=5,V=R*5 (clamped to 20)
+    var maxI = Math.min(5, 20 / vi.R);
+    var x0 = 80, y0 = 360;
+    var x1 = 80 + (maxI / 5) * 580;
+    var y1 = 360 - (vi.R * maxI / 20) * 310;
+    viLine.setAttribute('x1', x0);
+    viLine.setAttribute('y1', y0);
+    viLine.setAttribute('x2', x1);
+    viLine.setAttribute('y2', y1);
+    // point
+    var px = 80 + (vi.I / 5) * 580;
+    var py = 360 - (V / 20) * 310;
+    viPoint.setAttribute('cx', px);
+    viPoint.setAttribute('cy', py);
+    viPointLabel.setAttribute('x', px + 12);
+    viPointLabel.setAttribute('y', py - 6);
+    viPointLabel.textContent = '(' + vi.I.toFixed(1) + ' A, ' + V.toFixed(1) + ' V)';
+    viFormula.innerHTML =
+      '<span class="formula-line-live"><strong>V = I · R</strong> = ' + vi.I.toFixed(1) + ' A × ' + vi.R + ' Ω = <span class="formula-highlight">' + V.toFixed(1) + ' V</span></span>' +
+      '<span class="formula-line-live"><strong>Κλίση γραφήματος = R</strong> = ' + vi.R + ' Ω (όχι 1/R!)</span>';
+  }
+  viR.addEventListener('input', function(e){vi.R = parseFloat(e.target.value); updateVI();});
+  viI.addEventListener('input', function(e){vi.I = parseFloat(e.target.value); updateVI();});
+  updateVI();
+
+  // ===== Tab Δ: Conductivity =====
+  var MAT = {
+    cu:{name:'Χαλκός (Cu)', rho:0.0175, sigma:58.0, color:'#b87333'},
+    ag:{name:'Άργυρος (Ag)', rho:0.016, sigma:62.5, color:'#c0c0c0'},
+    al:{name:'Αλουμίνιο (Al)', rho:0.028, sigma:35.7, color:'#a8a8a8'},
+    nicr:{name:'Νικέλιο-χρώμιο', rho:1.10, sigma:0.91, color:'#6e6259'}
+  };
+  var cond = {mat:'cu', l:1.0, S:1.5};
+  var cMat = document.getElementById('cond-mat');
+  var cL = document.getElementById('cond-l');
+  var cS = document.getElementById('cond-s');
+  var cLV = document.getElementById('cond-l-val');
+  var cSV = document.getElementById('cond-s-val');
+  var cWire = document.getElementById('cond-wire');
+  var cLabel = document.getElementById('cond-label');
+  var cR = document.getElementById('cond-R');
+  var cG = document.getElementById('cond-G');
+  var cRho = document.getElementById('cond-rho');
+  var cSig = document.getElementById('cond-sigma');
+  var cFormula = document.getElementById('cond-formula');
+
+  function fmtC(v, d){return v.toFixed(d);}
+  function updateCond(){
+    var m = MAT[cond.mat];
+    var R = m.rho * cond.l / cond.S;
+    var G = 1 / R;
+    cLV.textContent = cond.l.toFixed(1) + ' m';
+    cSV.textContent = cond.S.toFixed(1) + ' mm²';
+    cWire.setAttribute('width', 100 + 300 * (cond.l / 2));
+    cWire.setAttribute('height', 15 + 35 * (cond.S / 5));
+    cWire.setAttribute('y', 100 - (15 + 35 * (cond.S / 5)) / 2 + 20);
+    cWire.setAttribute('fill', m.color);
+    cLabel.textContent = m.name.split(' (')[0] + ': ℓ = ' + cond.l.toFixed(1) + ' m, S = ' + cond.S.toFixed(1) + ' mm²';
+    cR.textContent = R >= 0.01 ? R.toFixed(3) + ' Ω' : R.toExponential(2) + ' Ω';
+    cG.textContent = G >= 1 ? G.toFixed(1) + ' S' : G.toFixed(3) + ' S';
+    cRho.textContent = m.rho + ' μΩ·m';
+    cSig.textContent = m.sigma.toFixed(1) + ' MS/m';
+    cFormula.innerHTML =
+      '<span class="formula-line-live"><strong>R = ρ·ℓ/S</strong> = ' + m.rho + ' × ' + cond.l.toFixed(1) + ' / ' + cond.S.toFixed(1) + ' = <span class="formula-highlight">' + (R >= 0.01 ? R.toFixed(3) : R.toExponential(2)) + ' Ω</span></span>' +
+      '<span class="formula-line-live"><strong>G = 1/R</strong> = <span class="formula-highlight">' + (G >= 1 ? G.toFixed(1) : G.toFixed(3)) + ' S</span></span>';
+  }
+  cMat.addEventListener('change', function(e){cond.mat = e.target.value; updateCond();});
+  cL.addEventListener('input', function(e){cond.l = parseFloat(e.target.value); updateCond();});
+  cS.addEventListener('input', function(e){cond.S = parseFloat(e.target.value); updateCond();});
+  updateCond();
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 8. ΦΥΛΛΑ ΕΡΓΑΣΙΑΣ                              -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="worksheets">8. Φύλλα Εργασίας</h2>
+
+<div class="worksheet">
+  <h4>ΦΥΛΛΟ Α — Ασκήσεις Επανάληψης <span style="font-weight:normal; font-size:0.85em;">(ατομικά — δεν βαθμολογείται)</span></h4>
+  <p><strong>Όνομα (προαιρετικό):</strong> <span class="fill-line"></span> &nbsp;&nbsp; <strong>Τμήμα:</strong> <span class="fill-line" style="min-width:100px;"></span></p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Άσκηση 1 — Νόμος Coulomb</h4>
+  <p>Δύο σημειακά φορτία q₁ = 2 μC και q₂ = 3 μC απέχουν r = 30 cm. Δίνεται k = 9×10⁹ N·m²/C².</p>
+  <p style="margin-left:20px;">α) Μετατροπή: q₁ = <span class="blank"></span> C, q₂ = <span class="blank"></span> C, r = <span class="blank"></span> m</p>
+  <p style="margin-left:20px;">β) F = k·q₁·q₂/r² = <span class="blank mid"></span> / <span class="blank mid"></span> = <span class="blank"></span> N</p>
+  <p style="margin-left:20px;">γ) Είδος δύναμης: <span class="blank mid"></span></p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Άσκηση 2 — Ρεύμα &amp; πυκνότητα</h4>
+  <p>Σε έναν αγωγό περνούν Q = 600 C σε χρόνο t = 5 min. Η διατομή είναι S = 2,5 mm².</p>
+  <p style="margin-left:20px;">α) t = <span class="blank"></span> s (μετατροπή)</p>
+  <p style="margin-left:20px;">β) I = Q/t = <span class="blank"></span> / <span class="blank"></span> = <span class="blank"></span> A</p>
+  <p style="margin-left:20px;">γ) J = I/S = <span class="blank"></span> / <span class="blank"></span> = <span class="blank"></span> A/mm²</p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Άσκηση 3 — Πολική τάση</h4>
+  <p>Πηγή με ΗΕΔ E = 12 V και εσωτερική αντίσταση r = 0,5 Ω. Το κύκλωμα διαρρέεται από I = 2 A.</p>
+  <p style="margin-left:20px;">α) U<sub>πολ</sub> = E − I·r = <span class="blank"></span> − <span class="blank"></span> × <span class="blank"></span> = <span class="blank"></span> V</p>
+  <p style="margin-left:20px;">β) Πόσο θα έδειχνε το βολτόμετρο; <span class="blank"></span> V</p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Άσκηση 4 — Από χαρακτηριστική V–I</h4>
+  <p>Σε έναν γραμμικό αντιστάτη, στα 10 V το ρεύμα είναι 0,5 A.</p>
+  <p style="margin-left:20px;">R = V/I = <span class="blank"></span> / <span class="blank"></span> = <span class="blank"></span> Ω</p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Άσκηση 5 — Αγωγός</h4>
+  <p>Σύρμα χαλκού: ℓ = 80 m, S = 1 mm², ρ<sub>Cu</sub> = 0,017 Ω·mm²/m.</p>
+  <p style="margin-left:20px;">α) R = ρ·ℓ/S = <span class="blank"></span> × <span class="blank"></span> / <span class="blank"></span> = <span class="blank"></span> Ω</p>
+  <p style="margin-left:20px;">β) G = 1/R = <span class="blank"></span> S</p>
+  <p style="margin-left:20px;">γ) σ = 1/ρ = <span class="blank"></span> MS/m</p>
+</div>
+
+<div class="worksheet">
+  <h4>ΦΥΛΛΟ Β — Θέμα Τράπεζας 18639 <span style="font-weight:normal; font-size:0.85em;">(δυάδες — δεν βαθμολογείται)</span></h4>
+
+  <div class="info-box">
+    <strong>🧮 ΘΕΜΑ 4ο (25 μον.) — Αυτούσια διατύπωση ΙΕΠ</strong>
+    <p style="margin-top:6px;">Η αγωγιμότητα ενός αγωγού από <strong>χρωμονικελίνη</strong> είναι G = 0,1 S και η διατομή του είναι S = 3 mm². Δίνεται ρ<sub>χρ</sub> = 1 Ω·mm²/m.</p>
+    <p><strong>4.1</strong> Η αντίσταση R του αγωγού. <em>(5 μον.)</em></p>
+    <p><strong>4.2</strong> Το μήκος ℓ του αγωγού. <em>(8 μον.)</em></p>
+    <p><strong>4.3</strong> Αντικαθιστούμε τον αγωγό με αλουμίνιο (ρ<sub>αλ</sub> = 0,03 Ω·mm²/m). Ποια η νέα διατομή S΄ ώστε η αντίσταση να μείνει ίδια; <em>(12 μον.)</em></p>
+  </div>
+
+  <p><strong>4.1</strong> — Λύση:</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <p><strong>4.2</strong> — Λύση:</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <p><strong>4.3</strong> — Λύση:</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <div class="success-box" style="margin-top:14px;">
+    <strong>🔑 Κλειδί ΙΕΠ (για έλεγχο μετά):</strong>
+    4.1: R = 1/G = <strong>10 Ω</strong> · 4.2: ℓ = R·S/ρ = <strong>30 m</strong> · 4.3: S΄ = ρ<sub>αλ</sub>·ℓ/R = <strong>0,09 mm²</strong>
+  </div>
+</div>
+
+<div class="worksheet">
+  <h4>ΦΥΛΛΟ Γ — Εισιτήριο Εξόδου &amp; Αυτοέλεγχος</h4>
+
+  <p><strong>1.</strong> Ένα πράγμα που <strong>ΚΑΤΑΛΑΒΑ</strong> σήμερα:</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <p><strong>2.</strong> Ένα πράγμα που <strong>ΑΚΟΜΑ ΔΕΝ ΚΑΤΑΛΑΒΑ</strong>:</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <p><strong>3.</strong> Από τους 6 τύπους του τετραμήνου, ποιοι είναι πιο «σίγουροι» στο κεφάλι σου; (γράψε 3)</p>
+  <div class="block-line"></div>
+
+  <p><strong>4.</strong> Σε ποιον τύπο θα ήθελες 5΄ επανάληψη πριν το τεστ;</p>
+  <div class="block-line"></div>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">Οι 5 παγίδες του τεστ — αντίγραψέ τες:</h4>
+  <table style="font-size:0.9em; margin-top:6px;">
+    <thead><tr><th style="width:8%;">#</th><th>Παγίδα</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Το r στον νόμο Coulomb είναι <strong>στο τετράγωνο</strong> — όχι γραμμικά</td></tr>
+      <tr><td>2</td><td>Η <strong>ΗΕΔ</strong> ≠ <strong>πολική τάση</strong>: U<sub>πολ</sub> = E − I·r</td></tr>
+      <tr><td>3</td><td>Αμπερόμετρο <strong>σε σειρά</strong>, βολτόμετρο <strong>παράλληλα</strong></td></tr>
+      <tr><td>4</td><td>Ο χρόνος σε <strong>δευτερόλεπτα</strong> (5 min = 300 s), τα φορτία σε <strong>C</strong></td></tr>
+      <tr><td>5</td><td>Η κλίση στο V–I <strong>είναι</strong> η R (με V στον άξονα y)</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:0.9em; color:#555; margin-top:14px;"><em>Παραδίδεται στον εκπαιδευτικό κατά την έξοδο. Δεν βαθμολογείται.</em></p>
+</div>
+
+<div class="worksheet">
+  <h4>ΦΥΛΛΟ Δ — Εργασία για το Σπίτι</h4>
+
+  <p><strong>Αποστολή 1:</strong> Λύστε ξανά τις ασκήσεις 1–5 του Φύλλου Α — αυτή τη φορά <strong>χωρίς</strong> να βλέπετε τις λύσεις.</p>
+
+  <p><strong>Αποστολή 2:</strong> Λύστε τα θέματα της Τράπεζας ΙΕΠ στο Φύλλο Ε (δύο 4ου + δύο 2ου).</p>
+
+  <p><strong>Αποστολή 3:</strong> Βρείτε στο σπίτι σας ένα <strong>καλώδιο</strong> (USB, φορτιστή, επέκταση) — γράψτε το υλικό του (συνήθως Cu) και προσπαθήστε να εκτιμήσετε τη διατομή του. Στο επόμενο μάθημα θα συζητήσουμε.</p>
+
+  <p><strong>Αποστολή 4:</strong> Σκεφτείτε και γράψτε: <em>«Γιατί μια μπαταρία τηλεχειριστηρίου διαρκεί μήνες, ενώ μια μπαταρία φακού λίγες ώρες;»</em></p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <div class="success-box" style="margin-top:14px;">
+    <strong>📝 Σημείωση:</strong> Δεν υπάρχουν σωστές και λάθος απαντήσεις στην Αποστολή 4 — μόνο παρατηρήσεις. Θα τις συζητήσουμε στην τάξη για να εξηγήσουμε τη <strong>χωρητικότητα</strong> και την <strong>εσωτερική αντίσταση</strong> της πηγής.
+  </div>
+</div>
+
+<div class="worksheet">
+  <h4>ΦΥΛΛΟ Ε — Τράπεζα Θεμάτων: εξάσκηση</h4>
+  <p><strong>Κανόνας:</strong> πρώτα λύνετε, μετά ελέγχετε με το κλειδί. Το κλειδί δίνεται από τον εκπαιδευτικό <strong>μετά</strong>.</p>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">ΘΕΜΑ 4ο (25 μον.)</h4>
+  <table style="font-size:0.9em;">
+    <thead><tr><th style="width:11%;">Κωδικός</th><th style="width:44%;">Τι ζητά</th><th style="width:30%;">Δεδομένα</th><th style="width:15%;">Έτοιμο;</th></tr></thead>
+    <tbody>
+      <tr><td><strong>18639</strong><br><span style="font-size:0.82em;">(στην τάξη)</span></td><td>R από G · μήκος ℓ · νέα διατομή με αλουμίνιο</td><td>G = 0,1 S · S = 3 mm² · ρ<sub>χρ</sub> = 1 · ρ<sub>αλ</sub> = 0,03</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>20675</strong></td><td>G από U, I · G χρυσού αγωγού</td><td>U = 40 V · I = 10 A · S = 1,5 mm² · ℓ = 15 m</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>20674</strong></td><td>Μήκος από R, S, ρ · R σε άλλη θερμοκρασία</td><td>R = 50 Ω · S = 1,5 mm² · ρ<sub>Cu</sub> = 0,02</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>36480</strong></td><td>R θερμαντικού · μήκος από διάμετρο</td><td>U = 230 V · P = 3,45 kW · D = 0,8 mm</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+    </tbody>
+  </table>
+
+  <h4 style="border-left:none; padding-left:0; color:var(--primary); margin-top:14px;">ΘΕΜΑ 2ο (25 μον.)</h4>
+  <table style="font-size:0.9em;">
+    <thead><tr><th style="width:11%;">Κωδικός</th><th style="width:70%;">Τι ζητά</th><th style="width:19%;">Έτοιμο;</th></tr></thead>
+    <tbody>
+      <tr><td><strong>19567</strong></td><td>Αντιστοίχιση μεγεθών–μονάδων · τρεις τρόποι μέτρησης</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>19565</strong></td><td>Συμπλήρωση: R και ℓ/S · τύπος R = ρ·ℓ/S και μονάδα ρ</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>28065</strong></td><td>ρ αλουμινίου · Σ/Λ για G = 1/R · ποια υλικά έχουν τη μικρότερη ρ</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+      <tr><td><strong>28058</strong></td><td>Σύμβολο αγωγιμότητας (G) · θερμική εξάρτηση ημιαγωγών</td><td style="text-align:center;"><input type="checkbox"></td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:12px;"><strong>Αυτοέλεγχος:</strong> ποιο θέμα σε δυσκόλεψε περισσότερο — και σε ποιο <em>βήμα</em>;</p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+
+  <p><strong>Ποιο λάθος ήταν μονάδων και ποιο τύπου;</strong></p>
+  <div class="block-line"></div>
+  <div class="block-line"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 9. ΠΑΙΔΑΓΩΓΙΚΗ ΤΕΚΜΗΡΙΩΣΗ                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="pedagogy">9. Παιδαγωγική Τεκμηρίωση</h2>
+
+<h3>Α. Αρχές ανά Φάση</h3>
+<table>
+  <thead>
+    <tr><th style="width:12%;">Φάση</th><th style="width:28%;">Αρχή</th><th style="width:22%;">Αναφορά</th><th style="width:38%;">Πρακτική συνέπεια</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Ενεργοποίηση πρότερης γνώσης</td><td>Ausubel (1968)</td><td>Ο χάρτης των 6 τύπων — χωρίς να διαβαστεί δυνατά</td></tr>
+    <tr><td>2</td><td>Ανάκληση · Παραδείγματα-λύσεις</td><td>Roediger &amp; Karpicke (2006); Sweller &amp; Cooper (1985)</td><td>Ο μαθητής προσπαθεί πρώτα — μετά βλέπει τη λύση</td></tr>
+    <tr><td>3</td><td>Πολλαπλή αναπαράσταση</td><td>Ainsworth (2006); Mayer (2009)</td><td>Τύπος + προσομοίωση με κινούμενα φορτία + άσκηση</td></tr>
+    <tr><td>4</td><td>Γνωστική σύγκρουση · Πρόβλεψη-Παρατήρηση</td><td>Piaget (1977); White &amp; Gunstone (1992)</td><td>Ψηφοφορία πριν την απάντηση· 4 σενάρια οργάνων</td></tr>
+    <tr><td>5</td><td>Διαβαθμισμένη εξάσκηση</td><td>Vygotsky (1978)</td><td>Από απλό (R = V/I) σε σύνθετο (G = 1/R, σ = 1/ρ)</td></tr>
+    <tr><td>6</td><td>Αξιολόγηση ΩΣ μάθηση · Μεταγνώση</td><td>Earl (2003); Flavell (1979)</td><td>Κουίζ με χέρια · exit ticket 2,5΄ σιωπής</td></tr>
+  </tbody>
+</table>
+
+<h3>Β. Γιατί διδάσκουμε ΕΤΣΙ</h3>
+
+<h4>1. Γιατί ξεκινάμε με χάρτη και όχι με νέα ύλη;</h4>
+<p>Η επανάληψη δεν είναι «ξανακάνω το μάθημα». Ο χάρτης των 6 τύπων δίνει στην τάξη μια <strong>οργανωτική δομή</strong> — και ο μαθητής βλέπει αμέσως τι ξέρει και τι όχι. Το «δεν εισάγουμε νέα ύλη» μειώνει το άγχος πριν το τεστ.</p>
+
+<h4>2. Γιατί 4 σταθμοί αντί για ένα συνεχές μάθημα;</h4>
+<p>Η τμηματοποίηση σε <strong>μικρά, ονομασμένα βήματα</strong> μειώνει το γνωστικό φορτίο (Sweller, 1988). Κάθε σταθμός έχει <strong>συγκεκριμένο χρονικό πλαίσιο</strong> — ο μαθητής ξέρει πού βρίσκεται.</p>
+
+<h4>3. Γιατί η ίδια έννοια σε 3 αναπαραστάσεις;</h4>
+<p>Για κάθε μέγεθος: τύπος (γραπτός), προσομοίωση (κίνηση), αριθμητική άσκηση. Η <strong>πολλαπλή αναπαράσταση</strong> (Ainsworth, 2006) βοηθά ιδιαίτερα μαθητές με αδύναμο αλγεβρικό υπόβαθρο.</p>
+
+<h4>4. Γιατί η πρόβλεψη πριν την απάντηση;</h4>
+<p>Στον Σταθμό 3, η τάξη ψηφίζει <strong>πριν</strong> δει το αποτέλεσμα. Η δέσμευση σε μια πρόβλεψη κάνει τη διόρθωση να «κολλήσει» (γνωστική σύγκρουση — Piaget, 1977). Αυτό είναι πιο αποτελεσματικό από την παθητική παρακολούθηση.</p>
+
+<h4>5. Γιατί το exit ticket χωρίς βαθμό;</h4>
+<p>Μειώνει το άγχος πριν το τεστ και δίνει στον εκπαιδευτικό <strong>ακριβή εικόνα</strong> για τα σημεία που χρειάζονται 5΄ υπενθύμιση στην αρχή του τεστ.</p>
+
+<h3>Γ. Τι ΔΕΝ κάνουμε</h3>
+<table>
+  <thead><tr><th style="width:34%;">Αποφεύγουμε</th><th>Γιατί</th></tr></thead>
+  <tbody>
+    <tr><td>Δεν εισάγουμε νέα ύλη</td><td>Είναι μάθημα <strong>επανάληψης</strong> — όχι νέας διδασκαλίας.</td></tr>
+    <tr><td>Δεν κάνουμε διαγώνισμα</td><td>Το exit ticket είναι εργαλείο ανατροφοδότησης — όχι αξιολόγησης.</td></tr>
+    <tr><td>Δεν αφήνουμε κανέναν να κολλήσει</td><td>Σε κάθε σταθμό, ο εκπαιδευτικός περπατά και βοηθά.</td></tr>
+    <tr><td>Δεν διαβάζουμε δυνατά τον χάρτη των τύπων</td><td>Ο μαθητής πρέπει να <strong>ανακαλέσει</strong> — όχι να ακούσει.</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 10. ΔΙΑΦΟΡΟΠΟΙΗΣΗ                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="differentiation">10. Διαφοροποίηση &amp; Διαχείριση Τάξης</h2>
+
+<table>
+  <thead><tr><th style="width:26%;">Περίπτωση</th><th>Τι κάνουμε</th></tr></thead>
+  <tbody>
+    <tr><td>Μαθητής που «τα ξέρει»</td><td>Του δίνεται ρόλος <strong>ελέγχου</strong> στον Σταθμό 4 (δυάδες) και η προαιρετική ερώτηση 4.3 του 18639 ως πρόκληση.</td></tr>
+    <tr><td>Μαθητής που έχει χάσει πολλά</td><td>Δεν του ζητάμε όλες τις ασκήσεις: προτεραιότητα στις Ασκήσεις 2 και 5 (οι δύο που εμφανίζονται σχεδόν σίγουρα στο τεστ).</td></tr>
+    <tr><td>Μαθητής με μαθηματικό άγχος</td><td>Δώστε έτοιμους τύπους σε κάρτα. Επικεντρωθείτε στην έννοια.</td></tr>
+    <tr><td>Αλλοδαποί μαθητές</td><td>Γλωσσάρι: <em>Coulomb / κουλόμπ, αγωγιμότητα / conductance, αντίσταση / resistance, τάση / voltage, ΗΕΔ / EMF, πυκνότητα / density, μέτρηση / measurement</em>.</td></tr>
+    <tr><td>Τάξη ανήσυχη</td><td>Το exit ticket γίνεται 2,5΄ σιωπής με παράδοση στην πόρτα — δίνει φυσικό κλείσιμο.</td></tr>
+    <tr><td>Χωρίς προβολέα</td><td>Οι 4 σταθμοί γίνονται με πίνακα και φύλλα — η δομή παραμένει.</td></tr>
+    <tr><td>Αργό τμήμα</td><td>Προτεραιότητα: Σταθμοί 3 &amp; 4 (τα πιο βαρυτικά στο τεστ).</td></tr>
+    <tr><td>Γρήγορο τμήμα</td><td>+3΄ στον Σταθμό 4 για το θέμα 18639 (4.3).</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 11. ΑΞΙΟΛΟΓΗΣΗ                                -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="assessment">11. Αξιολόγηση &amp; Αξιοποίηση Δεδομένων</h2>
+
+<div class="info-box">
+  <strong>Σε αυτό το μάθημα δεν βαθμολογείται κανείς.</strong> Όλα τα φύλλα είναι εργαλεία μάθησης — όχι βαθμολόγησης.
+</div>
+
+<table>
+  <thead><tr><th style="width:26%;">Εργαλείο</th><th style="width:26%;">Τι μετρά</th><th>Τι κάνω με το αποτέλεσμα</th></tr></thead>
+  <tbody>
+    <tr><td>Exit ticket (Φύλλο Γ)</td><td>Αυτοπεποίθηση + κενά</td><td>Τα 5 πρώτα λεπτά του τεστ αφιερώνονται στα σημεία που ζήτησε η τάξη (υπενθύμιση τύπων, όχι απαντήσεων).</td></tr>
+    <tr><td>Κουίζ με χέρια (Φάση 6)</td><td>Άμεση κατανόηση 6 εννοιών</td><td>Όποιος διστάζει → του υποδεικνύεται η αντίστοιχη άσκηση για το σπίτι.</td></tr>
+    <tr><td>Φύλλο Α (ασκήσεις)</td><td>Ακρίβεια υπολογισμών &amp; μονάδων</td><td>Δεν βαθμολογείται· χρησιμοποιείται για να στηθούν τα 4 πρώτα λεπτά της ανατροφοδότησης μετά το τεστ.</td></tr>
+    <tr><td>Φύλλο Β (θέμα 18639)</td><td>Εφαρμογή σε αυθεντικό θέμα</td><td>Αν το 4.3 αποτύχει μαζικά → 5΄ επανάληψη για τη λύση «ως προς S» στο επόμενο μάθημα.</td></tr>
+    <tr><td>Φύλλο Ε (τράπεζα)</td><td>Μεταφορά σε αυθεντική διατύπωση</td><td>Διορθώνουμε με το κλειδί του ΙΕΠ· καταγράφουμε ανά θέμα ποιοι έλυσαν το 4.1, το 4.2, το 4.3.</td></tr>
+  </tbody>
+</table>
+
+<div class="success-box">
+  <strong>✅ Δείκτης επιτυχίας:</strong> Αν στο τέλος της ώρας (α) οι περισσότεροι μαθητές μπορούν να λύσουν τουλάχιστον 3 από τις 5 ασκήσεις του Φύλλου Α, (β) ξέρουν τις 5 παγίδες του τεστ, (γ) θυμούνται τουλάχιστον 4 από τους 6 τύπους, (δ) έλυσαν χωρίς βοήθεια τα 4.1 και 4.2 του 18639 — η ώρα πέτυχε.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 12. ΤΡΑΠΕΖΑ                                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="bank">12. Τράπεζα Θεμάτων ΙΕΠ — Θέματα σχετικά με την επανάληψη</h2>
+
+<div class="info-box">
+  <strong>📌 Πώς χρησιμοποιούνται τα θέματα:</strong>
+  <ul style="margin:6px 0;">
+    <li><strong>Στην τάξη (Σταθμός 4, Φάση 5):</strong> θέμα <strong>18639</strong> — αγωγιμότητα, μήκος αγωγού, νέα διατομή</li>
+    <li><strong>Στο Φύλλο Ε (σπίτι):</strong> 20675, 20674, 36480 (4ου) · 19567, 19565, 28065, 28058 (2ου)</li>
+    <li><strong>Στο κουίζ (Φάση 6):</strong> 6 ερωτήσεις εμπνευσμένες από τα θέματα 2ου της τράπεζας</li>
+    <li><strong>Στο τεστ (επόμενη εβδομάδα):</strong> τα θέματα 19563, 19659, 18282, 21252 (από την τράπεζα)</li>
+  </ul>
+</div>
+
+<div class="data-box">
+  <strong>🧮 Θέμα 18639 — ΘΕΜΑ 4ο (25 μον.)</strong>
+  <p style="margin-top:8px;">Η αγωγιμότητα ενός αγωγού από χρωμονικελίνη είναι G = 0,1 S και η διατομή του είναι S = 3 mm². Δίνεται ρ<sub>χρ</sub> = 1 Ω·mm²/m.</p>
+  <p><strong>4.1</strong> Η αντίσταση R του αγωγού. <em>(5 μον.)</em></p>
+  <p><strong>4.2</strong> Το μήκος ℓ του αγωγού. <em>(8 μον.)</em></p>
+  <p><strong>4.3</strong> Αντικαθιστούμε τον αγωγό με αλουμίνιο (ρ<sub>αλ</sub> = 0,03 Ω·mm²/m). Ποια η νέα διατομή S΄ ώστε η αντίσταση να μείνει ίδια; <em>(12 μον.)</em></p>
+  <div class="success-box" style="margin-top:10px;">
+    <strong>🔑 Κλειδί:</strong> 4.1: R = 1/G = 10 Ω · 4.2: ℓ = R·S/ρ = 30 m · 4.3: S΄ = ρ<sub>αλ</sub>·ℓ/R = 0,09 mm²
+  </div>
+</div>
+
+<div class="data-box">
+  <strong>🧮 Θέμα 20675 — ΘΕΜΑ 4ο (25 μον.)</strong>
+  <p style="margin-top:8px;"><strong>4.1</strong> Συσκευή με U = 40 V, I = 10 A. Ποια η αγωγιμότητα;</p>
+  <p><strong>4.2</strong> Χρυσός αγωγός: S = 1,5 mm², ℓ = 15 m, ρ = 0,02 Ω·mm²/m. Ποια η αγωγιμότητα;</p>
+  <div class="success-box" style="margin-top:10px;">
+    <strong>🔑 Κλειδί:</strong> 4.1: R = U/I = 4 Ω → G = 0,25 S · 4.2: R = 0,2 Ω → G = 5 S
+  </div>
+</div>
+
+<div class="data-box">
+  <strong>🧮 Θέμα 20674 — ΘΕΜΑ 4ο (25 μον.)</strong>
+  <p style="margin-top:8px;"><strong>4.1</strong> Χάλκινος αγωγός, R = 50 Ω, S = 1,5 mm², ρ = 0,02 Ω·mm²/m. Ποιο το μήκος;</p>
+  <p><strong>4.2</strong> R₁ = 30 Ω στους 20 °C, θ₂ = 50 °C, α = 0,004 1/°C. Ποια η R₂;</p>
+  <div class="success-box" style="margin-top:10px;">
+    <strong>🔑 Κλειδί:</strong> 4.1: ℓ = R·S/ρ = 3750 m · 4.2: R₂ = 33,6 Ω
+  </div>
+  <div class="alert" style="margin-top:8px;">
+    <strong>⚠️ Ασυμφωνία:</strong> Το έντυπο γράφει α = 0,04 αλλά το κλειδί υπολογίζει με 0,004 (33,6 Ω). Με το 0,04 βγαίνει 66 Ω. <em>Αξιοποιήστε το ως άσκηση ελέγχου τάξης μεγέθους.</em>
+  </div>
+</div>
+
+<div class="data-box">
+  <strong>🧮 Θέμα 19567 — ΘΕΜΑ 2ο (25 μον.)</strong>
+  <p style="margin-top:8px;"><strong>2.1</strong> Αντιστοίχιση μεγεθών (R, ρ, G, κ) με μονάδες (Ω, Ω·mm²/m, S, S·m/mm²).</p>
+  <p><strong>2.2</strong> Με ποιους τρεις τρόπους μετριέται η αντίσταση;</p>
+  <div class="success-box" style="margin-top:10px;">
+    <strong>🔑 Κλειδί:</strong> 1-β, 2-γ, 3-δ, 4-α · ωμόμετρο/πολύμετρο · βολτόμετρο+αμπερόμετρο · γέφυρα
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 13. ΣΥΝΔΕΣΗ ΜΕ ΕΠΟΜΕΝΟ                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="next">13. Σύνδεση με το Επόμενο Μάθημα — Τεστ Α΄ Τετραμήνου</h2>
+
+<div class="success-box">
+  <strong>📅 Επόμενη εβδομάδα: Τεστ Α΄ Τετραμήνου</strong> — 4 θέματα, 100 μονάδες, 45 λεπτά.
+  <br><br>
+  Το γραπτό καλύπτει ακριβώς τις 4 ενότητες της σημερινής επανάληψης:
+  <ul style="margin:8px 0;">
+    <li><strong>ΘΕΜΑ 1ο (25 μον.):</strong> Σωστό/Λάθος &amp; Νόμος Coulomb — θέμα 19563</li>
+    <li><strong>ΘΕΜΑ 2ο (25 μον.):</strong> Όργανα σύνδεση &amp; σχήμα — θέμα 19659</li>
+    <li><strong>ΘΕΜΑ 3ο (25 μον.):</strong> Φορτίο / ρεύμα — θέμα 18282</li>
+    <li><strong>ΘΕΜΑ 4ο (25 μον.):</strong> Αντίσταση / αγωγιμότητα — θέμα 21252</li>
+  </ul>
+  <strong>Μετά το τεστ:</strong> διόρθωση ανά θέμα και ανατροφοδότηση με ανάλυση λαθών — τα 5 φύλλα με τα χαμηλότερα σκορ κρατούνται ανώνυμα για αυτή τη δουλειά.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 14. ΒΙΒΛΙΟΓΡΑΦΙΑ                               -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="biblio">14. Βιβλιογραφία &amp; Αναφορές</h2>
+
+<h3>Α. Παιδαγωγική &amp; Διδακτική Θεωρία</h3>
+<ul style="font-size:0.93em; line-height:1.8;">
+  <li>Ainsworth, S. (2006). DeFT: A conceptual framework for considering learning with multiple representations. <em>Learning and Instruction, 16</em>(3), 183–198.</li>
+  <li>Ausubel, D. P. (1968). <em>Educational psychology: A cognitive view</em>. Holt, Rinehart &amp; Winston.</li>
+  <li>Chi, M. T. H., &amp; Wylie, R. (2014). The ICAP framework. <em>Educational Psychologist, 49</em>(4), 219–243.</li>
+  <li>Earl, L. M. (2003). <em>Assessment as learning: Using classroom assessment to maximize student learning</em>. Corwin Press.</li>
+  <li>Edmondson, A. (1999). Psychological safety and learning behavior in work teams. <em>Administrative Science Quarterly, 44</em>(2), 350–383.</li>
+  <li>Flavell, J. H. (1979). Metacognition and cognitive monitoring. <em>American Psychologist, 34</em>(10), 906–911.</li>
+  <li>Kahneman, D. (2011). <em>Thinking, fast and slow</em>. Farrar, Straus and Giroux.</li>
+  <li>Mayer, R. E. (2009). <em>Multimedia learning</em> (2nd ed.). Cambridge University Press.</li>
+  <li>Piaget, J. (1977). <em>The development of thought: Equilibration of cognitive structures</em>. Viking Press.</li>
+  <li>Roediger, H. L., &amp; Karpicke, J. D. (2006). Test-enhanced learning. <em>Psychological Science, 17</em>(3), 249–255.</li>
+  <li>Sweller, J. (1988). Cognitive load during problem solving. <em>Cognitive Science, 12</em>(2), 257–285.</li>
+  <li>Sweller, J., &amp; Cooper, G. A. (1985). The use of worked examples as a substitute for problem solving. <em>Cognition and Instruction, 2</em>(1), 59–89.</li>
+  <li>Vygotsky, L. S. (1978). <em>Mind in society</em>. Harvard University Press.</li>
+  <li>White, R., &amp; Gunstone, R. (1992). <em>Probing understanding</em>. Falmer Press.</li>
+</ul>
+
+<h3>Β. Ελληνικό Θεσμικό &amp; Αναλυτικό Πλαίσιο</h3>
+<ul style="font-size:0.93em; line-height:1.8;">
+  <li>ΦΕΚ 2187/τ.Β΄/12-06-2018 — Ωρολόγιο Πρόγραμμα Β΄ ΕΠΑ.Λ.</li>
+  <li>ΦΕΚ 772/τ.Β΄/12-02-2016 — Αναλυτικό Πρόγραμμα Σπουδών ΕΠΑ.Λ. — Τομέας Ηλεκτρολογίας.</li>
+  <li>Υπουργείο Παιδείας. <em>Ψηφιακό Σχολείο — Ηλεκτροτεχνία Β΄ ΕΠΑ.Λ. (κωδ. 24-0332)</em>, Κεφ. 1.1–2.1, σελ. 96–112. Ανακτήθηκε από <a href="https://ebooks.edu.gr/ebooks/handle/8547/2920" target="_blank" rel="noopener">ebooks.edu.gr</a>.</li>
+  <li>Ινστιτούτο Εκπαιδευτικής Πολιτικής (ΙΕΠ). <em>Τράπεζα Θεμάτων</em>. Ανακτήθηκε από <a href="https://www.iep.edu.gr" target="_blank" rel="noopener">www.iep.edu.gr</a>.</li>
+</ul>
+
+<div class="success-box">
+  <strong>✅ Κλείσιμο:</strong> Αυτή η ώρα είναι η <strong>γέφυρα</strong> μεταξύ της καθημερινής διδασκαλίας και του τεστ. Δεν εισάγει νέα ύλη — ανακτά, ελέγχει, και προετοιμάζει. Αν φύγουν με <strong>μία καθαρή εικόνα</strong> — «ξέρω τι ξέρω, ξέρω τι δεν ξέρω, και ξέρω πού να κοιτάξω» — τότε το τεστ της επόμενης εβδομάδας θα είναι μια ευκαιρία, όχι μια απειλή.
+</div>
+
+</main>
+
+</body>
+</html>

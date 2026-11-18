@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ατομικό Φυλλάδιο Επανάληψης — Α΄ Τετράμηνο — Β΄ ΕΠΑΛ</title>
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --blue:#1a3a5c;
+    --green:#2e5c3a;
+    --gray:#5a5a5a;
+    --soft:#8a8a8a;
+    --bg:#fbfaf6;
+    --line:#c8c8c0;
+    --fill:#d0d0c8;
+    --bg-ex:#eef2f5;
+    --bg-you:#fafaf7;
+    --bg-warn:#f5efe6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+    font-size:12pt; line-height:1.6;
+    padding:20px;
+    max-width:900px; margin:0 auto;
+  }
+
+  h1{color:var(--blue); font-size:1.5em; font-weight:700; margin:0 0 6px 0; letter-spacing:.2px;}
+  h2{color:var(--blue); font-size:1.15em; font-weight:700; margin:18px 0 8px 0;
+     border-bottom:2px solid var(--blue); padding-bottom:4px;}
+  p{margin:6px 0;}
+  ul,ol{margin:6px 0; padding-left:22px;}
+  li{margin:4px 0;}
+
+  /* ─── Headers επαναλαμβανόμενα σε κάθε σελίδα ─── */
+  .page-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:0.8em; color:var(--soft);
+    padding-bottom:4px; margin-bottom:10px;
+    border-bottom:1px dashed var(--line);
+  }
+  .page-head .title{font-weight:600;}
+  .page-head .prog{font-family:"Courier New",monospace;}
+
+  /* ─── Σελίδες ─── */
+  .page{
+    page-break-after:always; break-after:page;
+    padding-top:4px;
+  }
+  .page:last-child{page-break-after:auto; break-after:auto;}
+
+  /* ─── Κουτί τύπου ─── */
+  .formula-box{
+    background:#fff; border:2px solid var(--blue);
+    border-radius:6px; padding:10px 14px; margin:10px 0;
+    text-align:center;
+    font-family:"Cambria Math",Georgia,serif;
+    font-size:1.35em; font-weight:700; color:var(--blue);
+  }
+  .formula-box .vals{
+    font-family:"Segoe UI",Arial,sans-serif;
+    font-size:0.62em; font-weight:400; color:var(--gray);
+    margin-top:4px;
+  }
+
+  /* ─── Οδηγία ─── */
+  .tip{
+    background:var(--bg-warn);
+    border-left:4px solid var(--gray);
+    padding:8px 12px; margin:10px 0;
+    font-size:0.95em; color:#333;
+  }
+  .tip strong{color:var(--ink);}
+
+  /* ─── Λυμένο παράδειγμα ─── */
+  .example{
+    background:var(--bg-ex);
+    border:1px solid #b0bec5;
+    border-radius:6px;
+    padding:10px 14px; margin:12px 0;
+  }
+  .example .tag{
+    display:inline-block;
+    background:var(--gray); color:#fff;
+    font-size:0.78em; font-weight:700; letter-spacing:.5px;
+    padding:2px 10px; border-radius:12px;
+    margin-bottom:6px;
+  }
+  .example .problem{
+    font-weight:600; color:var(--ink);
+    margin:6px 0 10px 0;
+  }
+
+  /* ─── Σειρά βήματος ─── */
+  .step{
+    display:grid;
+    grid-template-columns:32px 1fr;
+    gap:10px;
+    padding:7px 0;
+    border-top:1px solid #d8dde0;
+  }
+  .step:first-of-type{border-top:none;}
+  .step .num{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:0.9em;
+    flex-shrink:0;
+  }
+  .step .lbl{
+    font-size:0.92em; font-weight:600; color:var(--blue);
+    margin-bottom:3px;
+  }
+  .step .val{
+    font-family:"Courier New",monospace;
+    font-size:0.98em; color:var(--green);
+    line-height:1.5;
+  }
+  .step .fill{
+    font-family:"Courier New",monospace;
+    border-bottom:2px dotted var(--fill);
+    padding:2px 0 3px 0; min-height:1.4em;
+    color:#333;
+  }
+
+  /* ─── Απάντηση ─── */
+  .answer-box{
+    background:var(--green); color:#fff;
+    padding:10px 16px; border-radius:6px;
+    margin-top:12px;
+    font-family:"Courier New",monospace;
+    font-size:1.1em; font-weight:700;
+    text-align:center;
+  }
+  .answer-box small{
+    display:block;
+    font-size:0.7em; font-weight:400;
+    opacity:0.85; margin-top:2px;
+    font-family:"Segoe UI",Arial,sans-serif;
+  }
+  .answer-fill{
+    background:#fff;
+    border:2px dashed var(--green);
+    padding:12px 16px; border-radius:6px;
+    margin-top:12px;
+    font-family:"Courier New",monospace;
+    font-size:1.05em; text-align:center;
+    color:var(--ink);
+  }
+
+  /* ─── "Τώρα εσύ" ─── */
+  .your-turn{
+    background:var(--bg-you);
+    border:2px solid var(--blue);
+    border-radius:6px;
+    padding:10px 14px; margin:14px 0;
+  }
+  .your-turn .tag{
+    display:inline-block;
+    background:var(--blue); color:#fff;
+    font-size:0.78em; font-weight:700; letter-spacing:.5px;
+    padding:2px 10px; border-radius:12px;
+    margin-bottom:6px;
+  }
+
+  /* ─── Checkbox βήματος ─── */
+  .check{
+    display:inline-block; width:16px; height:16px;
+    border:1.5px solid var(--gray);
+    border-radius:3px;
+    margin-right:6px; vertical-align:-3px;
+  }
+
+  /* ─── Τέλος άσκησης ─── */
+  .done{
+    margin-top:16px; padding:8px 12px;
+    background:#fff; border:1px solid var(--line);
+    border-radius:6px;
+    font-size:0.92em; color:var(--gray);
+    text-align:center;
+  }
+  .done .check{width:14px; height:14px;}
+
+  /* ─── Πίνακας (Άσκηση 4) ─── */
+  table{
+    border-collapse:collapse; width:100%;
+    margin:10px 0; font-size:0.95em;
+  }
+  th,td{
+    border:1px solid var(--gray);
+    padding:6px 10px; text-align:center;
+    font-family:"Courier New",monospace;
+  }
+  th{background:#e8ecf0; color:var(--blue); font-weight:700;}
+
+  /* ─── Πρόγραμμα ημέρας ─── */
+  .schedule{
+    background:#fff; border:1px solid var(--line);
+    border-radius:8px; padding:14px 18px;
+    margin:14px 0;
+  }
+  .schedule ol{
+    list-style:none; padding:0; margin:0;
+  }
+  .schedule li{
+    padding:8px 0;
+    border-bottom:1px solid #eee;
+    display:flex; align-items:center;
+    gap:12px;
+  }
+  .schedule li:last-child{border-bottom:none;}
+  .schedule .cb{
+    width:20px; height:20px;
+    border:2px solid var(--blue);
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .schedule .txt{flex:1;}
+  .schedule .num{
+    font-family:"Courier New",monospace;
+    color:var(--soft); font-size:0.9em; min-width:20px;
+  }
+
+  /* ─── Κάρτες "Αν..." ─── */
+  .ifcards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px; margin:12px 0;
+  }
+  .ifcard{
+    background:#fff; border:1px solid var(--line);
+    border-left:4px solid var(--blue);
+    border-radius:6px; padding:10px 12px;
+    font-size:0.92em;
+  }
+  .ifcard strong{
+    display:block; color:var(--blue);
+    font-size:0.85em; letter-spacing:.3px;
+    margin-bottom:4px; text-transform:uppercase;
+  }
+
+  /* ─── Σχέδιο ─── */
+  .draw{
+    border:1.5px dashed var(--soft);
+    border-radius:5px;
+    min-height:4cm; margin:8px 0;
+    padding:8px 12px;
+    color:var(--soft); font-style:italic; font-size:0.9em;
+    background:#fff;
+  }
+
+  /* ─── Σημείωση δασκάλου ─── */
+  .teacher-note{
+    background:#f5efe6; border:1px dashed var(--gray);
+    padding:8px 12px; margin:8px 0;
+    font-size:0.85em; color:#555;
+  }
+
+  /* ─── no-print ─── */
+  .no-print{
+    background:#f0f7ff; border:1px solid #90caf9;
+    border-radius:6px; padding:10px 14px;
+    margin:0 0 14px 0; font-size:0.9em;
+  }
+
+  /* ─── PRINT ─── */
+  @media print{
+    body{
+      background:#fff; padding:0; max-width:100%;
+      font-size:10.5pt; line-height:1.45;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+    }
+    .no-print{display:none !important;}
+    .page{padding-top:0;}
+    .step{padding:5px 0;}
+    .step .num{width:22px; height:22px; font-size:0.82em;}
+    .example,.your-turn{padding:8px 11px; margin:9px 0;}
+    .formula-box{padding:8px 12px; margin:8px 0; font-size:1.2em;}
+    @page{ size:A4; margin:1.4cm 1.4cm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <strong>📋</strong> Ατομικό φυλλάδιο για μαθητή στο φάσμα του αυτισμού — <strong>εναλλακτική έκδοση</strong> του τυπικού φύλλου. Δίνεται αντί για το κανονικό, όχι επιπλέον. Ίδιες ασκήσεις, ίδιοι αριθμοί, ίδια ύλη. Εκτύπωση: <code>Ctrl+P</code> → A4 Portrait. Σελίδες 1–7: μαθητής. Σελίδα 8: κλειδί καθηγητή (μην την τυπώσεις για τον μαθητή).
+</div>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 1: ΠΡΟΓΡΑΜΜΑ ΗΜΕΡΑΣ ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΦΥΛΛΑΔΙΟ ΕΠΑΝΑΛΗΨΗΣ · ΣΕΛΙΔΑ 1 ΑΠΟ 7</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☐☐☐☐☐☐☐☐</span>
+  </div>
+
+  <h1>Ατομικό Φυλλάδιο Επανάληψης</h1>
+  <p style="color:var(--gray); margin-top:0;">
+    Α΄ Τετράμηνο · Ενότητες 1.1 → 2.1 · Β΄ ΕΠΑΛ
+  </p>
+
+  <div style="border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:14px 0; margin:14px 0; font-size:1.05em;">
+    <strong>Ονοματεπώνυμο:</strong> ___________________________________<br><br>
+    <strong>Τμήμα:</strong> ____________ &nbsp;&nbsp; <strong>Ημερομηνία:</strong> ____________
+  </div>
+
+  <h2>Τι θα κάνουμε σήμερα</h2>
+  <p>Ακολουθείς τις σελίδες <strong>με τη σειρά</strong>. Κάθε σελίδα έχει <strong>μία άσκηση</strong>. Όταν τελειώσεις τη σελίδα, βάζεις ✓ στο κουτάκι δίπλα.</p>
+
+  <div class="schedule">
+    <ol>
+      <li><span class="num">1.</span><span class="cb"></span><span class="txt"><strong>Διαβάζω αυτή τη σελίδα</strong> (2 λεπτά)</span></li>
+      <li><span class="num">2.</span><span class="cb"></span><span class="txt"><strong>Άσκηση 1</strong> — Δύναμη Coulomb (σελίδα 2)</span></li>
+      <li><span class="num">3.</span><span class="cb"></span><span class="txt"><strong>Άσκηση 2</strong> — Ένταση και πυκνότητα ρεύματος (σελίδα 3)</span></li>
+      <li><span class="num">4.</span><span class="cb"></span><span class="txt"><strong>Άσκηση 3</strong> — Τάση και πολική τάση (σελίδα 4)</span></li>
+      <li><span class="num">5.</span><span class="cb"></span><span class="txt"><strong>Άσκηση 4</strong> — Νόμος Ohm (σελίδα 5)</span></li>
+      <li><span class="num">6.</span><span class="cb"></span><span class="txt"><strong>Άσκηση 5</strong> — Ειδική αντίσταση (σελίδα 6)</span></li>
+      <li><span class="num">7.</span><span class="cb"></span><span class="txt"><strong>Θέμα τράπεζας</strong> + αυτοέλεγχος (σελίδα 7)</span></li>
+      <li><span class="num">8.</span><span class="cb"></span><span class="txt"><strong>Παραδίδω</strong> το φυλλάδιο στον καθηγητή</span></li>
+    </ol>
+  </div>
+
+  <h2>Αν χρειαστεί κάτι</h2>
+  <div class="ifcards">
+    <div class="ifcard">
+      <strong>Δεν καταλαβαίνω κάτι</strong>
+      Σηκώνω το χέρι. Περιμένω. Δείχνω τη σελίδα.
+    </div>
+    <div class="ifcard">
+      <strong>Κουράζομαι / χρειάζομαι διάλειμμα</strong>
+      Σηκώνω το χέρι. Δείχνω αυτή τη σελίδα. Πηγαίνω στην ήσυχη γωνία για 2 λεπτά.
+    </div>
+    <div class="ifcard">
+      <strong>Τελειώνω νωρίτερα</strong>
+      Γυρνάω στο λυμένο παράδειγμα της άσκησης. Διαβάζω τα βήματα. Δεν κάνω νέα άσκηση.
+    </div>
+    <div class="ifcard">
+      <strong>Θέλω να πάω τουαλέτα / νερό</strong>
+      Σηκώνω το χέρι. Δείχνω αυτή τη σελίδα.
+    </div>
+  </div>
+
+  <h2>Οι 5 τύποι που θα χρησιμοποιήσω</h2>
+  <p style="color:var(--gray); font-size:0.92em;">
+    Κάθε άσκηση έχει τον τύπο της στην κορυφή. Δεν χρειάζεται να τους θυμάμαι απέξω.
+    Είναι εδώ, γραμμένοι — τους βλέπω όποτε θέλω.
+  </p>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+    <div class="formula-box" style="font-size:1em; padding:8px;">F = k·q₁·q₂ / r²</div>
+    <div class="formula-box" style="font-size:1em; padding:8px;">I = Q / t &nbsp;·&nbsp; J = I / S</div>
+    <div class="formula-box" style="font-size:1em; padding:8px;">U = W / q</div>
+    <div class="formula-box" style="font-size:1em; padding:8px;">R = U / I</div>
+    <div class="formula-box" style="font-size:1em; padding:8px;">R = ρ·ℓ / S</div>
+    <div class="formula-box" style="font-size:1em; padding:8px;">G = 1 / R</div>
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 2: ΑΣΚΗΣΗ 1 — COULOMB ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΑΣΚΗΣΗ 1 ΑΠΟ 5 · ΔΥΝΑΜΗ COULOMB</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☐☐☐☐☐☐☐</span>
+  </div>
+
+  <h1>Άσκηση 1 — Δύναμη Coulomb</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Λύνω μία άσκηση.
+    Πρώτα κοιτάζω το <strong>λυμένο παράδειγμα</strong>. Μετά λύνω <strong>τη δική μου</strong> με τα ίδια βήματα.
+  </div>
+
+  <div class="formula-box">
+    F = k · q₁ · q₂ / r²
+    <div class="vals">k = 9·10⁹ N·m²/C² · 1 μC = 10⁻⁶ C · r σε μέτρα (m)</div>
+  </div>
+
+  <!-- ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ -->
+  <div class="example">
+    <span class="tag">ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ</span>
+    <p class="problem">Δύο φορτία: q₁ = 1 μC, q₂ = 4 μC. Απόσταση r = 0,2 m. Πόση η δύναμη;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τα φορτία σε C (αντί για μC):</div>
+        <div class="val">q₁ = 1·10⁻⁶ C &nbsp;·&nbsp; q₂ = 4·10⁻⁶ C</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω το r²:</div>
+        <div class="val">r² = 0,2² = 0,04 m²</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Βάζω στον τύπο:</div>
+        <div class="val">F = 9·10⁹ · (1·10⁻⁶ · 4·10⁻⁶) / 0,04</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div>
+        <div class="lbl">Υπολογίζω:</div>
+        <div class="val">F = 36·10⁻³ / 0,04 = 0,9 N</div>
+      </div>
+    </div>
+
+    <div class="answer-box">
+      F = 0,9 N
+      <small>Και τα δύο θετικά → απωθούνται</small>
+    </div>
+  </div>
+
+  <!-- ΤΩΡΑ ΕΣΥ -->
+  <div class="your-turn">
+    <span class="tag">ΤΩΡΑ ΕΣΥ</span>
+    <p class="problem">Δύο φορτία: q₁ = 2 μC, q₂ = 3 μC. Απόσταση r = 0,3 m.<br>(α) Πόση η δύναμη; (β) Έλξη ή άπωση;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τα φορτία σε C:</div>
+        <div class="fill">q₁ = ________________ C &nbsp;·&nbsp; q₂ = ________________ C</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω το r²:</div>
+        <div class="fill">r² = ______________ = ______________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Βάζω στον τύπο:</div>
+        <div class="fill">F = _______________________________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div>
+        <div class="lbl">Υπολογίζω:</div>
+        <div class="fill">F = _______________________________</div>
+      </div>
+    </div>
+
+    <div class="answer-fill">
+      F = ____________ N &nbsp;&nbsp;·&nbsp;&nbsp; είναι: &nbsp; ☐ έλξη &nbsp; ☐ άπωση
+    </div>
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα την Άσκηση 1.</strong> Γυρνάω σελίδα → Άσκηση 2.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 3: ΑΣΚΗΣΗ 2 — ΡΕΥΜΑ ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΑΣΚΗΣΗ 2 ΑΠΟ 5 · ΕΝΤΑΣΗ ΚΑΙ ΠΥΚΝΟΤΗΤΑ</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☑☐☐☐☐☐☐</span>
+  </div>
+
+  <h1>Άσκηση 2 — Ένταση και πυκνότητα ρεύματος</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Ίδια δομή με την Άσκηση 1.
+    Κοιτάζω πρώτα το παράδειγμα, μετά λύνω.
+  </div>
+
+  <div class="formula-box">
+    I = Q / t &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; J = I / S
+    <div class="vals">Q σε Coulomb (C) · t σε δευτερόλεπτα (s) · S σε mm² · J σε A/mm²</div>
+  </div>
+
+  <div class="tip" style="background:#fff; border-left-color:var(--green);">
+    <strong>Σημαντικό:</strong> Πριν διαιρέσω, γράφω <strong>πάντα</strong> τον χρόνο σε <strong>δευτερόλεπτα</strong>.
+    Αν ο χρόνος δίνεται σε λεπτά (min), πολλαπλασιάζω επί 60.<br>
+    1 min = 60 s · 2 min = 120 s · 5 min = 300 s
+  </div>
+
+  <!-- ΛΥΜΕΝΟ -->
+  <div class="example">
+    <span class="tag">ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ</span>
+    <p class="problem">Από αγωγό S = 2 mm² περνούν Q = 300 C σε t = 2 min. Πόσα A; Πόσα A/mm²;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον χρόνο σε δευτερόλεπτα:</div>
+        <div class="val">t = 2 min · 60 = 120 s</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω την ένταση I:</div>
+        <div class="val">I = 300 / 120 = 2,5 A</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Υπολογίζω την πυκνότητα J:</div>
+        <div class="val">J = 2,5 / 2 = 1,25 A/mm²</div>
+      </div>
+    </div>
+
+    <div class="answer-box">
+      I = 2,5 A &nbsp;·&nbsp; J = 1,25 A/mm²
+    </div>
+  </div>
+
+  <!-- ΤΩΡΑ ΕΣΥ -->
+  <div class="your-turn">
+    <span class="tag">ΤΩΡΑ ΕΣΥ</span>
+    <p class="problem">Αγωγός S = 2,5 mm². Q = 600 C σε t = 5 min.<br>(α) Πόση η ένταση I; (β) Πόση η πυκνότητα J;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον χρόνο σε δευτερόλεπτα:</div>
+        <div class="fill">t = ____________ min · 60 = ______________ s</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω την ένταση I:</div>
+        <div class="fill">I = __________ / __________ = __________ A</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Υπολογίζω την πυκνότητα J:</div>
+        <div class="fill">J = __________ / __________ = __________ A/mm²</div>
+      </div>
+    </div>
+
+    <div class="answer-fill">
+      I = __________ A &nbsp;&nbsp;·&nbsp;&nbsp; J = __________ A/mm²
+    </div>
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα την Άσκηση 2.</strong> Γυρνάω σελίδα → Άσκηση 3.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 4: ΑΣΚΗΣΗ 3 — ΤΑΣΗ ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΑΣΚΗΣΗ 3 ΑΠΟ 5 · ΤΑΣΗ ΚΑΙ ΠΟΛΙΚΗ ΤΑΣΗ</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☑☑☐☐☐☐☐</span>
+  </div>
+
+  <h1>Άσκηση 3 — Τάση, πολική τάση και όργανα</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Τρία μικρά μέρη.
+    Στο (β) <strong>ζωγραφίζω</strong> σε κουτί — δεν χρειάζεται να είναι τέλειο.
+  </div>
+
+  <div class="formula-box">
+    U = W / q
+    <div class="vals">W σε Joule (J) · q σε C · U σε Volt (V) · 1 V = 1 J/C</div>
+  </div>
+
+  <!-- ΛΥΜΕΝΟ -->
+  <div class="example">
+    <span class="tag">ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ</span>
+    <p class="problem">(α) Μεταφέραμε q = 4 C με έργο W = 20 J. Πόση τάση;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον τύπο:</div>
+        <div class="val">U = W / q</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Βάζω τα νούμερα:</div>
+        <div class="val">U = 20 J / 4 C</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Υπολογίζω:</div>
+        <div class="val">U = 5 V</div>
+      </div>
+    </div>
+
+    <div class="answer-box">U = 5 V</div>
+
+    <p style="margin-top:14px;"><strong>(β) Πώς ζωγραφίζω κύκλωμα με Α και V;</strong></p>
+    <p style="font-size:0.92em; color:var(--gray);">Ο κανόνας είναι ένας:</p>
+    <div style="background:#fff; border:1px solid var(--line); border-radius:6px; padding:10px 14px; margin:8px 0; font-family:'Courier New',monospace; font-size:1.05em; text-align:center;">
+      <strong>Α</strong> → σε σειρά με τον R &nbsp;&nbsp;·&nbsp;&nbsp; <strong>V</strong> → παράλληλα στα άκρα του R
+    </div>
+    <svg viewBox="0 0 280 120" style="display:block; max-width:260px; margin:8px auto;">
+      <g fill="none" stroke="#1a3a5c" stroke-width="2.2">
+        <path d="M30 30H70M100 30H170M210 30H250V100H30V55M30 50V30"/>
+        <path d="M20 50H40M26 57H34"/>
+        <rect x="170" y="22" width="40" height="16"/>
+        <circle cx="85" cy="30" r="14" fill="#fff"/>
+        <circle cx="195" cy="75" r="12" fill="#fff"/>
+        <path d="M170 30V75H183M210 30V75H207"/>
+      </g>
+      <g font-family="Arial" font-size="11" font-weight="700" fill="#1a3a5c" text-anchor="middle">
+        <text x="85" y="34">A</text>
+        <text x="195" y="79">V</text>
+        <text x="190" y="17">R</text>
+        <text x="15" y="52">+</text>
+      </g>
+    </svg>
+    <p style="font-size:0.9em; color:var(--gray); text-align:center;">
+      Αντιγράφω αυτό το σχήμα στο κουτί της δικής μου άσκησης.
+    </p>
+  </div>
+
+  <!-- ΤΩΡΑ ΕΣΥ -->
+  <div class="your-turn">
+    <span class="tag">ΤΩΡΑ ΕΣΥ</span>
+    <p class="problem">(α) Μεταφέραμε q = 2 C με έργο W = 24 J. Πόση τάση;</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον τύπο:</div>
+        <div class="fill">U = __________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Βάζω τα νούμερα:</div>
+        <div class="fill">U = __________ / __________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Υπολογίζω:</div>
+        <div class="fill">U = __________ V</div>
+      </div>
+    </div>
+
+    <p style="margin-top:16px;"><strong>(β) Ζωγραφίζω κύκλωμα</strong> — με Α σε σειρά και V παράλληλα, όπως στο παράδειγμα:</p>
+    <div class="draw">✏️ Χώρος σχεδίου</div>
+
+    <p style="margin-top:16px;"><strong>(γ) Πηγή Ε = 12 V, r = 0,5 Ω, I = 2 A.</strong> Πόση η πολική τάση;</p>
+    <div class="tip" style="background:#fff; border-left-color:var(--green); font-family:'Courier New',monospace; font-size:1em;">
+      U<sub>πολ</sub> = E − I · r
+    </div>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Υπολογίζω το I·r:</div>
+        <div class="fill">I · r = __________ · __________ = __________ V</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Αφαιρώ από την Ε:</div>
+        <div class="fill">U<sub>πολ</sub> = __________ − __________ = __________ V</div>
+      </div>
+    </div>
+
+    <div class="answer-fill">
+      U<sub>πολ</sub> = __________ V
+    </div>
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα την Άσκηση 3.</strong> Γυρνάω σελίδα → Άσκηση 4.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 5: ΑΣΚΗΣΗ 4 — OHM ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΑΣΚΗΣΗ 4 ΑΠΟ 5 · ΝΟΜΟΣ OHM</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☑☑☑☐☐☐☐</span>
+  </div>
+
+  <h1>Άσκηση 4 — Νόμος Ohm από πίνακα</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Έχω πίνακα με 4 μετρήσεις.
+    Υπολογίζω τον λόγο U/I σε <strong>κάθε στήλη</strong>. Αν βγαίνει ίδιος, η αντίσταση λέγεται <strong>ωμική</strong>.
+  </div>
+
+  <div class="formula-box">
+    R = U / I
+    <div class="vals">U σε Volt (V) · I σε Ampere (A) · R σε Ohm (Ω)</div>
+  </div>
+
+  <!-- ΛΥΜΕΝΟ -->
+  <div class="example">
+    <span class="tag">ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ</span>
+    <p class="problem">Πίνακας μετρήσεων σε έναν αντιστάτη:</p>
+
+    <table style="max-width:340px; margin:8px auto;">
+      <tr><th>U (V)</th><td>3</td><td>6</td><td>9</td><td>12</td></tr>
+      <tr><th>I (A)</th><td>0,1</td><td>0,2</td><td>0,3</td><td>0,4</td></tr>
+    </table>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Υπολογίζω U/I σε κάθε στήλη:</div>
+        <div class="val">3/0,1 = 30 &nbsp;·&nbsp; 6/0,2 = 30 &nbsp;·&nbsp; 9/0,3 = 30 &nbsp;·&nbsp; 12/0,4 = 30</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Ο λόγος είναι ίδιος παντού; ΝΑΙ → ωμική.</div>
+        <div class="val">R = 30 Ω</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Πρόβλεψη για U = 15 V:</div>
+        <div class="val">I = U / R = 15 / 30 = 0,5 A</div>
+      </div>
+    </div>
+
+    <div class="answer-box">
+      R = 30 Ω · η αντίσταση είναι ωμική · I(15 V) = 0,5 A
+    </div>
+  </div>
+
+  <!-- ΤΩΡΑ ΕΣΥ -->
+  <div class="your-turn">
+    <span class="tag">ΤΩΡΑ ΕΣΥ</span>
+    <p class="problem">Πίνακας μετρήσεων:</p>
+
+    <table style="max-width:340px; margin:8px auto;">
+      <tr><th>U (V)</th><td>2</td><td>4</td><td>6</td><td>8</td></tr>
+      <tr><th>I (A)</th><td>0,1</td><td>0,2</td><td>0,3</td><td>0,4</td></tr>
+    </table>
+
+    <p style="margin-top:12px;"><strong>(α) Είναι ωμική η αντίσταση;</strong></p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Υπολογίζω U/I σε κάθε στήλη:</div>
+        <div class="fill">____/____ = ____ &nbsp;·&nbsp; ____/____ = ____ &nbsp;·&nbsp; ____/____ = ____ &nbsp;·&nbsp; ____/____ = ____</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Ο λόγος είναι ίδιος;</div>
+        <div class="fill">☐ ΝΑΙ, είναι ίδιος → <strong>ωμική</strong> &nbsp;&nbsp;&nbsp; ☐ ΟΧΙ, δεν είναι ίδιος</div>
+      </div>
+    </div>
+
+    <p style="margin-top:14px;"><strong>(β) Πόσο είναι το R;</strong></p>
+    <div class="fill">R = __________ Ω</div>
+
+    <p style="margin-top:14px;"><strong>(γ) Πόσο θα είναι το I στα U = 10 V;</strong></p>
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον τύπο:</div>
+        <div class="fill">I = __________ / __________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Βάζω τα νούμερα:</div>
+        <div class="fill">I = __________ / __________ = __________ A</div>
+      </div>
+    </div>
+
+    <div class="answer-fill">
+      R = __________ Ω &nbsp;&nbsp;·&nbsp;&nbsp; I(10 V) = __________ A
+    </div>
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα την Άσκηση 4.</strong> Γυρνάω σελίδα → Άσκηση 5.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 6: ΑΣΚΗΣΗ 5 — ΑΝΤΙΣΤΑΣΗ ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΑΣΚΗΣΗ 5 ΑΠΟ 5 · ΕΙΔΙΚΗ ΑΝΤΙΣΤΑΣΗ</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☑☑☑☑☐☐☐</span>
+  </div>
+
+  <h1>Άσκηση 5 — Ειδική αντίσταση και θερμοκρασία</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Τέσσερα μικρά μέρη (α, β, γ, δ).
+    Στο (δ) χρησιμοποιώ έναν <strong>καινούργιο</strong> τύπο — είναι γραμμένος παρακάτω.
+  </div>
+
+  <div class="formula-box">
+    R = ρ · ℓ / S &nbsp;&nbsp;&nbsp;&nbsp; G = 1 / R &nbsp;&nbsp;&nbsp;&nbsp; σ = 1 / ρ
+    <div class="vals">ρ σε Ω·mm²/m → τότε S μένει σε mm² (ΟΧΙ σε m²)</div>
+  </div>
+
+  <div class="tip" style="background:#fff; border-left-color:var(--green);">
+    <strong>Τύπος θερμοκρασίας (για το δ):</strong><br>
+    <span style="font-family:'Courier New',monospace; font-size:1.1em;">R<sub>θ</sub> = R₂₀ · [1 + α · (θ − 20)]</span><br>
+    R₂₀ = η αντίσταση στους 20 °C · α = 0,004 /°C (για χαλκό) · θ = η νέα θερμοκρασία.
+  </div>
+
+  <!-- ΛΥΜΕΝΟ -->
+  <div class="example">
+    <span class="tag">ΛΥΜΕΝΟ ΠΑΡΑΔΕΙΓΜΑ</span>
+    <p class="problem">Αγωγός: ℓ = 100 m, S = 2 mm², ρ = 0,02 Ω·mm²/m, α = 0,004 /°C.</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">(α) Αντίσταση R:</div>
+        <div class="val">R = 0,02 · 100 / 2 = 1 Ω</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">(β) Αγωγιμότητα G:</div>
+        <div class="val">G = 1 / 1 = 1 S</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">(γ) Ειδική αγωγιμότητα σ:</div>
+        <div class="val">σ = 1 / 0,02 = 50 S·m/mm²  (= 50 MS/m)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div>
+        <div class="lbl">(δ) R στους 60 °C:</div>
+        <div class="val">R₆₀ = 1 · [1 + 0,004 · (60 − 20)] = 1 · [1 + 0,004·40] = 1 · 1,16 = 1,16 Ω</div>
+      </div>
+    </div>
+
+    <div class="answer-box">
+      R = 1 Ω · G = 1 S · σ = 50 MS/m · R₆₀ = 1,16 Ω
+    </div>
+  </div>
+
+  <!-- ΤΩΡΑ ΕΣΥ -->
+  <div class="your-turn">
+    <span class="tag">ΤΩΡΑ ΕΣΥ</span>
+    <p class="problem">Χάλκινος αγωγός: ℓ = 200 m, S = 2,5 mm², ρ = 0,017 Ω·mm²/m, α = 0,004 /°C.</p>
+
+    <p style="margin-top:12px;"><strong>(α) Πόσο είναι το R;</strong></p>
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Γράφω τον τύπο και τα νούμερα:</div>
+        <div class="fill">R = __________ · __________ / __________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω:</div>
+        <div class="fill">R = __________ Ω</div>
+      </div>
+    </div>
+
+    <p style="margin-top:14px;"><strong>(β) Πόση η αγωγιμότητα G;</strong></p>
+    <div class="fill">G = 1 / __________ = __________ S</div>
+
+    <p style="margin-top:14px;"><strong>(γ) Πόση η ειδική αγωγιμότητα σ;</strong></p>
+    <div class="fill">σ = 1 / __________ = __________ MS/m</div>
+
+    <p style="margin-top:14px;"><strong>(δ) Πόσο είναι το R στους 70 °C;</strong></p>
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="lbl">Υπολογίζω το (θ − 20):</div>
+        <div class="fill">θ − 20 = __________ − 20 = __________ °C</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="lbl">Υπολογίζω την αγκύλη [1 + α · (θ−20)]:</div>
+        <div class="fill">1 + __________ · __________ = __________</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="lbl">Υπολογίζω το R₇₀:</div>
+        <div class="fill">R₇₀ = __________ · __________ = __________ Ω</div>
+      </div>
+    </div>
+
+    <div class="answer-fill">
+      R = __________ Ω &nbsp;·&nbsp; G = __________ S &nbsp;·&nbsp; σ = __________ MS/m &nbsp;·&nbsp; R₇₀ = __________ Ω
+    </div>
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα την Άσκηση 5.</strong> Γυρνάω σελίδα → Θέμα τράπεζας.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 7: ΘΕΜΑ ΤΡΑΠΕΖΑΣ + ΑΥΤΟΕΛΕΓΧΟΣ ═══════════════ -->
+<section class="page">
+  <div class="page-head">
+    <span class="title">ΘΕΜΑ ΤΡΑΠΕΖΑΣ + ΑΥΤΟΕΛΕΓΧΟΣ</span>
+    <span class="prog">ΠΡΟΟΔΟΣ: ☑☑☑☑☑☑☐☐</span>
+  </div>
+
+  <h1>Θέμα από την Τράπεζα Θεμάτων</h1>
+
+  <div class="tip">
+    <strong>Τι κάνω σε αυτή τη σελίδα:</strong> Το τελευταίο θέμα. Έχει 3 μέρη (4.1, 4.2, 4.3).
+    Κάθε μέρος χρησιμοποιεί έναν τύπο που ήδη ξέρω.
+  </div>
+
+  <div class="tip" style="background:#fff; border-left-color:var(--blue);">
+    <strong>Εκφώνηση:</strong> Αγωγός από <strong>χρωμονικελίνη</strong>, G = 0,1 S, S = 3 mm², ρ<sub>χρ</sub> = 1 Ω·mm²/m.<br>
+    <strong>4.1</strong> Πόσο είναι το R; (5 μον.)<br>
+    <strong>4.2</strong> Πόσο είναι το μήκος ℓ; (8 μον.)<br>
+    <strong>4.3</strong> Αντικαθιστούμε με αλουμίνιο, ρ<sub>αλ</sub> = 0,03 Ω·mm²/m. Ποια η νέα διατομή S΄ για να μείνει το R ίδιο; (12 μον.)
+  </div>
+
+  <p style="margin-top:14px;"><strong>4.1 — Από G σε R</strong></p>
+  <div class="step">
+    <div class="num">1</div>
+    <div>
+      <div class="lbl">Γράφω: G = 1/R ⟹ R = 1/G</div>
+      <div class="fill">R = 1 / __________ = __________ Ω</div>
+    </div>
+  </div>
+
+  <p style="margin-top:14px;"><strong>4.2 — Βρίσκω το μήκος ℓ</strong></p>
+  <div class="tip" style="background:#fff; border-left-color:var(--green); font-family:'Courier New',monospace; font-size:0.95em;">
+    R = ρ · ℓ / S &nbsp;&nbsp;⟹&nbsp;&nbsp; ℓ = R · S / ρ
+  </div>
+  <div class="step">
+    <div class="num">1</div>
+    <div>
+      <div class="lbl">Βάζω τα νούμερα:</div>
+      <div class="fill">ℓ = __________ · __________ / __________</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div>
+      <div class="lbl">Υπολογίζω:</div>
+      <div class="fill">ℓ = __________ m</div>
+    </div>
+  </div>
+
+  <p style="margin-top:14px;"><strong>4.3 — Νέα διατομή με αλουμίνιο</strong></p>
+  <div class="tip" style="background:#fff; border-left-color:var(--green); font-family:'Courier New',monospace; font-size:0.95em;">
+    Ίδιο R, ίδιο ℓ, νέο υλικό: &nbsp;&nbsp;S΄ = ρ<sub>αλ</sub> · ℓ / R
+  </div>
+  <div class="step">
+    <div class="num">1</div>
+    <div>
+      <div class="lbl">Βάζω τα νούμερα:</div>
+      <div class="fill">S΄ = __________ · __________ / __________</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <div>
+      <div class="lbl">Υπολογίζω:</div>
+      <div class="fill">S΄ = __________ mm²</div>
+    </div>
+  </div>
+
+  <div class="answer-fill">
+    R = __________ Ω &nbsp;·&nbsp; ℓ = __________ m &nbsp;·&nbsp; S΄ = __________ mm²
+  </div>
+
+  <div class="done">
+    <span class="check"></span> <strong>Τελείωσα το θέμα.</strong> Πάω στον αυτοέλεγχο παρακάτω.
+  </div>
+
+  <hr style="border:none; border-top:1px dashed var(--line); margin:20px 0;">
+
+  <h2>Αυτοέλεγχος πριν παραδώσω</h2>
+
+  <p><strong>1. Ποια άσκηση ήταν εύκολη για μένα;</strong></p>
+  <div style="border-bottom:1px dotted var(--fill); height:1.6em; margin:6px 0;"></div>
+
+  <p><strong>2. Ποια άσκηση ήταν δύσκολη;</strong></p>
+  <div style="border-bottom:1px dotted var(--fill); height:1.6em; margin:6px 0;"></div>
+
+  <p><strong>3. Ποιος τύπος θέλω να ξαναδώ πριν το τεστ;</strong></p>
+  <div style="border-bottom:1px dotted var(--fill); height:1.6em; margin:6px 0;"></div>
+
+  <p style="margin-top:16px;"><strong>4. Τελείωσα τα πάντα σωστά;</strong> &nbsp; Βάλε ✓ σε ό,τι έκανα:</p>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; font-size:0.95em;">
+    <div>☐ Έγραψα όλες τις μονάδες (N, A, V, Ω, S)</div>
+    <div>☐ Έλεγξα τα r² και τα min → s</div>
+    <div>☐ Έβαλα τα Α και V στο σχέδιο</div>
+    <div>☐ Ολοκλήρωσα και τις 5 ασκήσεις</div>
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 8: ΚΛΕΙΔΙ ΚΑΘΗΓΗΤΗ ═══════════════ -->
+<section class="page">
+  <div style="background:#ffebee; border:2px solid #c62828; border-radius:6px; padding:10px 14px; margin-bottom:14px;">
+    <strong style="color:#b71c1c;">⚠️ ΜΟΝΟ ΓΙΑ ΤΟΝ ΚΑΘΗΓΗΤΗ — ΜΗΝ ΤΟ ΤΥΠΩΣΕΙΣ ΣΤΟΝ ΜΑΘΗΤΗ</strong>
+  </div>
+
+  <h1>Κλειδί — Ατομικό Φυλλάδιο</h1>
+
+  <div class="teacher-note">
+    <strong>Γιατί διαφέρει αυτό το φυλλάδιο από το τυπικό:</strong>
+    <ul style="margin:4px 0 0 0;">
+      <li><strong>1 άσκηση = 1 σελίδα</strong> → predictability· ο μαθητής δεν χρειάζεται να σκανάρει ολόκληρη σελίδα για να βρει πού βρίσκεται.</li>
+      <li><strong>Λυμένο παράδειγμα πριν από κάθε άσκηση</strong> → μειώνει το κόστος έναρξης· δείχνει τη μορφή της αναμενόμενης απάντησης χωρίς ασάφεια.</li>
+      <li><strong>Βήματα με αριθμούς και κουτάκια</strong> → κάθε βήμα μετρήσιμο· ο μαθητής ξέρει πότε τελείωσε.</li>
+      <li><strong>Καμία προθεσμία</strong> → ο χρόνος πίεσης είναι από τους μεγαλύτερους στρεσογόνους παράγοντες.</li>
+      <li><strong>Ήρεμη παλέτα</strong> → μπλε/πράσινο/γκρι αντί για κόκκινο-πορτοκαλί. Αποφυγή αισθητηριακής υπερφόρτωσης.</li>
+      <li><strong>Κάρτες "Αν..."</strong> → ρητές οδηγίες για κάθε πιθανή κατάσταση (κόλλημα, κούραση, τέλος).</li>
+      <li><strong>Ίδιοι αριθμοί με το τυπικό φύλλο</strong> → δίκαιη αξιολόγηση· ο μαθητής γράφεται στην ίδια ύλη.</li>
+    </ul>
+  </div>
+
+  <h2>Απαντήσεις — Άσκηση 1 (Coulomb)</h2>
+  <p>q₁ = 2·10⁻⁶ C, q₂ = 3·10⁻⁶ C. r² = 0,09 m².</p>
+  <p>F = 9·10⁹ · (2·10⁻⁶ · 3·10⁻⁶) / 0,09 = <strong>0,6 N</strong> · <strong>άπωση</strong> (ομώνυμα).</p>
+
+  <h2>Απαντήσεις — Άσκηση 2 (Ρεύμα)</h2>
+  <p>t = 300 s. I = 600/300 = <strong>2 A</strong> · J = 2/2,5 = <strong>0,8 A/mm²</strong>.</p>
+
+  <h2>Απαντήσεις — Άσκηση 3 (Τάση)</h2>
+  <p>(α) U = 24/2 = <strong>12 V</strong>.<br>
+  (β) Σχέδιο: πηγή → <strong>Α σε σειρά</strong> με R → πίσω στην πηγή· <strong>V παράλληλα</strong> στα άκρα του R.<br>
+  (γ) U<sub>πολ</sub> = 12 − 2·0,5 = <strong>11 V</strong>.</p>
+
+  <h2>Απαντήσεις — Άσκηση 4 (Ohm)</h2>
+  <p>2/0,1 = 4/0,2 = 6/0,3 = 8/0,4 = <strong>20 Ω</strong> → <strong>ωμική</strong>.<br>
+  R = <strong>20 Ω</strong>. I(10 V) = 10/20 = <strong>0,5 A</strong>.</p>
+
+  <h2>Απαντήσεις — Άσκηση 5 (Ειδική αντίσταση)</h2>
+  <p>(α) R = 0,017·200/2,5 = <strong>1,36 Ω</strong>.<br>
+  (β) G = 1/1,36 = <strong>0,735 S</strong>.<br>
+  (γ) σ = 1/0,017 ≈ <strong>58,8 MS/m</strong>.<br>
+  (δ) R₇₀ = 1,36·[1 + 0,004·50] = 1,36·1,2 = <strong>1,63 Ω</strong>.</p>
+
+  <h2>Απαντήσεις — Θέμα τράπεζας</h2>
+  <p><strong>4.1</strong> R = 1/0,1 = <strong>10 Ω</strong>.<br>
+  <strong>4.2</strong> ℓ = R·S/ρ = 10·3/1 = <strong>30 m</strong>.<br>
+  <strong>4.3</strong> S΄ = 0,03·30/10 = <strong>0,09 mm²</strong>.</p>
+
+  <h2>Σημειώσεις για τη διόρθωση</h2>
+  <table>
+    <tr><th style="width:35%;">Αν δεις...</th><th style="width:65%;">Τι σημαίνει / τι κάνεις</th></tr>
+    <tr>
+      <td>Κενά κουτάκια σε βήματα</td>
+      <td>Ο μαθητής κόλλησε. Ρώτησε «ποιο βήμα σε δυσκόλεψε;» — μη διορθώσεις κατευθείαν.</td>
+    </tr>
+    <tr>
+      <td>Σωστή μέθοδος, λάθος αριθμητική</td>
+      <td>Δώσε μερική μονάδα. Το λάθος είναι υπολογισμού, όχι κατανόησης.</td>
+    </tr>
+    <tr>
+      <td>Λάθος μονάδες (mm² → m², min → s)</td>
+      <td>Το πιο συχνό. Υπενθύμιση στον πίνακα της επόμενης ώρας.</td>
+    </tr>
+    <tr>
+      <td>Δεν ζωγράφισε κύκλωμα στο (β)</td>
+      <td>Δεν χρειάζεται να είναι «καλλιτεχνικό» — αρκεί Α σε σειρά και V παράλληλα. Μερική μονάδα.</td>
+    </tr>
+    <tr>
+      <td>Παράτησε σε μια άσκηση</td>
+      <td>Δεν είναι απροθυμία — είναι υπερφόρτωση. Ρώτησε «τι χρειάζεσαι για να συνεχίσεις;» — μπορεί να θέλει διάλειμμα.</td>
+    </tr>
+  </table>
+
+  <div class="teacher-note" style="margin-top:14px;">
+    <strong>Πριν δώσεις το φυλλάδιο:</strong> Ρώτησε τον μαθητή αν θέλει αυτή την έκδοση ή την κανονική.
+    Κάποιοι αυτιστικοί μαθητές προτιμούν το τυπικό φύλλο (δεν θέλουν να ξεχωρίζουν).
+    Δεν είναι «εύκολη έκδοση» — είναι <strong>εναλλακτική έκδοση παρουσίασης</strong> της ίδιας ύλης.
+  </div>
+</section>
+
+</body>
+</html>

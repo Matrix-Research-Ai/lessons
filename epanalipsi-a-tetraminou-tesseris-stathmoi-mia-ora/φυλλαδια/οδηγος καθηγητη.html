@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Οδηγός Καθηγητή — Επανάληψη Α΄ Τετραμήνου (χωρίς υπολογιστή) — Β΄ ΕΠΑΛ</title>
+<style>
+  :root{
+    --primary:#003366; --secondary:#00509e; --accent:#d0e3f5;
+    --text:#111; --muted:#555;
+    --em-bg:#ffebee; --em-border:#c62828;
+    --say-bg:#e3f2fd; --say-border:#1976d2;
+    --ans-bg:#e8f5e9; --ans-border:#43a047;
+    --trap-bg:#fff7e6; --trap-border:#f0c36d;
+    --assign-bg:#fff3e0; --assign-border:#e65100;
+    --board-bg:#f0f7ff; --board-border:#003366;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:"Segoe UI",Arial,sans-serif; margin:0 auto; max-width:1080px; color:var(--text);
+    line-height:1.45; background:#fff; padding:14px 20px; font-size:10.5pt;}
+  h1{color:var(--primary); font-size:1.32em; border-bottom:3px solid var(--primary); padding-bottom:5px; margin:0 0 4px 0;}
+  h2{color:var(--secondary); font-size:1.08em; border-left:4px solid var(--secondary); padding-left:10px;
+    margin:14px 0 7px 0; page-break-after:avoid; break-after:avoid;}
+  h3{color:var(--primary); font-size:1.0em; margin:12px 0 4px 0; page-break-after:avoid; break-after:avoid;}
+  p{margin:5px 0;}
+  ul,ol{margin:5px 0; padding-left:20px;}
+  li{margin:2px 0;}
+  table{border-collapse:collapse; width:100%; margin:7px 0; font-size:0.9em;}
+  th,td{border:1px solid #aaa; padding:5px 8px; vertical-align:top; text-align:left; overflow-wrap:break-word;}
+  th{background:var(--accent); color:var(--primary); font-weight:700;}
+  tr:nth-child(even) td{background:#fafafa;}
+
+  .emergency{background:var(--em-bg); border:3px solid var(--em-border); border-radius:8px;
+    padding:10px 14px; margin:0 0 12px 0; font-size:1.0em;}
+  .emergency strong:first-child{color:var(--em-border); font-size:1.05em;}
+
+  .timeline td:first-child{font-family:"Courier New",monospace; font-weight:700; color:var(--primary); white-space:nowrap;}
+  .timeline td:last-child{font-family:"Courier New",monospace; font-size:0.9em; color:var(--muted); text-align:right;}
+
+  .board{background:var(--board-bg); border:2px solid var(--board-border); border-radius:6px;
+    padding:10px 14px; margin:7px 0; font-family:"Courier New",monospace; font-size:1.05em;
+    line-height:1.7; color:#001a33;}
+  .board strong{color:var(--board-border); display:inline-block; min-width:22px;}
+
+  .say{background:var(--say-bg); border-left:5px solid var(--say-border); border-radius:4px;
+    padding:7px 12px; margin:6px 0; font-style:italic;}
+  .say strong{font-style:normal; color:var(--say-border);}
+  .ask{background:#ffffff; border:1.5px solid var(--say-border); border-radius:4px;
+    padding:6px 11px; margin:6px 0; font-weight:700; color:var(--say-border);}
+  .ans{background:var(--ans-bg); border-left:5px solid var(--ans-border); border-radius:4px;
+    padding:6px 12px; margin:5px 0; color:#1b5e20; font-weight:600;}
+  .ans span.ans{background:none; padding:0; border:none; color:#1b5e20; text-decoration:underline; text-underline-offset:2px;}
+  .trap{background:var(--trap-bg); border-left:5px solid var(--trap-border); border-radius:4px;
+    padding:7px 12px; margin:6px 0; font-size:0.96em;}
+  .trap strong{color:#b26a00;}
+  .assign{display:inline-block; background:var(--assign-bg); color:var(--assign-border);
+    border:1.5px solid var(--assign-border); border-radius:6px; padding:3px 10px;
+    font-weight:700; font-size:0.92em; margin:6px 0 3px 0;}
+  .q{background:#f5f5f5; border:1px dashed #999; border-radius:5px;
+    padding:6px 12px; margin:4px 0 5px 0; font-style:italic; font-size:0.96em;}
+  .sol{background:var(--ans-bg); border:1px solid var(--ans-border); border-radius:5px;
+    padding:8px 12px; margin:6px 0; font-size:0.96em;}
+  .sol strong{color:#1b5e20;}
+  .sol .ans{display:inline; padding:0; border:none; background:none; font-weight:800; color:#0d3a12;}
+  .note{background:#f5f5f5; border-left:4px solid #666; border-radius:4px;
+    padding:7px 12px; margin:8px 0; font-size:0.94em; color:#333;}
+  .diagnostic{background:#f3e5f5; border:2px solid #8e24aa; border-radius:6px; padding:10px 14px; margin:10px 0;}
+  .diagnostic strong{color:#6a1b9a;}
+  .meta{color:var(--muted); font-size:0.9em; margin-bottom:10px;}
+  .num-big{display:inline-block; background:var(--primary); color:#fff; padding:2px 10px;
+    border-radius:14px; font-weight:700; font-size:0.9em; margin-right:8px;}
+
+  .sheet{page-break-after:always; break-after:page;}
+  .sheet:last-child{page-break-after:auto; break-after:auto;}
+
+  .circuit-svg{display:block; max-width:300px; margin:8px auto;}
+
+  .no-print{background:#f0f7ff; border:1px solid #90caf9; border-radius:6px;
+    padding:8px 14px; margin:0 0 10px 0; font-size:0.92em;}
+
+  @media print{
+    body{max-width:100%; margin:0; padding:0; font-size:10pt; line-height:1.32;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .no-print{display:none !important;}
+    h2{margin:10px 0 5px 0;} h3{margin:8px 0 3px 0;}
+    th,td{padding:3px 6px; font-size:0.88em;}
+    .say,.ask,.ans,.trap,.sol,.note,.emergency,.diagnostic,.board{padding:5px 10px; margin:5px 0;}
+    .say,.ask,.ans,.trap,.sol,.note,.emergency,.diagnostic,.board{page-break-inside:avoid;}
+    tr{page-break-inside:avoid;}
+    @page{ size:A4; margin:1.4cm 1.4cm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <strong>📋</strong> Αυτό είναι φυλλάδιο <strong>καθηγητή</strong> — δεν δίνεται στους μαθητές. Εκτύπωση: <code>Ctrl+P</code> → A4 Portrait, με <em>Fit to page</em> ανοιχτό. <strong>5 σελίδες</strong> — η 1η είναι 1-λεπτο "at a glance". Τις υπόλοιπες τις διαβάζετε στο μάθημα.
+</div>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 1: AT-A-GLANCE ═══════════════ -->
+<section class="sheet">
+  <div class="emergency">
+    <strong>🚨 ΑΝ ΔΕΝ ΑΝΟΙΓΕΙ Ο ΥΠΟΛΟΓΙΣΤΗΣ Ή Ο ΠΡΟΒΟΛΕΑΣ —</strong>
+    Αυτό το φυλλάδιο περιέχει ΟΛΟ το μάθημα: τι λέτε, τι ρωτάτε, τι γράφετε στον πίνακα,
+    ποιες ασκήσεις βάζετε, όλες τις λύσεις. Χρειάζεστε μόνο <strong>πίνακα, κιμωλία</strong>
+    και το φύλλο του μαθητή (αν έχει τυπωθεί). Αν δεν έχει τυπωθεί, οι εκφωνήσεις είναι γραμμένες εδώ — τις διαβάζετε φωναχτά.
+  </div>
+
+  <h1>ΟΔΗΓΟΣ ΚΑΘΗΓΗΤΗ — Επανάληψη Α΄ Τετραμήνου (Ενότητες 1.1 → 2.1)</h1>
+  <p class="meta">Ηλεκτροτεχνία Β΄ ΕΠΑΛ · 45΄ · 4 σταθμοί · 5 ασκήσεις · 1 θέμα τράπεζας · 8 ερωτήσεις κουίζ · εισιτήριο εξόδου</p>
+
+  <h2>⏱️ Χρονοδιάγραμμα 45΄ — πού πρέπει να είστε κάθε στιγμή</h2>
+  <table class="timeline">
+    <tr><th>Λεπτό</th><th>Τι κάνετε</th><th>Σελ.</th></tr>
+    <tr><td>0:00–0:02</td><td>Καλωσορίστε. Πείτε το σχέδιο: 4 σταθμοί, στο τέλος τεστ.</td><td>—</td></tr>
+    <tr><td>0:02–0:04</td><td><strong>Ζέσταμα ανάκλησης:</strong> «Γράψτε όσους τύπους θυμάστε» — 45″ σιωπή.</td><td>§2</td></tr>
+    <tr><td>0:04–0:06</td><td><strong>Χάρτης τύπων</strong> στον πίνακα — ρωτήστε «ποιος λείπει;»</td><td>§3</td></tr>
+    <tr><td>0:06–0:12</td><td><strong>Σταθμός 1:</strong> Φορτίο &amp; Coulomb → Άσκηση 1</td><td>§4</td></tr>
+    <tr><td>0:12–0:18</td><td><strong>Σταθμός 2:</strong> Ρεύμα → Άσκηση 2</td><td>§5</td></tr>
+    <tr><td>0:18–0:25</td><td><strong>Σταθμός 3:</strong> Τάση &amp; ΗΕΔ → Άσκηση 3</td><td>§6</td></tr>
+    <tr><td>0:25–0:37</td><td><strong>Σταθμός 4:</strong> Αντίσταση → Ασκήσεις 4 &amp; 5</td><td>§7</td></tr>
+    <tr><td>0:37–0:41</td><td><strong>Θέμα 18639</strong> — δουλεύουν σε δυάδες, λύνετε στον πίνακα</td><td>§8</td></tr>
+    <tr><td>0:41–0:44</td><td><strong>Γρήγορο κουίζ</strong> — 8 ερωτήσεις, χέρια ψηλά</td><td>§9</td></tr>
+    <tr><td>0:44–0:45</td><td>Τι θα πέσει στο τεστ + εισιτήριο εξόδου</td><td>§10</td></tr>
+  </table>
+
+  <div class="note">
+    <strong>Αν σας κόψει κάτι 3–4 λεπτά:</strong> περικόψτε πρώτα το <strong>κουίζ (§9)</strong> και μετά την <strong>Άσκηση 5 (θερμοκρασία)</strong>.
+    <strong>Μην κόψετε ποτέ το Θέμα 18639 (§8)</strong> — είναι το πιο κοντινό στο επίσημο τεστ.
+    Αν έχετε 5 επιπλέον λεπτά: ζητήστε έναν μαθητή να λύσει το 18639 στον πίνακα μόνος του.
+  </div>
+
+  <h2>📐 §3 — ΓΡΑΨΤΕ ΣΤΟΝ ΠΙΝΑΚΑ (πριν ξεκινήσετε τις ασκήσεις)</h2>
+  <p>Γράψτε τα 7 βασικά με μεγάλα γράμματα, στη σειρά που θα τα δουλέψετε — μένουν όλη την ώρα:</p>
+  <div class="board">
+    <div><strong>1.</strong>&nbsp; F = k·q₁·q₂/r² &nbsp;&nbsp;&nbsp; (k = 9·10⁹ N·m²/C²)</div>
+    <div><strong>2.</strong>&nbsp; I = Q/t &nbsp;&nbsp;·&nbsp;&nbsp; J = I/S</div>
+    <div><strong>3.</strong>&nbsp; U = W/q &nbsp;&nbsp;·&nbsp;&nbsp; U<sub>πολ</sub> = E − I·r</div>
+    <div><strong>4.</strong>&nbsp; R = U/I &nbsp;&nbsp;·&nbsp;&nbsp; R = ρ·ℓ/S &nbsp;&nbsp;·&nbsp;&nbsp; G = 1/R</div>
+    <div style="margin-top:6px; font-size:0.82em; color:#555;">
+      Μονάδες (δεξιά γωνία, μικρά): 1 A = 1 C/s · 1 V = 1 J/C · 1 μC = 10⁻⁶ C · 1 min = 60 s · ρ σε Ω·mm²/m → S σε mm²
+    </div>
+  </div>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Αυτά είναι τα 7. Αν στο τεστ βρείτε τύπο που δεν είναι εδώ, δεν τον χρειάζεστε — όλα βγαίνουν από αυτά.»
+  </div>
+
+  <div class="ask">
+    <strong>Ρωτήστε (30″):</strong> «Ποιος τύπος δίνει το <em>μήκος</em> αγωγού όταν ξέρω R, ρ και S;»
+  </div>
+  <div class="ans">ℓ = R·S / ρ &nbsp;— λύνουμε το R = ρ·ℓ/S ως προς ℓ.</div>
+
+  <p style="margin-top:14px; font-size:0.9em; color:var(--muted); text-align:center;">
+    <em>→ Σελίδα 2: Σταθμοί 1 &amp; 2 · Σελίδα 3: Σταθμοί 3 &amp; 4 · Σελίδα 4: Θέμα 18639, κουίζ, τεστ · Σελίδα 5: Διάγνωση</em>
+  </p>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 2: ΣΤΑΘΜΟΙ 1 & 2 ═══════════════ -->
+<section class="sheet">
+  <h2><span class="num-big">6΄</span>§4 — ΣΤΑΘΜΟΣ 1: Φορτίο &amp; Νόμος Coulomb</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Δύο φορτία 1 C, σε απόσταση 1 m. Πόσο είναι η δύναμη;»
+  </div>
+  <div class="ans">F = 9·10⁹ · 1·1 / 1² = 9·10⁹ N — τεράστια. Γι' αυτό δεν βλέπουμε ποτέ τέτοια φορτία στην πράξη· τα συνηθισμένα είναι μC.</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Στον τύπο F = k·q₁·q₂/r², το r υψώνεται κάπου;»
+  </div>
+  <div class="ans">Στο τετράγωνο. Διπλάσιο r → η δύναμη γίνεται <strong>1/4</strong> (όχι 1/2).</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Δύο θετικά φορτία — έλκονται ή απωθούνται;» &nbsp;·&nbsp; «Θετικό και αρνητικό;»
+  </div>
+  <div class="ans">Ομώνυμα → <strong>άπωση</strong>. Ετερώνυμα → <strong>έλξη</strong>. Η δύναμη είναι πάντα κατά μήκος της γραμμής που τα ενώνει.</div>
+
+  <div class="assign">✍️ ΑΝΑΘΕΣΤΕ: Μέρος Α, Άσκηση 1 — 2 λεπτά</div>
+  <p class="q">Δύο σημειακά φορτία q₁ = 2 μC και q₂ = 3 μC βρίσκονται σε απόσταση r = 0,3 m. (α) Πόση είναι η δύναμη; (β) Είναι έλξη ή άπωση;</p>
+
+  <div class="sol">
+    <strong>Λύση:</strong>
+    q₁ = 2·10⁻⁶ C, q₂ = 3·10⁻⁶ C.
+    F = 9·10⁹ · (2·10⁻⁶ · 3·10⁻⁶) / 0,09 = 54·10⁻³ / 0,09 =
+    <span class="ans">0,6 N</span> · <strong>άπωση</strong> (ομώνυμα).
+  </div>
+
+  <div class="trap">
+    <strong>⚠️ Το κλασικό λάθος:</strong> γράφουν <code>0,3</code> αντί για <code>0,3² = 0,09</code>.<br>
+    <strong>Τι κάνετε:</strong> γράψτε στον πίνακα <code>r² = 0,09</code> με κόκκινη κιμωλία. Όποιος έβγαλε 0,18 N ή 0,2 N το έπαθε αυτό.
+  </div>
+
+  <div class="ask"><strong>Bonus στους γρήγορους:</strong> «Αν η απόσταση γίνει 0,6 m, πόση η δύναμη;» → 0,6/4 = <strong>0,15 N</strong>.</div>
+
+  <hr style="margin:16px 0; border:none; border-top:1px dashed #999;">
+
+  <h2><span class="num-big">6΄</span>§5 — ΣΤΑΘΜΟΣ 2: Ρεύμα — ένταση &amp; πυκνότητα</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Περνούν 10 C σε 2 s. Πόσο ρεύμα;» → 5 A. «Ίδια 10 C σε 1 s;» → 10 A. «Τι κατάλαβες;»
+  </div>
+  <div class="ans">Ίδιο φορτίο, μισός χρόνος → διπλάσιο ρεύμα. I = Q/t.</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Ίδιο ρεύμα, διπλάσια διατομή. Τι κάνει η πυκνότητα J = I/S;»
+  </div>
+  <div class="ans">Υποδιπλασιάζεται. Ίδιο νερό, πιο φαρδύς σωλήνας → πιο αργή ροή.</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Γιατί βάζουμε χοντρά καλώδια σε μεγάλα ρεύματα;» <em>(η σύνδεση με τη θέρμανση — θα το ξαναδούν στο 2.3)</em>
+  </div>
+  <div class="ans">Μεγάλο I σε μικρή S → μεγάλο J → μεγάλη θέρμανση → κίνδυνος για τη μόνωση. Γι' αυτό ο κανονισμός ορίζει μέγιστο επιτρεπόμενο J για κάθε διατομή.</div>
+
+  <div class="assign">✍️ ΑΝΑΘΕΣΤΕ: Μέρος Α, Άσκηση 2 — 2 λεπτά</div>
+  <p class="q">Από αγωγό διατομής S = 2,5 mm² περνούν Q = 600 C σε χρόνο t = 5 min. (α) Πόση η ένταση I; (β) Πόση η πυκνότητα J;</p>
+
+  <div class="sol">
+    <strong>Λύση:</strong> t = 5·60 = 300 s.<br>
+    (α) I = Q/t = 600 / 300 = <span class="ans">2 A</span><br>
+    (β) J = I/S = 2 / 2,5 = <span class="ans">0,8 A/mm²</span>
+  </div>
+
+  <div class="trap">
+    <strong>⚠️ Το κλασικό λάθος:</strong> <code>600/5 = 120 A</code> — ξέχασαν τα 60.<br>
+    <strong>Τι κάνετε:</strong> πριν διαιρέσουν, ζητήστε να γράψουν πρώτα <code>t = 5·60 = 300 s</code>. Όποιος γράφει <em>120 A</em> έχασε από τις μονάδες — ακριβώς αυτό τιμωρεί η εξέταση.
+  </div>
+
+  <div class="ask"><strong>Bonus στους γρήγορους:</strong> «Ποια διατομή για J = 4 A/mm² με το ίδιο ρεύμα;» → S = I/J = 2/4 = <strong>0,5 mm²</strong>.</div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 3: ΣΤΑΘΜΟΙ 3 & 4 ═══════════════ -->
+<section class="sheet">
+  <h2><span class="num-big">7΄</span>§6 — ΣΤΑΘΜΟΣ 3: Τάση, ΗΕΔ &amp; όργανα μέτρησης</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Μεταφέραμε 2 C με 24 J ενέργεια. Πόση τάση;» → U = W/q = 12 V.
+  </div>
+  <div class="ans">Η τάση είναι «ενέργεια ανά μονάδα φορτίου»: U = W/q, μονάδα J/C = V (βολτ).</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Αμπερόμετρο: πού το βάζω;»
+  </div>
+  <div class="ans"><strong>Σε σειρά</strong> — το ρεύμα πρέπει να περάσει μέσα του. Έχει πολύ μικρή αντίσταση, δεν επηρεάζει το κύκλωμα.</div>
+
+  <div class="ask">
+    <strong>Ρωτήστε:</strong> «Βολτόμετρο: πού;»
+  </div>
+  <div class="ans"><strong>Παράλληλα</strong> στα δύο άκρα του στοιχείου. Έχει πολύ μεγάλη αντίσταση, δεν «κλέβει» ρεύμα.</div>
+
+  <div class="trap">
+    <strong>⚠️ Δύο κλασικά λάθη για Σ/Λ:</strong><br>
+    ① Αμπερόμετρο <em>παράλληλα</em> → σχεδόν μηδενική αντίσταση → <strong>βραχυκύκλωμα</strong>, καίγεται η ασφάλεια.<br>
+    ② Βολτόμετρο <em>σε σειρά</em> → πάρα πολύ μεγάλη αντίσταση → το ρεύμα πέφτει σχεδόν στο μηδέν, το κύκλωμα «νεκρώνει».
+  </div>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Πηγή Ε = 12 V, r = 0,5 Ω, ρεύμα I = 2 A. Πόση τάση δίνει στους πόλους της;»
+  </div>
+  <div class="ans">U<sub>πολ</sub> = E − I·r = 12 − 2·0,5 = <strong>11 V</strong>. Με ρεύμα, η πολική είναι πάντα <strong>μικρότερη</strong> από την ΗΕΔ.</div>
+
+  <div class="assign">✍️ ΑΝΑΘΕΣΤΕ: Μέρος Α, Άσκηση 3 — 2,5 λεπτά</div>
+  <p class="q">(α) U = W/q με q = 2 C, W = 24 J. (β) Σχεδίασε κύκλωμα με πηγή, αντιστάτη, αμπερόμετρο, βολτόμετρο — να μετράς I και U του αντιστάτη. (γ) E = 12 V, r = 0,5 Ω, I = 2 A — πολική τάση;</p>
+
+  <div class="sol">
+    <strong>Λύση:</strong><br>
+    (α) U = 24 / 2 = <span class="ans">12 V</span><br>
+    (β) <em>Σχέδιο:</em> πηγή → <strong>Α σε σειρά</strong> με R → πίσω στην πηγή· <strong>V παράλληλα</strong> στα άκρα του R.<br>
+    (γ) U<sub>πολ</sub> = 12 − 1 = <span class="ans">11 V</span>
+  </div>
+
+  <svg class="circuit-svg" viewBox="0 0 300 130" aria-label="Κύκλωμα: πηγή, Α σε σειρά, R, V παράλληλα">
+    <g fill="none" stroke="#003366" stroke-width="2.5">
+      <path d="M30 30H75M105 30H180M220 30H270V110H30V60M30 55V30"/>
+      <path d="M20 55H40M26 62H34"/>
+      <rect x="180" y="22" width="40" height="16"/>
+      <circle cx="90" cy="30" r="15" fill="#fff"/>
+      <circle cx="205" cy="80" r="13" fill="#fff"/>
+      <path d="M180 30V80H192M220 30V80H218"/>
+    </g>
+    <g font-family="Arial" font-size="12" font-weight="700" fill="#003366" text-anchor="middle">
+      <text x="90" y="35">A</text>
+      <text x="205" y="84">V</text>
+      <text x="200" y="17">R</text>
+      <text x="15" y="57">+</text>
+    </g>
+  </svg>
+
+  <div class="trap">
+    <strong>⚠️ Εμφατικά:</strong> «<strong>ΗΕΔ Ε</strong> = τάση με <em>ανοιχτό</em> κύκλωμα (χωρίς ρεύμα). <strong>Πολική U</strong> = τάση στους πόλους <em>όταν δουλεύει</em>.» Αν κάποιος έγραψε U<sub>πολ</sub> = 12 V, το μπέρδεψε.
+  </div>
+
+  <hr style="margin:14px 0; border:none; border-top:1px dashed #999;">
+
+  <h2><span class="num-big">12΄</span>§7 — ΣΤΑΘΜΟΣ 4: Νόμος Ohm, ειδική αντίσταση, θερμοκρασία</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Διπλασιάζω την τάση σε έναν αντιστάτη. Τι κάνει το ρεύμα;» → διπλασιάζεται. «Άρα ο λόγος U/I…;» → σταθερός. Αυτός ο σταθερός λόγος είναι το R.
+  </div>
+  <div class="ans">R = U/I. Αν το U/I βγαίνει ίδιο σε όλες τις μετρήσεις → η συμπεριφορά είναι <strong>ωμική</strong> (γραμμική).</div>
+
+  <div class="ask"><strong>Ρωτήστε:</strong> «Διπλάσιο μήκος, ίδια διατομή — τι κάνει το R;» → διπλάσιο. «Διπλάσια διατομή, ίδιο μήκος;» → μισό. «Άλλο υλικό, ίδιες διαστάσεις;» → αλλάζει ανάλογα με το ρ.</div>
+  <div class="ans">R = ρ·ℓ/S — ανάλογο του ℓ και του ρ, αντιστρόφως ανάλογο του S.</div>
+
+  <div class="ask"><strong>Ρωτήστε:</strong> «Ζεσταίνω ένα χάλκινο σύρμα — το R του;» → <strong>αυξάνεται</strong>. «Άνθρακας / ημιαγωγός;» → <strong>μειώνεται</strong>.</div>
+  <div class="ans">Μέταλλα: R αυξάνεται με θερμοκρασία. R<sub>θ</sub> = R₂₀·[1 + α·(θ−20)], α σε 1/°C.</div>
+
+  <div class="assign">✍️ ΑΝΑΘΕΣΤΕ: Μέρος Α, Άσκηση 4 — 2,5 λεπτά</div>
+  <p class="q">Πίνακας: U = 2, 4, 6, 8 V → I = 0,1, 0,2, 0,3, 0,4 A. (α) Είναι ωμική; (δείξε 2 λόγους) (β) R; (γ) I στα 10 V;</p>
+  <div class="sol">
+    <strong>Λύση:</strong> 2/0,1 = 4/0,2 = 6/0,3 = 8/0,4 = 20 Ω → <span class="ans">ωμική, R = 20 Ω</span>.<br>
+    (γ) I = U/R = 10/20 = <span class="ans">0,5 A</span>
+  </div>
+
+  <div class="assign">✍️ ΑΝΑΘΕΣΤΕ: Μέρος Α, Άσκηση 5 — 3 λεπτά</div>
+  <p class="q">Χάλκινος αγωγός: ℓ = 200 m, S = 2,5 mm², ρ = 0,017 Ω·mm²/m, α = 0,004 1/°C. (α) R; (β) G; (γ) σ; (δ) R στους 70 °C;</p>
+  <div class="sol">
+    <strong>Λύση:</strong>
+    (α) R = 0,017·200/2,5 = <span class="ans">1,36 Ω</span>.
+    (β) G = 1/1,36 = <span class="ans">0,735 S</span>.
+    (γ) σ = 1/0,017 ≈ <span class="ans">58,8 MS/m</span>.
+    (δ) R₇₀ = 1,36·[1 + 0,004·50] = 1,36·1,2 = <span class="ans">1,63 Ω</span>
+  </div>
+
+  <div class="trap">
+    <strong>⚠️ Το κλασικό λάθος:</strong> μετατρέπουν τα mm² σε m² «για σιγουριά» — χάνουν 10⁶.<br>
+    <strong>Τι κάνετε:</strong> γράψτε στον πίνακα με κόκκινη κιμωλία: <strong>«ρ σε Ω·mm²/m ⟹ S σε mm² — ΟΧΙ σε m²»</strong>.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 4: ΘΕΜΑ 18639 + ΚΟΥΙΖ + ΤΕΣΤ ═══════════════ -->
+<section class="sheet">
+  <h2><span class="num-big">4΄</span>§8 — ΘΕΜΑ 18639 (Τράπεζα Θεμάτων ΙΕΠ)</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Αυτό είναι θέμα από την επίσημη τράπεζα. Το έχουμε δουλέψει. Δουλέψτε σε δυάδες — ο ένας λύνει, ο άλλος ελέγχει· μετά αλλάζετε ρόλο.»
+  </div>
+
+  <p class="q">
+    <strong>Εκφώνηση:</strong> Αγωγός από χρωμονικελίνη, G = 0,1 S, S = 3 mm², ρ<sub>χρ</sub> = 1 Ω·mm²/m.
+    <strong>4.1</strong> Η αντίσταση R; (5 μον.)
+    <strong>4.2</strong> Το μήκος ℓ; (8 μον.)
+    <strong>4.3</strong> Αντικαθιστούμε με αλουμίνιο ίδιου μήκους (ρ<sub>αλ</sub> = 0,03 Ω·mm²/m). Ποια η νέα διατομή S΄ ώστε η R να μείνει ίδια; (12 μον.)
+  </p>
+
+  <div class="say"><strong>Δώστε 2,5 λεπτά δουλειάς σε δυάδες, μετά λύστε στον πίνακα:</strong></div>
+
+  <div class="sol">
+    <strong>4.1:</strong> G = 1/R ⟹ R = 1/0,1 = <span class="ans">10 Ω</span><br>
+    <strong>4.2:</strong> R = ρ·ℓ/S ⟹ ℓ = R·S/ρ = 10·3/1 = <span class="ans">30 m</span><br>
+    <strong>4.3:</strong> R = ρ<sub>αλ</sub>·ℓ/S΄ ⟹ S΄ = ρ<sub>αλ</sub>·ℓ/R = 0,03·30/10 = <span class="ans">0,09 mm²</span>
+  </div>
+
+  <div class="trap">
+    <strong>⚠️ Σημείο διδασκαλίας:</strong> το S είναι <strong>ανάλογο του ρ</strong> όταν R και ℓ μένουν ίδια. Το αλουμίνιο έχει ρ 33 φορές μικρότερο → χρειάζεται 33 φορές μικρότερη διατομή. Όποιος γράψει «μεγαλύτερη διατομή γιατί το αλουμίνιο άγει χειρότερα» έχει αντιστρέψει τη σχέση — διορθώστε επιτόπου.
+  </div>
+
+  <hr style="margin:12px 0; border:none; border-top:1px dashed #999;">
+
+  <h2><span class="num-big">3΄</span>§9 — ΓΡΗΓΟΡΟ ΚΟΥΙΖ (σηκώνουν χέρι — δεν γράφουν)</h2>
+  <p>Διαβάστε φωναχτά. «Αριστερά ή δεξιά;» — 20″ ανά ερώτηση. Ρωτήστε «γιατί;» σε όσους διστάζουν.</p>
+
+  <table>
+    <tr><th>#</th><th>Ερώτηση</th><th>Απ.</th><th>Γιατί</th></tr>
+    <tr><td>1</td><td>Διπλασιάζω την απόσταση δύο φορτίων. Η δύναμη: &nbsp; Α. μισή &nbsp;·&nbsp; Β. το 1/4</td><td><strong>Β</strong></td><td>F ∝ 1/r²</td></tr>
+    <tr><td>2</td><td>1 A σημαίνει: &nbsp; Α. 1 C/s &nbsp;·&nbsp; Β. 1 J/C</td><td><strong>Α</strong></td><td>1 J/C = 1 V (όχι A)</td></tr>
+    <tr><td>3</td><td>Βολτόμετρο συνδέεται: &nbsp; Α. σε σειρά &nbsp;·&nbsp; Β. παράλληλα</td><td><strong>Β</strong></td><td>στα άκρα του στοιχείου</td></tr>
+    <tr><td>4</td><td>Διπλάσια διατομή, ίδιο ℓ, ίδιο υλικό. Το R: &nbsp; Α. διπλάσιο &nbsp;·&nbsp; Β. μισό</td><td><strong>Β</strong></td><td>R = ρℓ/S</td></tr>
+    <tr><td>5</td><td>Διάγραμμα V–I με V στον κάθετο. Κλίση = &nbsp; Α. R &nbsp;·&nbsp; Β. 1/R</td><td><strong>Α</strong></td><td>ΔV/ΔI = R</td></tr>
+    <tr><td>6</td><td>Η G = 1/R μετριέται σε: &nbsp; Α. Ω &nbsp;·&nbsp; Β. S (ζίμενς)</td><td><strong>Β</strong></td><td>ζίμενς</td></tr>
+    <tr><td>7</td><td>Ζεσταίνω χάλκινο σύρμα. Το R του: &nbsp; Α. αυξάνεται &nbsp;·&nbsp; Β. μειώνεται</td><td><strong>Α</strong></td><td>μέταλλο</td></tr>
+    <tr><td>8</td><td>Ίδιο ρεύμα, διπλάσια διατομή. Η J: &nbsp; Α. διπλάσια &nbsp;·&nbsp; Β. η μισή</td><td><strong>Β</strong></td><td>J = I/S</td></tr>
+  </table>
+
+  <div class="note">
+    <strong>Σημειώστε νοερά ποιοι σηκώνουν λάθος χέρι.</strong> Στην επόμενη ώρα, πρώτο 5λεπτο = τα θέματα όπου χάθηκαν τα περισσότερα χέρια (συνήθως #5 και #7).
+  </div>
+
+  <hr style="margin:12px 0; border:none; border-top:1px dashed #999;">
+
+  <h2><span class="num-big">1΄</span>§10 — ΤΙ ΘΑ ΠΕΣΕΙ ΣΤΟ ΤΕΣΤ &amp; ΕΙΣΙΤΗΡΙΟ ΕΞΟΔΟΥ</h2>
+
+  <div class="say">
+    <strong>Πείτε:</strong> «Αυτά τα είδαμε όλα σήμερα. Δεν υπάρχει έκπληξη στο τεστ.»
+  </div>
+
+  <table>
+    <tr><th>Θέμα</th><th>Τι θα έχει</th><th>Μονάδες</th></tr>
+    <tr><td><strong>1ο</strong></td><td>Σωστό/Λάθος + δύναμη Coulomb</td><td>25</td></tr>
+    <tr><td><strong>2ο</strong></td><td>Πολλαπλής + σχεδίαση κυκλώματος με όργανα</td><td>25</td></tr>
+    <tr><td><strong>3ο</strong></td><td>Φορτίο, ρεύμα, Q = I·t</td><td>25</td></tr>
+    <tr><td><strong>4ο</strong></td><td>R = ρ·ℓ/S, G, θερμοκρασία</td><td>25</td></tr>
+  </table>
+  <p class="meta"><strong>Σύνολο 100 · 45΄ · κλειστά βιβλία · αριθμομηχανή χωρίς πρόγραμμα.</strong></p>
+
+  <div class="say">
+    <strong>Εισιτήριο εξόδου (2΄, ΦΥΛΛΟ — Μέρος Γ):</strong>
+    ① τύποι από μνήμης (στόχος 9) · ② ποια παγίδα σε απειλεί · ③ τι να ξαναδούμε · ④ πόσο έτοιμος νιώθεις 1–5.
+    Παραδίδεται στην πόρτα, δεν βαθμολογείται. Διαβάστε τα πριν το επόμενο μάθημα — τα σημεία #3 καθορίζουν το πρώτο 5λεπτο του τεστ.
+  </div>
+</section>
+
+<!-- ═══════════════ ΣΕΛΙΔΑ 5: ΔΙΑΓΝΩΣΤΙΚΟΣ ΠΙΝΑΚΑΣ ═══════════════ -->
+<section class="sheet">
+  <h2>🔍 ΔΙΑΓΝΩΣΤΙΚΟΣ ΠΙΝΑΚΑΣ — τι κοιτάτε στα φύλλα (πριν το επόμενο μάθημα)</h2>
+  <p>Περάστε τα φύλλα γρήγορα (30″ το καθένα, μόνο τις απαντήσεις). Σημειώστε ποιο λάθος εμφανίζεται πιο συχνά — αυτό καθορίζει το πρώτο 5λεπτο της επόμενης ώρας (πριν το τεστ).</p>
+
+  <div class="diagnostic">
+    <table>
+      <tr>
+        <th style="width:28%;">Λάθος στο φύλλο</th>
+        <th style="width:32%;">Τι σημαίνει</th>
+        <th style="width:40%;">Τι κάνετε στο τεστ / επόμενη ώρα</th>
+      </tr>
+      <tr>
+        <td><code>600/5 = 120 A</code></td>
+        <td>Δεν μετατρέπει λεπτά → δευτερόλεπτα</td>
+        <td>Γράψτε πίνακα μονάδων στον πίνακα: <code>1 min = 60 s</code>, <code>1 μC = 10⁻⁶ C</code>, <code>mm² μένουν mm²</code></td>
+      </tr>
+      <tr>
+        <td><code>0,3</code> αντί για <code>0,3² = 0,09</code></td>
+        <td>Ξεχνά το τετράγωνο στον Coulomb</td>
+        <td>Γράψτε <code>r²</code> με κόκκινη κιμωλία δίπλα στον τύπο. Υπενθύμιση: «Διπλάσιο r → 1/4 F»</td>
+      </tr>
+      <tr>
+        <td><code>U<sub>πολ</sub> = 12 V</code></td>
+        <td>Μπερδεύει ΗΕΔ με πολική τάση</td>
+        <td>Μία ερώτηση Σ/Λ στην αρχή: «Όταν η πηγή δίνει ρεύμα, U<sub>πολ</sub> = Ε;» → <strong>Λάθος</strong></td>
+      </tr>
+      <tr>
+        <td>Μετατρέπει <code>mm² → m²</code></td>
+        <td>Δεν εμπιστεύεται τις μονάδες του ρ</td>
+        <td>Έμφαση: «ρ σε Ω·mm²/m σημαίνει S σε mm²». Γράψτε το πλαίσιο στον πίνακα</td>
+      </tr>
+      <tr>
+        <td><code>G = 1,36 S</code></td>
+        <td>Δεν αντέστρεψε (G = 1/R)</td>
+        <td>Ανάποδη ερώτηση: «Αν ξέρω G, πώς βρίσκω R;» → R = 1/G</td>
+      </tr>
+      <tr>
+        <td>Δεν ζωγραφίζει κύκλωμα ή βάζει Α/V λάθος</td>
+        <td>Θεωρεί τη σχεδίαση «περιττή»</td>
+        <td>Στον πίνακα: <strong>Α σε σειρά, V παράλληλα</strong> — ζωγραφίστε το μαζί. Μισή μονάδα ανά σωστή θέση οργάνου στο τεστ</td>
+      </tr>
+      <tr>
+        <td><code>R₇₀ = 1,36 Ω</code> (χωρίς διόρθωση)</td>
+        <td>Αγνοεί τη θερμοκρασιακή εξάρτηση</td>
+        <td>Υπενθύμιση: «Μέταλλο → R αυξάνεται». Δείξτε: 1,36 → 1,63 = +20%</td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>📌 Αν έχετε 5 επιπλέον λεπτά στο επόμενο μάθημα (πριν το τεστ)</h2>
+  <ol>
+    <li><strong>1΄:</strong> Γράψτε τους 7 τύπους στον πίνακα. Δεν εξηγείτε — απλώς τους βλέπουν.</li>
+    <li><strong>2΄:</strong> Βάλτε <strong>μία</strong> άσκηση από το πιο συχνό λάθος (π.χ. αν πολλοί ξέχασαν τα λεπτά, βάλτε ξανά το I = Q/t με min).</li>
+    <li><strong>2΄:</strong> Ανακοινώστε τις 5 παγίδες — διαβάστε τες φωναχτά μία-μία, οι μαθητές λένε «ναι το έχω πάθει / όχι».</li>
+  </ol>
+
+  <div class="note" style="margin-top:20px; text-align:center; font-size:0.95em;">
+    <strong>ΤΕΛΟΣ ΟΔΗΓΟΥ.</strong> Αν χρειαστεί να ξανατυπώσετε: μόνο οι σελίδες 1–4 είναι απαραίτητες για το μάθημα.
+    Η σελίδα 5 είναι διαγνωστικό εργαλείο — χρήσιμη αλλά όχι κρίσιμη.<br><br>
+    <em>Καλή επιτυχία. Το μάθημα είναι το ίδιο, με ή χωρίς υπολογιστή.</em>
+  </div>
+</section>
+
+</body>
+</html>

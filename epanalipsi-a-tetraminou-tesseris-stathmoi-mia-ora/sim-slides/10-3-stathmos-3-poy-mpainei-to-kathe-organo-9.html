@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<script>
+/* ── deck-pause bridge ────────────────────────────────────────────────────────
+   Όταν η διαφάνεια αυτού του εξομοιωτή δεν φαίνεται, το deck στέλνει
+   {deckPause:true} και κάθε animation frame παρακάμπτεται — το loop μένει
+   ζωντανό, οπότε η συνέχεια είναι ακαριαία. Χωρίς αυτό, 5 κρυμμένα sims
+   ζωγραφίζουν συνεχώς (αισθητό σε αργό σχολικό PC). ─────────────────────── */
+(function () {
+  var paused = false, raf = window.requestAnimationFrame.bind(window);
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.deckPause === 'boolean') paused = e.data.deckPause;
+  });
+  window.requestAnimationFrame = function (cb) {
+    return raf(function (t) {
+      if (paused) { window.requestAnimationFrame(cb); return; }
+      cb(t);
+    });
+  };
+  /* χειραψία με το deck: «είμαι εδώ» — ξεχωρίζει «φορτώνει» από «λείπει το αρχείο» */
+  window.addEventListener('load', function () {
+    try { parent.postMessage({ simReady: true }, '*'); } catch (e) {}
+  });
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Σταθμός 3 — Πού μπαίνει το κάθε όργανο; · Β΄ ΕΠΑΛ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#070d18; --bg1:#0c1526; --surf:#101c33; --surf2:#152441; --line:#24365a; --line2:#31497a;
+  --ink:#eaf1ff; --muted:#93a4c7; --dim:#5f7099;
+  --blue:#3f8cff; --blue2:#6fb1ff; --cyan:#39c6ff; --amber:#ffb020; --copper:#ff8a3d;
+  --red:#ff4d5e; --green:#2fd67b; --violet:#a06bff;
+  --grad-main:linear-gradient(135deg,#3f8cff,#39c6ff);
+  --grad-hot:linear-gradient(135deg,#ff8a3d,#ffb020);
+  --grad-danger:linear-gradient(135deg,#ff4d5e,#ff8a3d);
+  --grad-ok:linear-gradient(135deg,#1fb868,#2fd67b);
+  --shadow:0 18px 50px -18px rgba(0,0,0,.7);
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif; background:var(--bg0); color:var(--ink);
+  min-height:100vh; overflow-x:hidden; line-height:1.5;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(900px 600px at 12% -8%, rgba(63,140,255,.16), transparent 60%),
+    radial-gradient(800px 620px at 96% 14%, rgba(57,198,255,.10), transparent 60%),
+    radial-gradient(900px 700px at 70% 108%, rgba(255,138,61,.10), transparent 60%),
+    linear-gradient(180deg,#0a1120,#070d18 55%,#08101f);
+  animation:aurora 26s ease-in-out infinite alternate;
+}
+@keyframes aurora{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-14deg)}}
+body::after{
+  content:""; position:fixed; inset:0; z-index:60; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:#0b1424}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#2c5db0,#2a9ecf);border-radius:8px;border:2px solid #0b1424}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#3f8cff,#39c6ff)}
+*{scrollbar-width:thin;scrollbar-color:#2c5db0 #0b1424}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:10px 20px; background:rgba(9,15,29,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.topbar::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+  background:linear-gradient(90deg,transparent,#3f8cff 25%,#39c6ff 50%,#ffb020 78%,transparent); opacity:.7}
+.station-badge{
+  display:flex; align-items:center; gap:10px; padding:6px 14px 6px 8px; border-radius:12px;
+  background:var(--grad-main); color:#04101f; font-weight:700; box-shadow:0 6px 20px -6px rgba(63,140,255,.6);
+  white-space:nowrap;
+}
+.station-badge .num{width:34px;height:34px;border-radius:9px;background:rgba(4,16,31,.22);display:grid;place-items:center;font-size:19px}
+.titles{flex:1;min-width:200px}
+.titles h1{font-size:clamp(15px,2vw,19px);font-weight:700;letter-spacing:.2px}
+.titles p{font-size:11.5px;color:var(--muted)}
+.titles p b{color:var(--amber);font-weight:600}
+.top-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip-timer{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--line);border-radius:11px;padding:4px 8px}
+.chip-timer .t{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;min-width:48px;text-align:center;color:var(--cyan)}
+.chip-timer.warn .t{color:var(--amber)} .chip-timer.crit .t{color:var(--red);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.ibtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;min-width:36px;padding:0 10px;
+  background:var(--surf);border:1px solid var(--line);border-radius:11px;color:var(--ink);cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:600;transition:.18s;
+}
+.ibtn:hover{border-color:var(--blue);background:var(--surf2);transform:translateY(-1px);box-shadow:0 6px 16px -8px rgba(63,140,255,.7)}
+.ibtn:active{transform:translateY(0)}
+.ibtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ibtn.on{border-color:var(--green);color:var(--green)}
+.ibtn.off{color:var(--dim)}
+.kbd{font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-family:'IBM Plex Mono',monospace}
+
+/* ---------- LAYOUT ---------- */
+main{max-width:1460px;margin:0 auto;padding:92px 20px 30px}
+.lab-grid{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:18px;align-items:start;margin-top:14px}
+.left-col{min-width:0}
+
+/* scenario selector */
+.scenarios{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.scn{
+  position:relative;display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:14px;cursor:pointer;
+  background:var(--surf);border:1px solid var(--line);color:var(--ink);font-family:inherit;text-align:left;transition:.2s;overflow:hidden;
+}
+.scn::before{content:"";position:absolute;inset:0;background:var(--grad-main);opacity:0;transition:.2s}
+.scn:hover{transform:translateY(-2px);border-color:var(--line2);box-shadow:var(--shadow)}
+.scn .ic{position:relative;width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:17px;color:#04101f}
+.scn.ok .ic{background:var(--grad-ok)} .scn.bad .ic{background:var(--grad-danger)}
+.scn .tx{position:relative;min-width:0}
+.scn .tx b{display:block;font-size:13px;font-weight:600;white-space:nowrap}
+.scn .tx span{font-size:11px;color:var(--muted)}
+.scn .key{position:absolute;top:6px;right:8px;font-size:9.5px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+.scn.active{border-color:transparent}
+.scn.active::before{opacity:.16}
+.scn.active.ok{box-shadow:0 0 0 1.5px var(--green),0 10px 26px -12px rgba(47,214,123,.55)}
+.scn.active.bad{box-shadow:0 0 0 1.5px var(--red),0 10px 26px -12px rgba(255,77,94,.55)}
+
+/* verdict */
+.verdict{display:flex;gap:13px;align-items:flex-start;margin:14px 0;padding:14px 16px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surf);transition:.3s;animation:fadeUp .5s both}
+.verdict.ok{border-color:rgba(47,214,123,.45);background:linear-gradient(120deg,rgba(47,214,123,.10),var(--surf) 55%)}
+.verdict.bad{border-color:rgba(255,77,94,.5);background:linear-gradient(120deg,rgba(255,77,94,.12),var(--surf) 55%)}
+.verdict .vic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:700;color:#04101f}
+.verdict.ok .vic{background:var(--grad-ok)} .verdict.bad .vic{background:var(--grad-danger)}
+.verdict h3{font-size:15.5px;margin-bottom:3px}
+.verdict p{font-size:13px;color:#c6d3ef}
+.verdict .vchip{display:inline-block;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+  padding:3px 10px;border-radius:99px;background:rgba(63,140,255,.14);border:1px solid rgba(63,140,255,.4);color:var(--blue2)}
+.verdict .vwarn{display:none;margin-top:8px;font-size:12px;color:var(--amber);font-weight:600}
+.verdict .vwarn.show{display:block;animation:blink 1.4s steps(2) infinite}
+
+/* ---------- STAGE ---------- */
+.stage-box{
+  position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line2);
+  box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.03);
+  aspect-ratio:1000/640;background:#0d1a30;animation:fadeUp .6s .1s both;
+}
+.stage-box svg{display:block;width:100%;height:100%}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.flash{position:absolute;inset:0;background:radial-gradient(circle at 61% 77%,#fff,rgba(255,220,160,.85) 30%,transparent 70%);opacity:0;pointer-events:none}
+.flash.go{animation:flashA .45s ease-out}
+@keyframes flashA{0%{opacity:.95}100%{opacity:0}}
+.hud{position:absolute;top:10px;left:12px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none;max-width:70%}
+.hchip{font-size:10.5px;font-weight:600;letter-spacing:.4px;padding:4px 10px;border-radius:99px;
+  background:rgba(8,14,27,.78);border:1px solid var(--line2);color:var(--muted);backdrop-filter:blur(4px)}
+.hchip.live{color:var(--green);border-color:rgba(47,214,123,.5)}
+.hchip.dead{color:var(--red);border-color:rgba(255,77,94,.5)}
+.hchip.warnc{color:var(--amber);border-color:rgba(255,176,32,.5)}
+.legend{position:absolute;top:10px;right:12px;font-size:10.5px;padding:4px 10px;border-radius:99px;
+  background:rgba(8,14,27,.78);border:1px solid var(--line2);color:var(--blue2);pointer-events:none}
+.hint{position:absolute;bottom:8px;left:12px;right:12px;text-align:center;font-size:11px;color:#7e91ba;pointer-events:none;
+  text-shadow:0 1px 4px #000}
+#switchG,#fuseG{cursor:pointer}
+#switchG:hover .sw-base,#fuseG:hover .fu-clip{filter:brightness(1.35)}
+
+/* ---------- SIDE PANEL ---------- */
+.panel{display:flex;flex-direction:column;gap:14px;animation:fadeUp .6s .18s both}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tile{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:10px 12px;position:relative;overflow:hidden;transition:.2s}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc,var(--blue))}
+.tile:hover{border-color:var(--line2);transform:translateY(-1px)}
+.tile .lb{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.tile .vl{font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;color:var(--tc,var(--blue));margin:2px 0;white-space:nowrap}
+.tile .sb{font-size:10.5px;color:var(--dim);font-family:'IBM Plex Mono',monospace}
+.tile.hot .vl{animation:blink 1s steps(2) infinite}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.card h4{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.card h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.ctl{margin-bottom:11px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.ctl label{font-size:12.5px;font-weight:500;color:#c6d3ef}
+.ctl .val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--cyan)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;
+  background:linear-gradient(90deg,#3f8cff,#39c6ff var(--p),#1c2c4d var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;margin-top:-5.5px;
+  background:radial-gradient(circle at 35% 30%,#bfe0ff,#3f8cff 65%);border:2px solid #0a1428;box-shadow:0 0 10px rgba(63,140,255,.8);transition:.15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:#1c2c4d}
+input[type=range]::-moz-range-progress{height:6px;border-radius:6px;background:linear-gradient(90deg,#3f8cff,#39c6ff)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#bfe0ff,#3f8cff 65%);border:2px solid #0a1428}
+select{width:100%;padding:8px 10px;border-radius:10px;background:var(--surf2);border:1px solid var(--line2);color:var(--ink);
+  font-family:inherit;font-size:12.5px;cursor:pointer}
+select:focus{outline:2px solid var(--blue);outline-offset:1px}
+.seg{display:flex;background:var(--surf2);border:1px solid var(--line2);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:6px 4px;border:none;border-radius:8px;background:transparent;color:var(--muted);
+  font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:.18s;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.active{background:var(--grad-main);color:#04101f;box-shadow:0 3px 10px -3px rgba(63,140,255,.7)}
+.tgl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+.tgl-row label{font-size:12.5px;font-weight:500;color:#c6d3ef}
+.switch-t{position:relative;width:42px;height:23px;flex:none}
+.switch-t input{opacity:0;width:100%;height:100%;position:absolute;cursor:pointer;z-index:2;margin:0}
+.switch-t .kn{position:absolute;inset:0;border-radius:99px;background:#1c2c4d;border:1px solid var(--line2);transition:.2s}
+.switch-t .kn::after{content:"";position:absolute;top:2.5px;left:3px;width:16px;height:16px;border-radius:50%;background:#7e91ba;transition:.2s}
+.switch-t input:checked+.kn{background:linear-gradient(90deg,#1fb868,#2fd67b);border-color:transparent}
+.switch-t input:checked+.kn::after{left:21px;background:#04101f}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border-radius:11px;border:1px solid var(--line2);
+  background:var(--surf2);color:var(--ink);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.18s}
+.btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--blue);box-shadow:0 8px 18px -10px rgba(63,140,255,.8)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn.primary{background:var(--grad-main);color:#04101f;border-color:transparent}
+.btn.danger{background:var(--grad-danger);color:#1c0508;border-color:transparent}
+.btn.pulse{animation:pulseB 1.1s ease-in-out infinite}
+@keyframes pulseB{0%,100%{box-shadow:0 0 0 0 rgba(255,77,94,.6)}50%{box-shadow:0 0 0 8px rgba(255,77,94,0)}}
+
+/* ---------- THEORY + QUIZ ---------- */
+.lower{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:14px;margin-top:22px}
+.reveal{opacity:0;transform:translateY(26px);transition:.7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.theory{position:relative;overflow:hidden}
+.theory .big{position:absolute;right:-6px;top:-16px;font-size:92px;font-weight:700;opacity:.07;font-family:'IBM Plex Mono',monospace}
+.theory h3{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+.theory .dot{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:14px;color:#04101f;flex:none}
+.theory p{font-size:12.8px;color:#c6d3ef}
+.theory p b{color:var(--ink)}
+.formula{margin-top:11px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:9px;
+  background:rgba(63,140,255,.1);border:1px dashed rgba(63,140,255,.4);color:var(--blue2);display:inline-block}
+.mnemonic{margin-top:10px;font-size:12px;color:var(--amber);background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.3);border-radius:9px;padding:8px 11px}
+.quiz-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.quiz-head h3{font-size:14.5px;flex:1}
+.qscore{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--green)}
+.qbar{height:5px;border-radius:5px;background:#1c2c4d;overflow:hidden;margin-bottom:12px}
+.qbar i{display:block;height:100%;width:0;background:var(--grad-ok);border-radius:5px;transition:.5s}
+.qitem{padding:9px 11px;border-radius:11px;border:1px solid var(--line);margin-bottom:8px;background:var(--surf2);transition:.25s}
+.qitem .qt{display:flex;gap:9px;align-items:center}
+.qitem .qt p{flex:1;font-size:12.3px;color:#d7e1f7}
+.qbtns{display:flex;gap:5px;flex:none}
+.qbtns button{width:34px;height:29px;border-radius:8px;border:1px solid var(--line2);background:var(--surf);color:var(--muted);
+  font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;transition:.15s}
+.qbtns button:hover:not(:disabled){border-color:var(--blue);color:var(--ink);transform:translateY(-1px)}
+.qbtns button:disabled{cursor:default;opacity:.55}
+.qitem .why{display:none;font-size:11.3px;margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);color:var(--muted)}
+.qitem.answered .why{display:block;animation:fadeUp .35s both}
+.qitem.right{border-color:rgba(47,214,123,.55);background:rgba(47,214,123,.07)}
+.qitem.right .qbtns .pick{background:var(--grad-ok);color:#04101f;border-color:transparent;opacity:1}
+.qitem.wrong{border-color:rgba(255,77,94,.55);background:rgba(255,77,94,.07);animation:shake .4s}
+.qitem.wrong .qbtns .pick{background:var(--grad-danger);color:#1c0508;border-color:transparent;opacity:1}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ---------- NOTES DRAWER ---------- */
+.scrim{position:fixed;inset:0;background:rgba(4,8,16,.6);backdrop-filter:blur(3px);z-index:80;opacity:0;pointer-events:none;transition:.3s}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(430px,94vw);z-index:90;background:var(--bg1);border-left:1px solid var(--line2);
+  transform:translateX(102%);transition:.38s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.6)}
+.drawer.open{transform:none}
+.drawer header{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.drawer header h3{flex:1;font-size:15px}
+.drawer .body{padding:16px 18px;overflow-y:auto;font-size:13px;color:#c6d3ef}
+.drawer .body h5{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin:16px 0 7px}
+.drawer .body h5:first-child{margin-top:0}
+.drawer .body p{margin-bottom:8px}
+.drawer .body ul{margin:0 0 8px 18px}
+.drawer .body li{margin-bottom:6px}
+.drawer .body .fm{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--surf);border:1px solid var(--line);border-radius:9px;padding:8px 11px;margin-bottom:7px;color:var(--blue2)}
+.drawer .body .tip{background:rgba(255,176,32,.09);border:1px solid rgba(255,176,32,.35);border-radius:10px;padding:10px 12px;color:#ffd9a0}
+
+/* ---------- TOASTS / FOOTER ---------- */
+.toasts{position:fixed;bottom:18px;right:18px;z-index:100;display:flex;flex-direction:column;gap:8px;max-width:min(360px,90vw)}
+.toast{background:rgba(14,24,45,.95);border:1px solid var(--line2);border-left:4px solid var(--blue);border-radius:12px;
+  padding:10px 14px;font-size:12.8px;font-weight:500;box-shadow:var(--shadow);animation:toastIn .35s cubic-bezier(.2,.8,.2,1) both;backdrop-filter:blur(8px)}
+.toast.ok{border-left-color:var(--green)} .toast.bad{border-left-color:var(--red)} .toast.warn{border-left-color:var(--amber)}
+.toast.out{animation:toastOut .3s both}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px)}}
+footer{max-width:1460px;margin:26px auto 0;padding:16px 20px 26px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
+footer .keys span{margin-right:12px;white-space:nowrap}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+@media (max-width:1120px){
+  .lab-grid{grid-template-columns:1fr}
+  .lower{grid-template-columns:1fr 1fr}
+  .lower .quiz-card{grid-column:1/-1}
+}
+@media (max-width:760px){
+  main{padding:118px 12px 24px}
+  .scenarios{grid-template-columns:1fr 1fr}
+  .scn .tx b{font-size:12px;white-space:normal}
+  .lower{grid-template-columns:1fr}
+  .titles p{display:none}
+  .hint{display:none}
+  .hud{max-width:60%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01s !important;transition-duration:.01s !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="station-badge"><span class="num">3</span><span>ΣΤΑΘΜΟΣ&nbsp;3</span></div>
+  <div class="titles">
+    <h1>Πού μπαίνει το κάθε όργανο; <span style="color:var(--amber)">⏱ 7΄</span></h1>
+    <p>Β΄ ΕΠΑΛ · Επανάληψη Α΄ Τετραμήνου · Ενότητες <b>1.1 → 2.1</b> · Όργανα μέτρησης 🔬</p>
+  </div>
+  <div class="top-tools">
+    <div class="chip-timer" id="timerChip">
+      <span style="font-size:13px">⏱</span><span class="t" id="timerText">7:00</span>
+      <button class="ibtn" id="btnTimerPlay" style="height:28px;min-width:28px;padding:0 6px" aria-label="Έναρξη/παύση χρονομέτρου"></button>
+      <button class="ibtn" id="btnTimerReset" style="height:28px;min-width:28px;padding:0 6px" aria-label="Επαναφορά χρονομέτρου">
+        <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+      </button>
+    </div>
+    <button class="ibtn on" id="btnSound" aria-label="Ήχος"></button>
+    <button class="ibtn" id="btnNotes" aria-label="Σημειώσεις εκπαιδευτικού">
+      <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h6M9 16h6"/></svg><span class="kbd">N</span>
+    </button>
+    <button class="ibtn" id="btnFS" aria-label="Πλήρης οθόνη">
+      <svg viewBox="0 0 24 24" id="fsIcon"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="kbd">F</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ================= SCENARIOS ================= -->
+  <div class="scenarios" role="tablist" aria-label="Επιλογές σύνδεσης">
+    <button class="scn ok active" data-scn="Aser" role="tab" aria-pressed="true">
+      <span class="ic">A✓</span><span class="tx"><b>Αμπερόμετρο ✓</b><span>σε σειρά — σωστό</span></span><span class="key">1</span>
+    </button>
+    <button class="scn bad" data-scn="Apar" role="tab" aria-pressed="false">
+      <span class="ic">A✗</span><span class="tx"><b>Αμπερόμετρο ✗</b><span>παράλληλα — βραχυκύκλωμα</span></span><span class="key">2</span>
+    </button>
+    <button class="scn ok" data-scn="Vpar" role="tab" aria-pressed="false">
+      <span class="ic">V✓</span><span class="tx"><b>Βολτόμετρο ✓</b><span>παράλληλα — σωστό</span></span><span class="key">3</span>
+    </button>
+    <button class="scn bad" data-scn="Vser" role="tab" aria-pressed="false">
+      <span class="ic">V✗</span><span class="tx"><b>Βολτόμετρο ✗</b><span>σε σειρά — «νεκρώνει»</span></span><span class="key">4</span>
+    </button>
+  </div>
+
+  <div class="lab-grid">
+    <div class="left-col">
+      <!-- verdict -->
+      <div class="verdict ok" id="verdict">
+        <div class="vic" id="vIcon">✓</div>
+        <div style="min-width:0">
+          <h3 id="vTitle">Σωστό — το αμπερόμετρο σε σειρά</h3>
+          <p id="vText"></p>
+          <span class="vchip" id="vChip"></span>
+          <div class="vwarn" id="vWarn">⚠ Η ασφάλεια είναι καμένη — πάτα «Αντικατάσταση» ή κάνε κλικ πάνω της.</div>
+        </div>
+      </div>
+
+      <!-- ================= STAGE ================= -->
+      <div class="stage-box" id="stageBox">
+        <svg id="scene" viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans',Arial,sans-serif">
+          <defs>
+            <radialGradient id="benchGrad" cx="42%" cy="30%" r="90%">
+              <stop offset="0%" stop-color="#15264a"/><stop offset="55%" stop-color="#0f1d3a"/><stop offset="100%" stop-color="#0a1428"/>
+            </radialGradient>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M50 0H0V50" fill="none" stroke="#1c2f55" stroke-width="1"/>
+              <circle cx="0" cy="0" r="1.4" fill="#26407a"/>
+            </pattern>
+            <radialGradient id="vig" cx="50%" cy="46%" r="75%">
+              <stop offset="62%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".42"/>
+            </radialGradient>
+            <linearGradient id="wireRedG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff7a5c"/><stop offset="45%" stop-color="#e0402f"/><stop offset="100%" stop-color="#8e1f14"/>
+            </linearGradient>
+            <linearGradient id="wireBlkG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a5060"/><stop offset="45%" stop-color="#23262e"/><stop offset="100%" stop-color="#0c0e13"/>
+            </linearGradient>
+            <linearGradient id="batBody" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#16337e"/><stop offset="35%" stop-color="#2f63e0"/><stop offset="60%" stop-color="#2456c9"/><stop offset="100%" stop-color="#102a6b"/>
+            </linearGradient>
+            <linearGradient id="batCap" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1d3a8a"/><stop offset="100%" stop-color="#0c1c4a"/>
+            </linearGradient>
+            <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#b9ac97"/><stop offset="35%" stop-color="#efe6d4"/><stop offset="65%" stop-color="#ddd2bd"/><stop offset="100%" stop-color="#a89a83"/>
+            </linearGradient>
+            <linearGradient id="heatGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#ff3d00" stop-opacity=".1"/><stop offset="50%" stop-color="#ff9d2e"/><stop offset="100%" stop-color="#ff3d00" stop-opacity=".1"/>
+            </linearGradient>
+            <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffe9a8"/><stop offset="45%" stop-color="#d8a83c"/><stop offset="100%" stop-color="#8a6420"/>
+            </linearGradient>
+            <linearGradient id="metalCap" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e8ecf2"/><stop offset="50%" stop-color="#9aa3b2"/><stop offset="100%" stop-color="#5c6470"/>
+            </linearGradient>
+            <linearGradient id="glassFuse" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#cfe4ff" stop-opacity=".55"/><stop offset="50%" stop-color="#8fb4dd" stop-opacity=".22"/><stop offset="100%" stop-color="#dbeaff" stop-opacity=".5"/>
+            </linearGradient>
+            <linearGradient id="meterBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3a4152"/><stop offset="12%" stop-color="#2a2f3d"/><stop offset="100%" stop-color="#171b25"/>
+            </linearGradient>
+            <linearGradient id="faceGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f7f2e4"/><stop offset="100%" stop-color="#e6ddc6"/>
+            </linearGradient>
+            <linearGradient id="mirrorG" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#b9c2cc"/><stop offset="50%" stop-color="#eef4fa"/><stop offset="100%" stop-color="#a9b3bf"/>
+            </linearGradient>
+            <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fff" stop-opacity=".22"/><stop offset="35%" stop-color="#fff" stop-opacity=".04"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="lcdGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#b4c4a4"/><stop offset="100%" stop-color="#93a883"/>
+            </linearGradient>
+            <radialGradient id="postRedG" cx="35%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#ff9d8a"/><stop offset="55%" stop-color="#e03a28"/><stop offset="100%" stop-color="#7e150b"/>
+            </radialGradient>
+            <radialGradient id="postBlkG" cx="35%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#6a7280"/><stop offset="55%" stop-color="#23262e"/><stop offset="100%" stop-color="#000"/>
+            </radialGradient>
+            <filter id="blurHot" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+            <filter id="softSh" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000" flood-opacity=".5"/>
+            </filter>
+            <g id="flowDefs"></g>
+          </defs>
+
+          <!-- bench -->
+          <rect width="1000" height="640" fill="url(#benchGrad)"/>
+          <rect width="1000" height="640" fill="url(#grid)" opacity=".55"/>
+          <rect x="14" y="14" width="972" height="612" rx="18" fill="none" stroke="#2b4576" stroke-width="1.5" opacity=".6"/>
+          <g fill="#0a0f1c" stroke="#31497a" stroke-width="1.5">
+            <circle cx="30" cy="30" r="6"/><circle cx="970" cy="30" r="6"/><circle cx="30" cy="610" r="6"/><circle cx="970" cy="610" r="6"/>
+          </g>
+          <g stroke="#4a669c" stroke-width="1.4"><path d="M26 30h8M966 30h8M26 610h8M966 610h8"/></g>
+
+          <!-- wires -->
+          <g fill="none" stroke-linecap="round">
+            <path d="M150 200 L150 150 L850 150 L850 205" stroke="#000" stroke-width="10" opacity=".45" transform="translate(2,4)"/>
+            <path d="M850 435 L850 490 L150 490 L150 452" stroke="#000" stroke-width="10" opacity=".45" transform="translate(2,4)"/>
+            <path id="wireRed" d="M150 200 L150 150 L850 150 L850 205" stroke="url(#wireRedG)" stroke-width="7"/>
+            <path d="M150 200 L150 150 L850 150 L850 205" stroke="#ffb4a0" stroke-width="1.8" opacity=".5"/>
+            <path id="wireBlk" d="M850 435 L850 490 L150 490 L150 452" stroke="url(#wireBlkG)" stroke-width="7"/>
+            <path d="M850 435 L850 490 L150 490 L150 452" stroke="#7d8798" stroke-width="1.6" opacity=".4"/>
+            <path id="hotRed" d="M150 200 L150 150 L850 150 L850 205" stroke="#ff5a3d" stroke-width="10" filter="url(#blurHot)" opacity="0"/>
+            <path id="hotBlk" d="M850 435 L850 490 L150 490 L150 452" stroke="#ff5a3d" stroke-width="10" filter="url(#blurHot)" opacity="0"/>
+          </g>
+
+          <!-- flow dots -->
+          <g id="flowG"></g>
+
+          <!-- battery -->
+          <g id="batteryG" filter="url(#softSh)">
+            <rect x="108" y="222" width="84" height="216" rx="12" fill="url(#batBody)" stroke="#081538" stroke-width="2"/>
+            <rect x="108" y="236" width="84" height="11" fill="#ffb020" opacity=".9"/>
+            <rect x="108" y="415" width="84" height="9" fill="#ffb020" opacity=".55"/>
+            <rect x="116" y="206" width="68" height="20" rx="6" fill="url(#batCap)" stroke="#081538" stroke-width="1.5"/>
+            <rect x="118" y="268" width="64" height="88" rx="8" fill="#f2f6ff" stroke="#b9c6e4"/>
+            <text x="150" y="300" text-anchor="middle" font-size="23" font-weight="700" fill="#12275e" id="batBig">12 V</text>
+            <text x="150" y="318" text-anchor="middle" font-size="8.5" letter-spacing="1.5" fill="#4a5f96">ΜΠΑΤΑΡΙΑ</text>
+            <text x="150" y="336" text-anchor="middle" font-size="9.5" font-family="'IBM Plex Mono',monospace" fill="#12275e" id="batLabelE">E = 12,0 V</text>
+            <text x="150" y="349" text-anchor="middle" font-size="8" fill="#4a5f96">ΕΡΓΑΣΤΗΡΙΟ ΦΥΣΙΚΩΝ</text>
+            <circle cx="150" cy="200" r="11" fill="#1b1f28" stroke="#000"/>
+            <circle cx="150" cy="200" r="7.5" fill="url(#postRedG)"/>
+            <circle cx="147.5" cy="197.5" r="2.2" fill="#fff" opacity=".55"/>
+            <circle cx="150" cy="448" r="11" fill="#1b1f28" stroke="#000"/>
+            <circle cx="150" cy="448" r="7.5" fill="url(#postBlkG)"/>
+            <circle cx="147.5" cy="445.5" r="2.2" fill="#fff" opacity=".35"/>
+            <text x="172" y="206" font-size="15" font-weight="700" fill="#ff6a55">+</text>
+            <text x="172" y="454" font-size="15" font-weight="700" fill="#9aa7c4">−</text>
+            <g id="batDamage" opacity="0">
+              <ellipse cx="150" cy="300" rx="38" ry="70" fill="#1a0f08" opacity=".75"/>
+              <path d="M128 250 L150 292 L138 300 L162 352 M160 240 L150 270" stroke="#000" stroke-width="3" fill="none"/>
+              <text x="150" y="395" text-anchor="middle" font-size="20">💥</text>
+            </g>
+          </g>
+
+          <!-- resistor -->
+          <g id="resG" filter="url(#softSh)">
+            <path d="M850 205 V244 M850 396 V435" stroke="#b9c2cc" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M850 205 V244 M850 396 V435" stroke="#eef4fa" stroke-width="1.5" opacity=".7"/>
+            <rect x="826" y="244" width="48" height="152" rx="11" fill="url(#ceramic)" stroke="#7e715c" stroke-width="1.5"/>
+            <rect x="826" y="244" width="48" height="13" rx="6" fill="#a89a83"/>
+            <rect x="826" y="383" width="48" height="13" rx="6" fill="#a89a83"/>
+            <g id="resBands"></g>
+            <rect id="resGlow" x="826" y="244" width="48" height="152" rx="11" fill="url(#heatGrad)" opacity="0"/>
+            <rect id="resChar" x="826" y="244" width="48" height="152" rx="11" fill="#1e1610" opacity="0"/>
+          </g>
+
+          <!-- fuse -->
+          <g id="fuseG" filter="url(#softSh)">
+            <title>Κλικ για αντικατάσταση καμένης ασφάλειας</title>
+            <rect class="fu-clip" x="550" y="477" width="16" height="26" rx="4" fill="url(#brass)" stroke="#6b4d16"/>
+            <rect class="fu-clip" x="654" y="477" width="16" height="26" rx="4" fill="url(#brass)" stroke="#6b4d16"/>
+            <rect x="566" y="479" width="88" height="22" rx="10" fill="#0d1526"/>
+            <rect x="566" y="479" width="88" height="22" rx="10" fill="url(#glassFuse)" stroke="#9fb4d4" stroke-width="1"/>
+            <rect x="566" y="479" width="17" height="22" rx="6" fill="url(#metalCap)" stroke="#49505c"/>
+            <rect x="637" y="479" width="17" height="22" rx="6" fill="url(#metalCap)" stroke="#49505c"/>
+            <path id="fuseFil" d="M583 490 L637 490" stroke="#e8a05c" stroke-width="2.2" fill="none"/>
+            <g id="fuseBlownG" opacity="0">
+              <path d="M583 490 L603 487 M620 494 L637 490" stroke="#8a5c30" stroke-width="2.2" fill="none"/>
+              <circle cx="611" cy="490" r="7" fill="#1a0f08" opacity=".85"/>
+              <rect x="583" y="481" width="54" height="18" rx="8" fill="#241812" opacity=".55"/>
+            </g>
+            <text x="610" y="474" text-anchor="middle" font-size="9" font-family="'IBM Plex Mono',monospace" fill="#c8d6f2" id="fuseRatingTop">5 A</text>
+          </g>
+
+          <!-- switch -->
+          <g id="switchG" filter="url(#softSh)">
+            <title>Κλικ: άνοιγμα / κλείσιμο κυκλώματος (Space)</title>
+            <rect x="306" y="430" width="132" height="82" fill="transparent"/>
+            <rect class="sw-base" x="312" y="478" width="116" height="26" rx="7" fill="url(#meterBody)" stroke="#05070c" stroke-width="1.5"/>
+            <circle cx="330" cy="486" r="8" fill="url(#brass)" stroke="#6b4d16"/>
+            <circle cx="410" cy="486" r="8" fill="url(#brass)" stroke="#6b4d16"/>
+            <g id="bladeG">
+              <polygon points="330,482.5 408,484.5 412,489 330,491.5" fill="url(#brass)" stroke="#6b4d16" stroke-width="1"/>
+              <circle cx="404" cy="486.5" r="5.5" fill="#b03028" stroke="#5e130d"/>
+              <circle cx="330" cy="487" r="4.5" fill="#8a6420"/>
+            </g>
+          </g>
+
+          <!-- probe leads (parallel scenarios) -->
+          <g id="leadsG" style="display:none">
+            <g fill="none" stroke-linecap="round">
+              <path d="M595 412 C620 470 770 330 846 222" stroke="#000" stroke-width="8" opacity=".4" transform="translate(2,3)"/>
+              <path d="M685 412 C715 462 795 442 846 418" stroke="#000" stroke-width="8" opacity=".4" transform="translate(2,3)"/>
+              <path id="leadR" d="M595 412 C620 470 770 330 846 222" stroke="url(#wireRedG)" stroke-width="5.5"/>
+              <path d="M595 412 C620 470 770 330 846 222" stroke="#ffb4a0" stroke-width="1.4" opacity=".5"/>
+              <path id="leadB" d="M685 412 C715 462 795 442 846 418" stroke="url(#wireBlkG)" stroke-width="5.5"/>
+              <path id="hotLeadR" d="M595 412 C620 470 770 330 846 222" stroke="#ff5a3d" stroke-width="9" filter="url(#blurHot)" opacity="0"/>
+              <path id="hotLeadB" d="M685 412 C715 462 795 442 846 418" stroke="#ff5a3d" stroke-width="9" filter="url(#blurHot)" opacity="0"/>
+            </g>
+            <g id="clipR" transform="translate(846,222)">
+              <rect x="-16" y="-7" width="17" height="14" rx="4" fill="#c23422" stroke="#5e130d"/>
+              <path d="M1 -6 L10 -3 M1 6 L10 3" stroke="#d8dee8" stroke-width="3" stroke-linecap="round"/>
+            </g>
+            <g id="clipB" transform="translate(846,418)">
+              <rect x="-16" y="-7" width="17" height="14" rx="4" fill="#23262e" stroke="#000"/>
+              <path d="M1 -6 L10 -3 M1 6 L10 3" stroke="#d8dee8" stroke-width="3" stroke-linecap="round"/>
+            </g>
+            <circle cx="850" cy="222" r="4" fill="#e8a05c" stroke="#7e4a16"/>
+            <circle cx="850" cy="418" r="4" fill="#e8a05c" stroke="#7e4a16"/>
+          </g>
+
+          <!-- meters injected by JS -->
+          <g id="meterInline"></g>
+          <g id="meterBench" style="display:none"></g>
+
+          <!-- labels -->
+          <g id="labelsG">
+            <text x="212" y="262" font-size="12.5" font-weight="600" fill="#9fc0ff" id="labE">E = 12,0 V</text>
+            <text x="212" y="279" font-size="11" font-family="'IBM Plex Mono',monospace" fill="#6f86b8" id="labRint">r = 0,20 Ω</text>
+            <text x="298" y="136" font-size="12.5" font-weight="600" font-family="'IBM Plex Mono',monospace" fill="#5ec1ff" id="labI">→ I = 1,90 A</text>
+            <text x="884" y="296" font-size="13.5" font-weight="700" fill="#ffd9a0" id="labR">R = 6 Ω</text>
+            <text x="884" y="313" font-size="10.5" fill="#6f86b8">όριο 25 W</text>
+            <text x="884" y="331" font-size="11.5" font-family="'IBM Plex Mono',monospace" fill="#ffb020" id="labP">P = 21,8 W</text>
+            <text x="610" y="530" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="#7e91ba" id="labFuse">ΑΣΦΑΛΕΙΑ 5 A</text>
+            <text x="370" y="530" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="#7e91ba">ΔΙΑΚΟΠΤΗΣ</text>
+            <text x="640" y="222" text-anchor="middle" font-size="11.5" font-weight="700" letter-spacing="1.5" fill="#9fc0ff" id="labMeterB">ΑΜΠΕΡΟΜΕΤΡΟ</text>
+            <text x="500" y="54" text-anchor="middle" font-size="11.5" font-weight="700" letter-spacing="1.5" fill="#9fc0ff" id="labMeterI">ΑΜΠΕΡΟΜΕΤΡΟ</text>
+          </g>
+          <rect width="1000" height="640" fill="url(#vig)" pointer-events="none"/>
+        </svg>
+        <canvas id="fx"></canvas>
+        <div class="flash" id="flashDiv"></div>
+        <div class="hud">
+          <span class="hchip" id="hudScenario">A · ΣΕ ΣΕΙΡΑ</span>
+          <span class="hchip live" id="hudSwitch">⚡ ΚΛΕΙΣΤΟ</span>
+          <span class="hchip live" id="hudFuse">ΑΣΦ. 5 A ✓</span>
+        </div>
+        <span class="legend" id="legend">⚛ ροή ηλεκτρονίων</span>
+        <div class="hint">💡 Κλικ στον <b>διακόπτη</b> για ON/OFF (Space) · Κλικ στην <b>ασφάλεια</b> για αντικατάσταση · Σύρε τα χειριστήρια δεξιά</div>
+      </div>
+    </div>
+
+    <!-- ================= SIDE PANEL ================= -->
+    <aside class="panel">
+      <div class="tiles">
+        <div class="tile" style="--tc:var(--blue2)" id="tileIbox"><div class="lb">Πραγματικό ρεύμα I</div><div class="vl" id="tileI">1,90 A</div><div class="sb" id="tileIsub">ιδανικό: 2,00 A</div></div>
+        <div class="tile" style="--tc:var(--amber)"><div class="lb">Τάση στα άκρα της R</div><div class="vl" id="tileV">11,43 V</div><div class="sb" id="tileVsub">ιδανικό: 12,00 V</div></div>
+        <div class="tile" style="--tc:var(--copper)" id="tilePbox"><div class="lb">Ισχύς στην R</div><div class="vl" id="tileP">21,8 W</div><div class="sb" id="tilePsub">ιδανικό: 24,0 W</div></div>
+        <div class="tile" style="--tc:var(--green)"><div class="lb">Ένδειξη οργάνου</div><div class="vl" id="tileM">1,90 A</div><div class="sb" id="tileMsub">Αμπερόμετρο · 0–5 A</div></div>
+      </div>
+
+      <div class="card">
+        <h4>🎛 Πηγή &amp; Φορτίο</h4>
+        <div class="ctl"><div class="row"><label for="sE">ΗΕΔ πηγής E</label><span class="val" id="vE">12,0 V</span></div>
+          <input type="range" id="sE" min="1" max="24" step="0.5" value="12"></div>
+        <div class="ctl"><div class="row"><label for="sR">Αντίσταση φορτίου R</label><span class="val" id="vR">6 Ω</span></div>
+          <input type="range" id="sR" min="1" max="47" step="1" value="6"></div>
+        <div class="ctl"><div class="row"><label for="sr">Εσωτερική αντίσταση πηγής r</label><span class="val" id="vr">0,20 Ω</span></div>
+          <input type="range" id="sr" min="0" max="2" step="0.05" value="0.2"></div>
+      </div>
+
+      <div class="card">
+        <h4>🔬 Όργανα μέτρησης</h4>
+        <div class="ctl"><div class="row"><label for="sRA">Αντίσταση αμπερομέτρου R<sub>A</sub></label><span class="val" id="vRA">0,10 Ω</span></div>
+          <input type="range" id="sRA" min="0.01" max="1" step="0.01" value="0.1"></div>
+        <div class="ctl"><div class="row"><label for="sRV">Αντίσταση βολτομέτρου R<sub>V</sub></label><span class="val" id="vRV">10,0 MΩ</span></div>
+          <input type="range" id="sRV" min="0" max="100" step="1" value="91"></div>
+        <div class="ctl"><div class="row"><label>Τύπος οργάνων</label></div>
+          <div class="seg" id="segMeter">
+            <button data-m="analog" class="active">🧭 Αναλογικά</button>
+            <button data-m="digital">🔢 Ψηφιακά</button>
+          </div></div>
+      </div>
+
+      <div class="card">
+        <h4>🛡 Προστασία &amp; Προβολή</h4>
+        <div class="ctl"><div class="row"><label for="selFuse">Ασφάλεια κυκλώματος</label></div>
+          <select id="selFuse">
+            <option value="2">2 A (ευαίσθητη)</option>
+            <option value="5" selected>5 A (εργαστηρίου)</option>
+            <option value="10">10 A (ισχυρή)</option>
+            <option value="0">⚠ Χωρίς ασφάλεια</option>
+          </select></div>
+        <div class="ctl"><div class="row"><label>Οπτική ροή</label></div>
+          <div class="seg" id="segFlow">
+            <button data-f="electrons" class="active">⚛ Ηλεκτρόνια</button>
+            <button data-f="conv">→ Συμβατική</button>
+            <button data-f="none">✕ Καθόλου</button>
+          </div></div>
+        <div class="ctl"><div class="row"><label for="sSpeed">Ταχύτητα animation ροής</label><span class="val" id="vSpeed">1,0×</span></div>
+          <input type="range" id="sSpeed" min="0.2" max="3" step="0.1" value="1"></div>
+        <div class="tgl-row"><label for="tglLabels">Ετικέτες &amp; τιμές στο κύκλωμα</label>
+          <span class="switch-t"><input type="checkbox" id="tglLabels" checked><span class="kn"></span></span></div>
+        <div class="actions">
+          <button class="btn danger" id="btnRepair" disabled><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3z"/></svg>Αντικατάσταση</button>
+          <button class="btn" id="btnReset"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>Επαναφορά</button>
+          <button class="btn" id="btnRandom"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor"/></svg>Τυχαίο σενάριο</button>
+          <button class="btn primary" id="btnPNG"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Εξαγωγή PNG</button>
+          <button class="btn" id="btnCSV" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v4h4M9 13h6M9 17h6"/></svg>Λήψη μετρήσεων (CSV)</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================= THEORY + QUIZ ================= -->
+  <section class="lower">
+    <div class="card theory reveal">
+      <span class="big">A</span>
+      <h3><span class="dot" style="background:var(--grad-main)">A</span>Αμπερόμετρο</h3>
+      <p>Μπαίνει <b>πάντα σε ΣΕΙΡΑ</b>, γιατί πρέπει να περάσει <b>όλο το ρεύμα</b> από μέσα του. Ιδανικά R<sub>A</sub> → 0, ώστε να μην αλλοιώνει το κύκλωμα.</p>
+      <p style="margin-top:7px;color:var(--red)">✗ Παράλληλα ⇒ βραχυκυκλώνει την R ⇒ τεράστια ένταση ⇒ <b>καίγεται η ασφάλεια</b>.</p>
+      <span class="formula">I = E / (r + R_A + R)</span>
+    </div>
+    <div class="card theory reveal">
+      <span class="big">V</span>
+      <h3><span class="dot" style="background:var(--grad-hot)">V</span>Βολτόμετρο</h3>
+      <p>Μπαίνει <b>πάντα ΠΑΡΑΛΛΗΛΑ</b>, στα άκρα του στοιχείου. Ιδανικά R<sub>V</sub> → ∞, ώστε να τραβά ελάχιστο ρεύμα.</p>
+      <p style="margin-top:7px;color:var(--red)">✗ Σε σειρά ⇒ η τεράστια R<sub>V</sub> ρίχνει το ρεύμα ≈ 0 ⇒ το κύκλωμα <b>«νεκρώνει»</b> (το V δείχνει σχεδόν όλη την ΗΕΔ!).</p>
+      <span class="formula">V_R = I · R</span>
+      <div class="mnemonic">🧠 <b>Μνημονικό:</b> το <b>Α</b> θέλει να «δει» όλο το ρεύμα → μπαίνει στη <b>διαδρομή</b>. Το <b>V</b> θέλει να «δει» τη διαφορά → μπαίνει στα <b>άκρα</b>.</div>
+    </div>
+    <div class="card quiz-card reveal">
+      <div class="quiz-head">
+        <h3>📝 Εξάσκηση Σ/Λ — Τράπεζα Θεμάτων</h3>
+        <span class="qscore" id="quizScore">0 / 5</span>
+        <button class="btn" id="btnQuizReset" style="padding:6px 10px;font-size:11px">↺ Ξανά</button>
+      </div>
+      <div class="qbar"><i id="quizBar"></i></div>
+      <div id="quizList"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>⚡ Εργαστήριο Φυσικών — Β΄ ΕΠΑΛ · Σταθμός 3 · Ρεαλιστική προσομοίωση με εσωτερικές αντιστάσεις οργάνων</span>
+  <span class="keys"><span><span class="kbd">1–4</span> σενάρια</span><span><span class="kbd">Space</span> διακόπτης</span><span><span class="kbd">F</span> πλήρης οθόνη</span><span><span class="kbd">N</span> σημειώσεις</span></span>
+</footer>
+
+<!-- ================= NOTES DRAWER ================= -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="notesDrawer" aria-label="Σημειώσεις εκπαιδευτικού">
+  <header>
+    <h3>📋 Σημειώσεις εκπαιδευτικού</h3>
+    <span class="kbd">N / Esc</span>
+    <button class="ibtn" id="btnNotesClose" aria-label="Κλείσιμο"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </header>
+  <div class="body">
+    <h5>⏱ Χρονισμός — 9 λεπτά</h5>
+    <p>Σταθμός 3 της επανάληψης Α΄ Τετραμήνου (Ενότητες 1.1 → 2.1). Χρησιμοποίησε το χρονόμετρο στην επάνω μπάρα για να κρατήσεις τη ροή των ομάδων.</p>
+    <h5>🎯 Τι να δείξεις</h5>
+    <ul>
+      <li><b>Δείξτε και τις 4 επιλογές</b> με τα πλήκτρα 1–4 ή τις καρτέλες.</li>
+      <li><b>Αμπερόμετρο ✓ (σειρά):</b> όλο το ρεύμα περνά από μέσα του — δείχνει το πραγματικό I.</li>
+      <li><b>Αμπερόμετρο ✗ (παράλληλα):</b> σχεδόν μηδενική αντίσταση → <b>βραχυκύκλωμα</b> → καίγεται η ασφάλεια (δες το εξάρτημα να σπάει!).</li>
+      <li><b>Βολτόμετρο ✓ (παράλληλα):</b> τεράστια αντίσταση → τραβά ελάχιστο ρεύμα → μετρά χωρίς να ενοχλεί.</li>
+      <li><b>Βολτόμετρο ✗ (σειρά):</b> το ρεύμα πέφτει σχεδόν στο μηδέν → το κύκλωμα «νεκρώνει». Τόνισε ότι το V δείχνει τότε <b>σχεδόν όλη την ΗΕΔ</b>.</li>
+    </ul>
+    <div class="tip">⭐ Είναι το <b>πιο συχνό ερώτημα Σ/Λ της τράπεζας</b>. Κλείσε τον σταθμό με το κουίζ Σ/Λ στο κάτω μέρος της σελίδας.</div>
+    <h5>🔬 Ρεαλιστικές τιμές προσομοίωσης</h5>
+    <div class="fm">R_A ≈ 0,1 Ω (αμπερόμετρο)</div>
+    <div class="fm">R_V ≈ 10 MΩ (βολτόμετρο)</div>
+    <div class="fm">r ≈ 0,2 Ω (εσωτερική αντίσταση πηγής)</div>
+    <p>Γι αυτό το «πραγματικό» ρεύμα (≈ 1,90 A) διαφέρει λίγο από το ιδανικό 2,00 A = 12 V / 6 Ω. Δείξε τη σύγκριση στις καρτέλες μετρήσεων.</p>
+    <h5>🧮 Τύποι αναφοράς</h5>
+    <div class="fm">Σειρά: I = E / (r + R_A + R)</div>
+    <div class="fm">Παράλληλα: R_p = R·R_x / (R + R_x)</div>
+    <div class="fm">Ισχύς φορτίου: P = I²·R = V²/R</div>
+    <h5>🛡 Ασφάλεια στον πάγκο</h5>
+    <p>Η ασφάλεια 5 A καίγεται ρεαλιστικά (θερμικό μοντέλο I²t). Χωρίς ασφάλεια, το βραχυκύκλωμα υπερθερμαίνει καλώδια και πηγή — η προσομοίωση ανοίγει το κύκλωμα προστατευτικά. Η αντίσταση 25 W καίγεται αν ξεπεραστεί το όριό της.</p>
+  </div>
+</aside>
+
+<div class="toasts" id="toastBox"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   ΣΤΑΘΜΟΣ 3 — Ρεαλιστικό εργαστήριο οργάνων μέτρησης
+   ============================================================ */
+const $=id=>id.getElementById?id.getElementById(id):document.getElementById(id);
+const NS="http://www.w3.org/2000/svg";
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,str,attrs){const t=el("text",Object.assign({x,y},attrs),parent);t.textContent=str;return t;}
+const comma=s=>String(s).replace(".",",");
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+/* ---------------- STATE ---------------- */
+const DEFAULTS={scenario:"Aser",E:12,R:6,r:0.2,RA:0.1,RV:1e7,fuse:5,switchOn:true,
+  meterStyle:"analog",flowMode:"electrons",speed:1,labels:true,sound:true};
+const state=Object.assign({},DEFAULTS,{fuseBlown:false,resistorBurnt:false,batteryDamaged:false,
+  heatFuse:0,heatR:0,heatBat:0,tLeft:420,tRun:false});
+
+const SCN={
+  Aser:{type:"A",pos:"inline",ok:true,hud:"A · ΣΕ ΣΕΙΡΑ",title:"Σωστό — το αμπερόμετρο σε σειρά",
+    text:"Το αμπερόμετρο μπαίνει πάντα σε σειρά, γιατί πρέπει να περάσει όλο το ρεύμα από μέσα του. Η εσωτερική του αντίσταση είναι ελάχιστη (R_A ≈ 0,1 Ω), ώστε να μην αλλοιώνει το κύκλωμα."},
+  Apar:{type:"A",pos:"bench",ok:false,hud:"A · ΠΑΡΑΛΛΗΛΑ",title:"Λάθος — βραχυκύκλωμα!",
+    text:"Παράλληλα στην R, το αμπερόμετρο (R_A ≈ 0) τη βραχυκυκλώνει: σχεδόν όλο το ρεύμα περνά από το όργανο → τεράστια ένταση → καίγεται η ασφάλεια. Ποτέ αμπερόμετρο παράλληλα!"},
+  Vpar:{type:"V",pos:"bench",ok:true,hud:"V · ΠΑΡΑΛΛΗΛΑ",title:"Σωστό — το βολτόμετρο παράλληλα",
+    text:"Το βολτόμετρο μπαίνει πάντα παράλληλα, στα άκρα του στοιχείου. Έχει τεράστια αντίσταση (R_V ≈ 10 MΩ) και τραβά ελάχιστο ρεύμα (~1 µA), οπότε δεν διαταράσσει το κύκλωμα."},
+  Vser:{type:"V",pos:"inline",ok:false,hud:"V · ΣΕ ΣΕΙΡΑ",title:"Λάθος — το κύκλωμα «νεκρώνει»",
+    text:"Σε σειρά, η τεράστια αντίσταση του βολτομέτρου ρίχνει το ρεύμα σχεδόν στο μηδέν (I ≈ 1 µA). Πρόσεξε: το όργανο δείχνει σχεδόν όλη την ΗΕΔ, αλλά η συσκευή δεν λειτουργεί!"}
+};
+
+/* ---------------- PHYSICS ---------------- */
+function solve(){
+  const{E,R,r,RA,RV,scenario,switchOn,fuseBlown,resistorBurnt,batteryDamaged}=state;
+  const open=!switchOn||fuseBlown||batteryDamaged;
+  const G=resistorBurnt?0:1/R;
+  let I=0,IR=0,IM=0,VR=0,meter=0;
+  if(!open){
+    if(scenario==="Aser"){const Rt=resistorBurnt?Infinity:r+RA+R;I=E/Rt;IR=I;IM=I;VR=resistorBurnt?E:I*R;meter=I;}
+    else if(scenario==="Apar"){const Rp=resistorBurnt?RA:(R*RA)/(R+RA);I=E/(r+Rp);const Vp=I*Rp;IR=Vp*G;IM=Vp/RA;VR=Vp;meter=IM;}
+    else if(scenario==="Vpar"){const Rp=resistorBurnt?RV:(R*RV)/(R+RV);I=E/(r+Rp);const Vp=I*Rp;IR=Vp*G;IM=Vp/RV;VR=Vp;meter=Vp;}
+    else{const Rt=resistorBurnt?Infinity:r+RV+R;I=E/Rt;IR=I;IM=I;VR=resistorBurnt?0:I*R;meter=I*RV;}
+  }
+  return{I,IR,IM,VR,PR:VR*VR*G,meter};
+}
+const vRange=()=>state.E<=15?15:30;
+const activeType=()=>SCN[state.scenario].type;
+const activeRange=()=>activeType()==="A"?5:vRange();
+
+/* ---------------- FORMATTING ---------------- */
+function fmtA(x){if(x<1e-7)return"≈ 0 A";if(x<1e-3)return comma((x*1e6).toFixed(1))+" µA";if(x<1)return comma((x*1e3).toFixed(1))+" mA";return comma(x.toFixed(2))+" A";}
+function fmtV(x){if(x<1e-4)return"≈ 0 V";if(x<1)return comma((x*1e3).toFixed(1))+" mV";return comma(x.toFixed(2))+" V";}
+function fmtW(x){if(x<1e-3)return"≈ 0 W";return comma(x.toFixed(1))+" W";}
+function fmtRV(x){return x>=1e6?comma((x/1e6).toFixed(1))+" MΩ":comma((x/1e3).toFixed(0))+" kΩ";}
+function lcdFmt(x,unit){
+  if(unit==="A"){if(x>5.05)return{v:"OL",u:""};if(x<1e-3)return{v:(x*1e6).toFixed(2),u:"µA"};if(x<1)return{v:(x*1e3).toFixed(1),u:"mA"};return{v:x.toFixed(3),u:"A"};}
+  if(x<1)return{v:(x*1e3).toFixed(1),u:"mV"};return{v:x.toFixed(2),u:"V"};
+}
+
+/* ---------------- AUDIO ---------------- */
+let AC=null,master=null;
+function audio(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=state.sound?0.5:0;master.connect(AC.destination);}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC;}
+function tone(f,dur,type,vol,slide){if(!audio()||!state.sound)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+  o.type=type||"sine";o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02);}
+function noise(dur,freq,vol,q){if(!audio()||!state.sound)return;const t=AC.currentTime,n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type="bandpass";f.frequency.value=freq;f.Q.value=q||1;
+  const g=AC.createGain();g.gain.value=vol||.3;s.connect(f);f.connect(g);g.connect(master);s.start(t);}
+const SFX={
+  click:()=>tone(1300,.05,"square",.1),
+  thunk:()=>{tone(190,.14,"sine",.25,120);noise(.06,900,.08);},
+  pop:()=>{noise(.28,1800,.5,.8);tone(75,.3,"sine",.5,40);noise(.5,400,.2,.5);},
+  spark:()=>noise(.07,3200,.18,2),
+  tink:()=>{tone(2400,.09,"triangle",.16);tone(3600,.05,"sine",.08);},
+  hiss:()=>noise(.7,700,.25,.4),
+  alarm:()=>{tone(520,.18,"square",.18);setTimeout(()=>tone(390,.25,"square",.18),190);},
+  good:()=>{tone(880,.12,"sine",.18);setTimeout(()=>tone(1320,.2,"sine",.18),110);},
+  bad:()=>tone(150,.3,"sawtooth",.16,90),
+  chime:()=>{[0,220,440].forEach(d=>setTimeout(()=>tone(1040,.16,"sine",.2),d));}
+};
+window.addEventListener("pointerdown",()=>audio(),{once:true});
+window.addEventListener("keydown",()=>audio(),{once:true});
+
+/* ---------------- METERS ---------------- */
+function buildMeter(mountId,cx,cy,orient){
+  const g=$(mountId);g.innerHTML="";
+  const bx=cx-95,by=cy-85;
+  el("rect",{x:bx,y:by,width:190,height:170,rx:16,fill:"url(#meterBody)",stroke:"#05070c","stroke-width":2,filter:"url(#softSh)"},g);
+  [[bx+11,by+11],[bx+179,by+11],[bx+11,by+159],[bx+179,by+159]].forEach(p=>{
+    el("circle",{cx:p[0],cy:p[1],r:3.4,fill:"#0a0d13",stroke:"#3a4152","stroke-width":.8},g);
+    el("path",{d:`M${p[0]-2.2} ${p[1]}h4.4`,stroke:"#4a5568","stroke-width":1},g);});
+  const fx=bx+12,fy=by+12,fw=166,fh=146;
+  const faceG=el("g",{},g);
+  el("rect",{x:fx,y:fy,width:fw,height:fh,rx:10,fill:"url(#faceGrad)",stroke:"#b9b09a"},faceG);
+  const px=cx,py=fy+125;
+  const mirror=el("path",{d:"",stroke:"url(#mirrorG)","stroke-width":8,fill:"none",opacity:.85},faceG);
+  const arc=el("path",{d:"",stroke:"#2a2a2a","stroke-width":1.6,fill:"none"},faceG);
+  const redz=el("path",{d:"",stroke:"#d33","stroke-width":3.4,fill:"none"},faceG);
+  const ticksG=el("g",{},faceG);
+  const numsG=el("g",{"font-family":"'IBM Plex Mono',monospace","font-size":10.5,fill:"#2a2a2a","text-anchor":"middle"},faceG);
+  const rangeEl=txt(faceG,cx,fy+19,"0–5 A DC",{"font-size":9.5,fill:"#6b6250","text-anchor":"middle","font-family":"'IBM Plex Mono',monospace"});
+  const letterEl=txt(faceG,cx,py-24,"A",{"font-size":23,"font-weight":"700",fill:"#1c1c1c","text-anchor":"middle"});
+  txt(faceG,fx+58,fy+fh-8,"ΕΠΑΛ·LAB",{"font-size":7.5,"letter-spacing":1,fill:"#8a8069"});
+  el("circle",{cx:fx+16,cy:fy+fh-11,r:5,fill:"#3a3a3a",stroke:"#111"},faceG);
+  el("path",{d:`M${fx+12.5} ${fy+fh-11}h7`,stroke:"#999","stroke-width":1.4},faceG);
+  const needleG=el("g",{},faceG);
+  el("path",{d:"M-2.6 8 L-0.9 -90 L0.9 -90 L2.6 8 Z",fill:"#000",opacity:.22,transform:"translate(1.6,2)"},needleG);
+  el("path",{d:"M-2.6 8 L-0.9 -90 L0.9 -90 L2.6 8 Z",fill:"#d92f2f"},needleG);
+  el("rect",{x:-3.4,y:8,width:6.8,height:9,rx:2,fill:"#5a1010"},needleG);
+  el("circle",{cx:0,cy:0,r:6.5,fill:"#222",stroke:"#000"},needleG);
+  el("path",{d:"M-3.4 0h6.8",stroke:"#777","stroke-width":1.2},needleG);
+  el("rect",{x:fx,y:fy,width:fw,height:fh,rx:10,fill:"url(#glassGrad)","pointer-events":"none"},faceG);
+  el("polygon",{points:`${fx+8},${fy+4} ${fx+52},${fy+4} ${fx+22},${fy+fh-4} ${fx+4},${fy+fh-4}`,fill:"#fff",opacity:.07,"pointer-events":"none"},faceG);
+  // LCD
+  const lcdG=el("g",{style:"display:none"},g);
+  el("rect",{x:fx+4,y:fy+14,width:fw-8,height:fh-28,rx:9,fill:"#0c1210",stroke:"#000"},lcdG);
+  const scr=el("rect",{x:fx+10,y:fy+20,width:fw-20,height:fh-40,rx:6,fill:"url(#lcdGrad)"},lcdG);
+  txt(lcdG,fx+18,fy+36,"DC",{"font-size":10,"font-weight":"700",fill:"#2c3a28","font-family":"'IBM Plex Mono',monospace"});
+  const lcdType=txt(lcdG,fx+fw-18,fy+36,"A",{"font-size":12,"font-weight":"700",fill:"#2c3a28","text-anchor":"end"});
+  const lcdVal=txt(lcdG,fx+fw-16,fy+92,"0.000",{"font-size":33,fill:"#16241a","text-anchor":"end","font-family":"'Share Tech Mono',monospace"});
+  const lcdUnit=txt(lcdG,fx+fw-16,fy+112,"A",{"font-size":13,fill:"#2c3a28","text-anchor":"end","font-family":"'Share Tech Mono',monospace"});
+  const lcdOL=txt(lcdG,cx,fy+82,"⚠ OVERLOAD",{"font-size":10,fill:"#7e1f14","text-anchor":"middle","font-weight":"700",opacity:0});
+  // posts
+  const posts=orient==="inline"?[[bx-0,cy,"red"],[bx+190,cy,"blk"]]:[[cx-45,by+170+7,"red"],[cx+45,by+170+7,"blk"]];
+  posts.forEach(p=>{
+    el("circle",{cx:p[0],cy:p[1],r:11,fill:"#1b1f28",stroke:"#000"},g);
+    el("circle",{cx:p[0],cy:p[1],r:9,fill:"none",stroke:"#000","stroke-width":1,"stroke-dasharray":"2 2",opacity:.5},g);
+    el("circle",{cx:p[0],cy:p[1],r:7,fill:p[2]==="red"?"url(#postRedG)":"url(#postBlkG)"},g);
+    el("circle",{cx:p[0]-2.3,cy:p[1]-2.3,r:2,fill:"#fff",opacity:p[2]==="red"?.55:.3},g);
+    txt(g,p[0]+(orient==="inline"?(p[2]==="red"?-1:1)*0:0),p[1]+(orient==="inline"?-16:24),p[2]==="red"?"+":"−",
+      {"font-size":13,"font-weight":"700",fill:p[2]==="red"?"#ff6a55":"#9aa7c4","text-anchor":"middle"});
+  });
+  return{g,faceG,lcdG,ticksG,numsG,arc,mirror,redz,rangeEl,letterEl,lcdVal,lcdUnit,lcdType,lcdOL,scr,
+    px,py,needleG,anim:{a:-50,v:0},lastTink:0,type:"A",range:5};
+}
+const mInline=buildMeter("meterInline",500,150,"inline");
+const mBench=buildMeter("meterBench",640,316,"bench");
+const activeMeter=()=>SCN[state.scenario].pos==="inline"?mInline:mBench;
+
+function arcPt(px,py,r,deg){const a=deg*Math.PI/180;return[px+r*Math.sin(a),py-r*Math.cos(a)];}
+function arcD(px,py,r,d0,d1){const[a,b]=arcPt(px,py,r,d0),[c,d]=arcPt(px,py,r,d1);return`M${a.toFixed(1)} ${b.toFixed(1)} A${r} ${r} 0 0 1 ${c.toFixed(1)} ${d.toFixed(1)}`;}
+function rebuildTicks(m,type,range){
+  m.type=type;m.range=range;
+  m.ticksG.innerHTML="";m.numsG.innerHTML="";
+  m.arc.setAttribute("d",arcD(m.px,m.py,104,-50,50));
+  m.mirror.setAttribute("d",arcD(m.px,m.py,89,-48,48));
+  m.redz.setAttribute("d",arcD(m.px,m.py,101,40,50));
+  const N=type==="A"?25:30,major=type==="A"?5:6;
+  for(let i=0;i<=N;i++){
+    const deg=-50+100*i/N,isM=i%major===0;
+    const[x1,y1]=arcPt(m.px,m.py,isM?93:97,deg),[x2,y2]=arcPt(m.px,m.py,104,deg);
+    el("line",{x1,y1,x2,y2,stroke:"#2a2a2a","stroke-width":isM?1.8:0.9},m.ticksG);
+    if(isM){const[nx,ny]=arcPt(m.px,m.py,77,deg);
+      txt(m.numsG,nx,ny+3.5,String(Math.round(range*i/N)),{});}
+  }
+  m.letterEl.textContent=type;
+  m.rangeEl.textContent=`0–${range} ${type} DC`;
+  m.lcdType.textContent=type;
+}
+
+/* ---------------- RESISTOR BANDS ---------------- */
+const BAND=["#1a1a1a","#7b4a21","#d33327","#f28018","#f5d020","#2f9e44","#2b5fd9","#9c36b5","#8d8d8d","#f2f2f2"];
+function rebuildBands(){
+  const g=$("resBands");g.innerHTML="";const R=state.R;
+  const cols=R<10?[BAND[R],BAND[0],"#c9a227","#c9a227"]:[BAND[Math.floor(R/10)],BAND[R%10],BAND[0],"#c9a227"];
+  [266,290,314,360].forEach((y,i)=>{
+    el("rect",{x:827,y,width:46,height:12,fill:cols[i],stroke:"#00000033"},g);
+    el("rect",{x:827,y,width:46,height:3,fill:"#fff",opacity:.18},g);});
+}
+
+/* ---------------- FLOW ---------------- */
+const FLOW_D={
+  loop:"M150 200 L150 150 L850 150 L850 490 L150 490 L150 452",
+  src:"M150 200 L150 150 L850 150 L850 222",
+  rbr:"M850 222 L850 418",
+  mbr:"M846 222 C770 330 620 470 595 412 L685 412 C715 462 795 442 846 418 L850 418",
+  ret:"M850 418 L850 490 L150 490 L150 452"};
+let flowPaths=[];
+function rebuildFlow(){
+  const defs=$("flowDefs"),fg=$("flowG");defs.innerHTML="";fg.innerHTML="";flowPaths=[];
+  const cfg=SCN[state.scenario].pos==="inline"?[{d:FLOW_D.loop,k:"I"}]:
+    [{d:FLOW_D.src,k:"I"},{d:FLOW_D.rbr,k:"IR"},{d:FLOW_D.mbr,k:"IM"},{d:FLOW_D.ret,k:"I"}];
+  const fill=state.flowMode==="conv"?"#ffc24d":"#5ec1ff";
+  fg.style.filter=state.flowMode==="conv"?"drop-shadow(0 0 4px #ffb020)":"drop-shadow(0 0 4px #4da3ff)";
+  cfg.forEach(c=>{
+    const p=el("path",{d:c.d,fill:"none"},defs);
+    const len=p.getTotalLength(),n=Math.max(3,Math.floor(len/28)),dots=[];
+    const grp=el("g",{},fg);
+    for(let i=0;i<n;i++)dots.push(el("circle",{r:2.7,fill,cx:-20,cy:-20},grp));
+    flowPaths.push({p,len,dots,off:Math.random()*len,k:c.k,grp});
+  });
+  fg.style.display=state.flowMode==="none"?"none":"";
+}
+
+/* ---------------- PARTICLES ---------------- */
+const cv=$("fx"),ctx=cv.getContext("2d"),stageBox=$("stageBox");
+let parts=[],smokeFuse=0,smokeRes=0,smokeBat=0;
+function sizeCanvas(){
+  const r=stageBox.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);
+  ctx.setTransform(cv.width/1000,0,0,cv.height/640,0,0);
+}
+new ResizeObserver(sizeCanvas).observe(stageBox);sizeCanvas();
+function sparks(x,y,n,pow){
+  n=RM?Math.ceil(n/3):n;
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(60+Math.random()*260)*(pow||1);
+    parts.push({t:"s",x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-90,life:0,ttl:.35+Math.random()*.5,sz:1+Math.random()*2.2});}
+}
+function smoke(x,y,dt,rate){
+  if(Math.random()<dt*rate*(RM?.3:1))
+    parts.push({t:"m",x:x+(Math.random()-.5)*14,y,vx:(Math.random()-.5)*16,vy:-26-Math.random()*30,life:0,ttl:1.6+Math.random()*1.6,sz:5+Math.random()*7});
+}
+function ember(x,y){parts.push({t:"e",x:x+(Math.random()-.5)*30,y,vx:(Math.random()-.5)*20,vy:-30-Math.random()*40,life:0,ttl:.5+Math.random()*.5,sz:1+Math.random()*1.6});}
+function stepParts(dt){
+  ctx.clearRect(0,0,1000,640);
+  if(parts.length>420)parts.splice(0,parts.length-420);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life+=dt;
+    if(p.life>=p.ttl){parts.splice(i,1);continue;}
+    const k=p.life/p.ttl;
+    if(p.t==="s"){p.vy+=620*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+      ctx.globalCompositeOperation="lighter";ctx.globalAlpha=(1-k);
+      ctx.strokeStyle=k<.3?"#fff5d0":"#ff9a3d";ctx.lineWidth=p.sz;
+      ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.vx*.02,p.y-p.vy*.02);ctx.stroke();}
+    else if(p.t==="e"){p.x+=p.vx*dt;p.y+=p.vy*dt;
+      ctx.globalCompositeOperation="lighter";ctx.globalAlpha=(1-k)*.9;
+      ctx.fillStyle="#ffb020";ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,7);ctx.fill();}
+    else{p.x+=p.vx*dt+Math.sin(p.life*3)*8*dt;p.y+=p.vy*dt;
+      ctx.globalCompositeOperation="source-over";ctx.globalAlpha=(1-k)*.32;
+      ctx.fillStyle="#9aa4b5";ctx.beginPath();ctx.arc(p.x,p.y,p.sz*(1+k*2.4),0,7);ctx.fill();}
+  }
+  ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+}
+
+/* ---------------- TOASTS ---------------- */
+function toast(msg,kind){
+  const box=$("toastBox");
+  while(box.children.length>=4)box.firstChild.remove();
+  const d=document.createElement("div");d.className="toast "+(kind||"");d.textContent=msg;box.appendChild(d);
+  setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),320);},3400);
+}
+
+/* ---------------- FAILURES ---------------- */
+function blowFuse(){
+  state.fuseBlown=true;state.heatFuse=0;smokeFuse=5;
+  sparks(610,490,46,1.2);SFX.pop();
+  const f=$("flashDiv");f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+  toast("💥 Βραχυκύκλωμα! Η ασφάλεια "+state.fuse+" A κάηκε.","bad");render();
+}
+function burnResistor(){
+  state.resistorBurnt=true;state.heatR=0;smokeRes=7;SFX.hiss();sparks(850,320,16,.7);
+  toast("🔥 Η αντίσταση ξεπέρασε τα 25 W και κάηκε (ανοιχτό κύκλωμα).","bad");render();
+}
+function damageBattery(){
+  state.batteryDamaged=true;state.heatBat=0;smokeBat=9;SFX.alarm();sparks(150,300,22,.9);
+  toast("⚠️ Χωρίς ασφάλεια η πηγή υπερθερμάνθηκε — προστασία: κύκλωμα ανοιχτό.","warn");render();
+}
+function repairAll(){
+  const had=state.fuseBlown||state.resistorBurnt||state.batteryDamaged;
+  state.fuseBlown=state.resistorBurnt=state.batteryDamaged=false;
+  state.heatFuse=state.heatR=state.heatBat=0;
+  SFX.click();if(had)toast("🔧 Τα εξαρτήματα αντικαταστάθηκαν — κύκλωμα έτοιμο.","ok");render();
+}
+
+/* ---------------- RENDER ---------------- */
+function setSliderFill(inp){const p=(inp.value-inp.min)/(inp.max-inp.min)*100;inp.style.setProperty("--p",p+"%");}
+function render(){
+  const s=solve(),sc=SCN[state.scenario],type=sc.type,range=activeRange();
+  // meters visibility + faces
+  mInline.g.style.display=sc.pos==="inline"?"":"none";
+  mBench.g.style.display=sc.pos==="bench"?"":"none";
+  $("leadsG").style.display=sc.pos==="bench"?"":"none";
+  [mInline,mBench].forEach(m=>{
+    rebuildTicks(m,type,range);
+    m.faceG.style.display=state.meterStyle==="analog"?"":"none";
+    m.lcdG.style.display=state.meterStyle==="digital"?"":"none";
+  });
+  $("labMeterB").textContent=$("labMeterI").textContent=type==="A"?"ΑΜΠΕΡΟΜΕΤΡΟ":"ΒΟΛΤΟΜΕΤΡΟ";
+  // verdict
+  const v=$("verdict");v.className="verdict "+(sc.ok?"ok":"bad");
+  $("vIcon").textContent=sc.ok?"✓":"✗";$("vTitle").textContent=sc.title;$("vText").textContent=sc.text;
+  $("vChip").textContent=`I = ${fmtA(s.I)}  ·  Ένδειξη: ${type==="A"?fmtA(s.meter):fmtV(s.meter)}`;
+  $("vWarn").classList.toggle("show",state.fuseBlown||state.batteryDamaged||state.resistorBurnt);
+  $("vWarn").textContent=state.fuseBlown?"⚠ Η ασφάλεια είναι καμένη — πάτα «Αντικατάσταση» ή κάνε κλικ πάνω της.":
+    state.batteryDamaged?"⚠ Η πηγή υπέστη ζημιά — πάτα «Αντικατάσταση».":
+    state.resistorBurnt?"⚠ Η αντίσταση είναι καμένη — πάτα «Αντικατάσταση».":"";
+  // tiles
+  $("tileI").textContent=fmtA(s.I);$("tileIsub").textContent="ιδανικό: "+fmtA(state.E/state.R);
+  $("tileV").textContent=fmtV(s.VR);$("tileVsub").textContent="ιδανικό: "+fmtV(state.E);
+  $("tileP").textContent=fmtW(s.PR);$("tilePsub").textContent="ιδανικό: "+fmtW(state.E*state.E/state.R);
+  $("tileM").textContent=type==="A"?fmtA(s.meter):fmtV(s.meter);
+  $("tileMsub").textContent=(type==="A"?"Αμπερόμετρο · 0–5 A":"Βολτόμετρο · 0–"+vRange()+" V");
+  $("tileIbox").classList.toggle("hot",s.I>state.fuse&&state.fuse>0&&!state.fuseBlown);
+  $("tilePbox").classList.toggle("hot",s.PR>25&&!state.resistorBurnt);
+  // HUD
+  $("hudScenario").textContent=sc.hud;
+  const hs=$("hudSwitch");hs.textContent=state.switchOn?"⚡ ΚΛΕΙΣΤΟ":"⭘ ΑΝΟΙΚΤΟ";hs.className="hchip "+(state.switchOn?"live":"");
+  const hf=$("hudFuse");
+  if(state.fuse===0){hf.textContent="ΧΩΡΙΣ ΑΣΦ. ⚠";hf.className="hchip warnc";}
+  else if(state.fuseBlown){hf.textContent="ΑΣΦ. ΕΚΑΨΕ 💥";hf.className="hchip dead";}
+  else{hf.textContent="ΑΣΦ. "+state.fuse+" A ✓";hf.className="hchip live";}
+  // labels
+  $("labelsG").style.display=state.labels?"":"none";
+  $("batBig").textContent=comma(state.E.toFixed(state.E%1?1:0))+" V";
+  $("batLabelE").textContent="E = "+comma(state.E.toFixed(1))+" V";
+  $("labE").textContent="E = "+comma(state.E.toFixed(1))+" V";
+  $("labRint").textContent="r = "+comma(state.r.toFixed(2))+" Ω";
+  $("labR").textContent="R = "+state.R+" Ω";
+  $("labI").textContent="→ I = "+fmtA(s.I);
+  $("labP").textContent="P = "+fmtW(s.PR);
+  $("labFuse").textContent=state.fuse===0?"ΧΩΡΙΣ ΑΣΦΑΛΕΙΑ":"ΑΣΦΑΛΕΙΑ "+state.fuse+" A";
+  $("fuseRatingTop").textContent=state.fuse===0?"—":state.fuse+" A";
+  $("fuseRatingTop").style.display=state.fuse===0?"none":"";
+  // fuse / damage visuals
+  $("fuseFil").setAttribute("opacity",state.fuseBlown?0:1);
+  $("fuseBlownG").setAttribute("opacity",state.fuseBlown?1:0);
+  $("batDamage").setAttribute("opacity",state.batteryDamaged?1:0);
+  $("resChar").setAttribute("opacity",state.resistorBurnt?.88:clamp(state.heatR*.4,0,.4));
+  // controls
+  $("vE").textContent=comma(state.E.toFixed(1))+" V";$("vR").textContent=state.R+" Ω";
+  $("vr").textContent=comma(state.r.toFixed(2))+" Ω";$("vRA").textContent=comma(state.RA.toFixed(2))+" Ω";
+  $("vRV").textContent=fmtRV(state.RV);$("vSpeed").textContent=comma(state.speed.toFixed(1))+"×";
+  ["sE","sR","sr","sRA","sRV","sSpeed"].forEach(id=>setSliderFill($(id)));
+  const anyDead=state.fuseBlown||state.resistorBurnt||state.batteryDamaged;
+  $("btnRepair").disabled=!anyDead;$("btnRepair").classList.toggle("pulse",anyDead);
+  $("legend").textContent=state.flowMode==="electrons"?"⚛ ροή ηλεκτρονίων (− → +)":state.flowMode==="conv"?"→ συμβατικό ρεύμα (+ → −)":"ροή: ανενεργή";
+  $("legend").style.color=state.flowMode==="conv"?"var(--amber)":"var(--blue2)";
+  rebuildBands();
+}
+
+/* ---------------- SCENARIO ---------------- */
+function setScenario(key,silent){
+  if(!SCN[key])return;
+  state.scenario=key;
+  document.querySelectorAll(".scn").forEach(b=>{
+    const on=b.dataset.scn===key;b.classList.toggle("active",on);b.setAttribute("aria-pressed",on);});
+  const m=activeMeter();m.anim.a=-50;m.anim.v=0;
+  rebuildFlow();render();
+  if(!silent)SFX.thunk();
+}
+
+/* ---------------- MAIN LOOP ---------------- */
+let lastT=performance.now(),lcdAcc=0,timerShown=-1,bladeA=0,glowT=0;
+function loop(now){
+  const dt=clamp((now-lastT)/1000,0,.05);lastT=now;glowT+=dt;
+  const s=solve();
+  // --- failures ---
+  if(state.fuse>0&&!state.fuseBlown&&s.I>state.fuse){
+    state.heatFuse+=dt*Math.pow(s.I/state.fuse,2)/40;
+    if(state.heatFuse>.4&&Math.random()<dt*10)ember(610,486);
+    if(state.heatFuse>=1)blowFuse();
+  }else state.heatFuse=Math.max(0,state.heatFuse-dt*.4);
+  if(!state.resistorBurnt&&s.PR>25){
+    state.heatR+=dt*(s.PR/25-1)*.5;
+    if(state.heatR>=1)burnResistor();
+  }else state.heatR=Math.max(0,state.heatR-dt*.3);
+  if(state.fuse===0&&s.I>15&&!state.batteryDamaged){
+    state.heatBat+=dt*(s.I/15-1)*.22;
+    if(state.heatBat>=1)damageBattery();
+  }else state.heatBat=Math.max(0,state.heatBat-dt*.3);
+  // --- needle ---
+  const m=activeMeter();
+  if(state.meterStyle==="analog"){
+    const frac=s.meter/m.range,target=frac>1.02?57:-50+100*clamp(frac,0,1.02);
+    const k=90,c=RM?20:9;
+    m.anim.v+=(k*(target-m.anim.a)-c*m.anim.v)*dt;
+    m.anim.a+=m.anim.v*dt;
+    if(m.anim.a>57){if(Math.abs(m.anim.v)>60&&now-m.lastTink>500){SFX.tink();m.lastTink=now;}m.anim.a=57;m.anim.v*=-.25;}
+    if(m.anim.a<-52){m.anim.a=-52;m.anim.v*=-.3;}
+    m.needleG.setAttribute("transform",`translate(${m.px} ${m.py}) rotate(${m.anim.a.toFixed(2)})`);
+  }else{
+    lcdAcc+=dt;
+    if(lcdAcc>.12){lcdAcc=0;
+      const f=lcdFmt(s.meter,m.type);
+      m.lcdVal.textContent=f.v;m.lcdUnit.textContent=f.u;
+      m.lcdOL.setAttribute("opacity",f.v==="OL"?(Math.sin(glowT*8)>0?1:.15):0);
+      m.scr.setAttribute("opacity",state.switchOn&&!state.fuseBlown?1:.75);}
+  }
+  // --- switch blade ---
+  const bt=state.switchOn?0:-34;
+  bladeA+=(bt-bladeA)*Math.min(1,dt*10);
+  $("bladeG").setAttribute("transform",`rotate(${bladeA.toFixed(2)} 330 487)`);
+  // --- flow ---
+  if(state.flowMode!=="none"){
+    const dir=state.flowMode==="electrons"?-1:1;
+    for(const f of flowPaths){
+      const I=s[f.k],v=Math.min(520,42*I)*state.speed;
+      f.off=(f.off+dir*v*dt)%f.len;
+      const n=f.dots.length,sp=f.len/n;
+      for(let i=0;i<n;i++){
+        const d=((f.off+i*sp)%f.len+f.len)%f.len,pt=f.p.getPointAtLength(d);
+        f.dots[i].setAttribute("cx",pt.x.toFixed(1));f.dots[i].setAttribute("cy",pt.y.toFixed(1));
+      }
+    }
+  }
+  // --- heat glow / hot wires ---
+  const pulse=.85+.15*Math.sin(glowT*6);
+  $("resGlow").setAttribute("opacity",state.resistorBurnt?0:clamp(s.PR/40,0,.85)*pulse);
+  const hotMain=clamp((s.I-8)/30,0,.8)*pulse;
+  $("hotRed").setAttribute("opacity",hotMain);$("hotBlk").setAttribute("opacity",hotMain);
+  const hotLead=state.scenario==="Apar"?clamp(s.IM/22,0,.9)*pulse:0;
+  $("hotLeadR").setAttribute("opacity",hotLead);$("hotLeadB").setAttribute("opacity",hotLead);
+  // --- smoke emitters ---
+  if(smokeFuse>0){smokeFuse-=dt;smoke(610,480,dt,9);}
+  if(smokeRes>0){smokeRes-=dt;smoke(850,300,dt,8);}
+  if(smokeBat>0){smokeBat-=dt;smoke(150,280,dt,9);}
+  if(state.resistorBurnt&&Math.random()<dt*.6)smoke(850,300,dt,4);
+  stepParts(dt);
+  // --- timer ---
+  if(state.tRun){
+    state.tLeft=Math.max(0,state.tLeft-dt);
+    if(state.tLeft===0){state.tRun=false;SFX.chime();toast("⏱ Τέλος 9λέπτου! Αλλαγή σταθμού.","warn");updateTimerBtn();}
+  }
+  const sec=Math.ceil(state.tLeft);
+  if(sec!==timerShown){timerShown=sec;
+    $("timerText").textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");
+    const chip=$("timerChip");chip.classList.toggle("warn",sec<=60&&sec>10);chip.classList.toggle("crit",sec<=10);}
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- EVENTS ---------------- */
+document.querySelectorAll(".scn").forEach(b=>b.addEventListener("click",()=>setScenario(b.dataset.scn)));
+function bindSlider(id,key,fn){$(id).addEventListener("input",e=>{state[key]=fn?fn(+e.target.value):+e.target.value;render();});}
+bindSlider("sE","E");bindSlider("sR","R");bindSlider("sr","r");bindSlider("sRA","RA");bindSlider("sSpeed","speed");
+bindSlider("sRV","RV",v=>Math.pow(10,4+v/100*3.3));
+$("selFuse").addEventListener("change",e=>{
+  state.fuse=+e.target.value;state.fuseBlown=false;state.heatFuse=0;SFX.click();
+  toast(state.fuse===0?"⚠ Χωρίς ασφάλεια — πρόσεχε το βραχυκύκλωμα!":"Νέα ασφάλεια "+state.fuse+" A τοποθετήθηκε ✓",state.fuse===0?"warn":"ok");
+  render();});
+$("segMeter").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  state.meterStyle=b.dataset.m;
+  $("segMeter").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));
+  SFX.click();render();}));
+$("segFlow").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  state.flowMode=b.dataset.f;
+  $("segFlow").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));
+  SFX.click();rebuildFlow();render();}));
+$("tglLabels").addEventListener("change",e=>{state.labels=e.target.checked;SFX.click();render();});
+$("btnRepair").addEventListener("click",repairAll);
+$("btnReset").addEventListener("click",()=>{
+  Object.assign(state,DEFAULTS,{fuseBlown:false,resistorBurnt:false,batteryDamaged:false,heatFuse:0,heatR:0,heatBat:0});
+  $("sE").value=12;$("sR").value=6;$("sr").value=.2;$("sRA").value=.1;$("sRV").value=91;$("sSpeed").value=1;
+  $("selFuse").value="5";$("tglLabels").checked=true;
+  $("segMeter").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x.dataset.m==="analog"));
+  $("segFlow").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x.dataset.f==="electrons"));
+  setScenario("Aser",true);SFX.click();toast("↺ Επαναφορά στις αρχικές τιμές (12 V · 6 Ω).","ok");});
+$("btnRandom").addEventListener("click",()=>{
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  state.E=pick([6,9,12,15,18,24]);state.R=pick([3,6,10,15,22,33,47]);
+  state.r=+(0.1+Math.random()*.7).toFixed(2);state.RA=+(0.05+Math.random()*.45).toFixed(2);
+  state.RV=pick([1e5,1e6,1e7,2e7]);state.fuse=pick([2,5,10]);
+  state.fuseBlown=state.resistorBurnt=state.batteryDamaged=false;state.heatFuse=state.heatR=state.heatBat=0;
+  $("sE").value=state.E;$("sR").value=state.R;$("sr").value=state.r;$("sRA").value=state.RA;
+  $("sRV").value=Math.round((Math.log10(state.RV)-4)/3.3*100);$("selFuse").value=state.fuse;
+  SFX.thunk();render();toast("🎲 Τυχαίο σενάριο: E="+comma(state.E.toFixed(1))+" V · R="+state.R+" Ω · ασφ. "+state.fuse+" A");});
+// switch & fuse clicks
+$("switchG").addEventListener("click",()=>{
+  state.switchOn=!state.switchOn;SFX.click();
+  if(state.switchOn){const s=solve();if(s.I>.5){sparks(408,487,7,.4);SFX.spark();}}
+  render();});
+$("fuseG").addEventListener("click",()=>{
+  if(state.fuseBlown){state.fuseBlown=false;state.heatFuse=0;SFX.click();toast("🔧 Η ασφάλεια αντικαταστάθηκε ✓","ok");render();}
+  else if(state.fuse>0)toast("Η ασφάλεια "+state.fuse+" A είναι εντάξει ✓");});
+// sound
+function updateSoundBtn(){
+  const b=$("btnSound");
+  b.className="ibtn "+(state.sound?"on":"off");
+  b.innerHTML=(state.sound?
+    '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg>':
+    '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zM17 9l5 6M22 9l-5 6"/></svg>')+
+    '<span style="font-size:11px">'+(state.sound?"ΗΧΟΣ":"ΣΙΓΗ")+'</span>';
+  if(master)master.gain.value=state.sound?.5:0;
+}
+$("btnSound").addEventListener("click",()=>{state.sound=!state.sound;audio();updateSoundBtn();if(state.sound)SFX.click();});
+// timer
+function updateTimerBtn(){
+  $("btnTimerPlay").innerHTML=state.tRun?
+    '<svg viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M8 5v14M16 5v14"/></svg>':
+    '<svg viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M7 4l13 8-13 8z" fill="currentColor" stroke="none"/></svg>';
+}
+$("btnTimerPlay").addEventListener("click",()=>{if(state.tLeft<=0)state.tLeft=420;state.tRun=!state.tRun;SFX.click();updateTimerBtn();});
+$("btnTimerReset").addEventListener("click",()=>{state.tLeft=420;state.tRun=false;SFX.click();updateTimerBtn();});
+// notes drawer
+function setNotes(open){$("notesDrawer").classList.toggle("open",open);$("scrim").classList.toggle("open",open);}
+$("btnNotes").addEventListener("click",()=>{SFX.click();setNotes(!$("notesDrawer").classList.contains("open"));});
+$("btnNotesClose").addEventListener("click",()=>setNotes(false));
+$("scrim").addEventListener("click",()=>setNotes(false));
+// fullscreen
+$("btnFS").addEventListener("click",toggleFS);
+function toggleFS(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>toast("Η πλήρης οθόνη δεν υποστηρίζεται εδώ.","warn"));}
+  else document.exitFullscreen&&document.exitFullscreen();
+}
+document.addEventListener("fullscreenchange",()=>{
+  $("fsIcon").innerHTML=document.fullscreenElement?
+    '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>':
+    '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';});
+// keyboard
+document.addEventListener("keydown",e=>{
+  const tag=(e.target.tagName||"").toUpperCase();
+  if(e.key==="Escape"){setNotes(false);return;}
+  if(["INPUT","SELECT","TEXTAREA"].includes(tag))return;
+  if(e.key===" "&&tag!=="BUTTON"){e.preventDefault();$("switchG").dispatchEvent(new Event("click"));return;}
+  const map={"1":"Aser","2":"Apar","3":"Vpar","4":"Vser"};
+  if(map[e.key])setScenario(map[e.key]);
+  else if(e.key==="f"||e.key==="F"||e.key==="φ"||e.key==="Φ")toggleFS();
+  else if(e.key==="n"||e.key==="N"||e.key==="ν"||e.key==="Ν")setNotes(!$("notesDrawer").classList.contains("open"));
+});
+
+/* ---------------- EXPORT ---------------- */
+$("btnPNG").addEventListener("click",()=>{
+  try{
+    const clone=$("scene").cloneNode(true);
+    clone.setAttribute("width",2000);clone.setAttribute("height",1280);
+    clone.setAttribute("xmlns",NS);
+    const wm=el("text",{x:986,y:626,"text-anchor":"end","font-size":13,fill:"#7e91ba","font-family":"Arial,sans-serif"},clone);
+    wm.textContent="Σταθμός 3 · Β΄ ΕΠΑΛ · "+SCN[state.scenario].hud+" · E="+state.E+"V · R="+state.R+"Ω";
+    const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml;charset=utf-8"});
+    const url=URL.createObjectURL(blob),img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");c.width=2000;c.height=1280;
+      const x=c.getContext("2d");x.fillStyle="#0d1a30";x.fillRect(0,0,2000,1280);x.drawImage(img,0,0,2000,1280);
+      URL.revokeObjectURL(url);
+      c.toBlob(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);
+        a.download="stathmos3-"+state.scenario+".png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+        SFX.good();toast("📸 Το κύκλωμα εξήχθη σε PNG (τρέχουσα κατάσταση).","ok");},"image/png");
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);toast("Η εξαγωγή απέτυχε σε αυτό το πρόγραμμα περιήγησης.","bad");};
+    img.src=url;
+  }catch(err){toast("Η εξαγωγή απέτυχε.","bad");}
+});
+$("btnCSV").addEventListener("click",()=>{
+  const s=solve();
+  const rows=[["Σενάριο","E (V)","R (Ω)","r (Ω)","RA (Ω)","RV (Ω)","I (A)","I_R (A)","I οργάνου (A)","V_R (V)","P_R (W)","Ένδειξη"],
+    [SCN[state.scenario].hud,state.E,state.R,state.r,state.RA,state.RV,
+     s.I.toExponential(4),s.IR.toExponential(4),s.IM.toExponential(4),s.VR.toFixed(4),s.PR.toFixed(3),s.meter.toExponential(4)],
+    ["Ιδανικό (χωρίς όργανα, r=0)",state.E,state.R,0,0,"∞",(state.E/state.R).toFixed(4),(state.E/state.R).toFixed(4),"-",state.E,(state.E*state.E/state.R).toFixed(3),"-"]];
+  const csv="\uFEFF"+rows.map(r=>r.join(";")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="metriseis-stathmos3.csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  SFX.good();toast("📄 Οι μετρήσεις αποθηκεύτηκαν σε CSV.","ok");
+});
+
+/* ---------------- QUIZ ---------------- */
+const QUIZ=[
+  {q:"Το αμπερόμετρο συνδέεται πάντα σε σειρά με το στοιχείο.",a:true,why:"Σωστό (Σ): όλο το ρεύμα πρέπει να περάσει από μέσα του."},
+  {q:"Το βολτόμετρο συνδέεται σε σειρά με την αντίσταση.",a:false,why:"Λάθος (Λ): συνδέεται ΠΑΡΑΛΛΗΛΑ, στα άκρα του στοιχείου. Σε σειρά «νεκρώνει» το κύκλωμα."},
+  {q:"Το ιδανικό αμπερόμετρο έχει πολύ μεγάλη εσωτερική αντίσταση.",a:false,why:"Λάθος (Λ): έχει σχεδόν ΜΗΔΕΝΙΚΗ αντίσταση, για να μην αλλοιώνει το ρεύμα."},
+  {q:"Η παράλληλη σύνδεση αμπερομέτρου προκαλεί βραχυκύκλωμα.",a:true,why:"Σωστό (Σ): η R_A ≈ 0 βραχυκυκλώνει το στοιχείο → καίγεται η ασφάλεια."},
+  {q:"Το ιδανικό βολτόμετρο έχει άπειρη εσωτερική αντίσταση.",a:true,why:"Σωστό (Σ): R_V → ∞ ώστε να μην τραβά ρεύμα από το στοιχείο."}];
+let qScore=0,qDone=0;
+function buildQuiz(){
+  qScore=0;qDone=0;const list=$("quizList");list.innerHTML="";
+  QUIZ.forEach((item,idx)=>{
+    const d=document.createElement("div");d.className="qitem";
+    d.innerHTML=`<div class="qt"><p><b style="color:var(--dim)">${idx+1}.</b> «${item.q}»</p>
+      <div class="qbtns"><button data-v="1">Σ</button><button data-v="0">Λ</button></div></div>
+      <div class="why">${item.why}</div>`;
+    d.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      if(d.classList.contains("answered"))return;
+      const val=b.dataset.v==="1",right=val===item.a;
+      d.classList.add("answered",right?"right":"wrong");b.classList.add("pick");
+      d.querySelectorAll("button").forEach(x=>x.disabled=true);
+      qDone++;if(right){qScore++;SFX.good();}else SFX.bad();
+      $("quizScore").textContent=qScore+" / "+QUIZ.length;
+      $("quizBar").style.width=(qDone/QUIZ.length*100)+"%";
+      if(qDone===QUIZ.length)toast(qScore===QUIZ.length?"🏆 Άριστα! 5/5 — έτοιμοι για την τράπεζα!":"Ολοκληρώθηκε: "+qScore+"/5. Δες τις εξηγήσεις!",qScore>=4?"ok":"warn");
+    }));
+    list.appendChild(d);
+  });
+  $("quizScore").textContent="0 / "+QUIZ.length;$("quizBar").style.width="0%";
+}
+$("btnQuizReset").addEventListener("click",()=>{SFX.click();buildQuiz();});
+
+/* ---------------- REVEALS & INIT ---------------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll(".reveal").forEach(x=>io.observe(x));
+updateSoundBtn();updateTimerBtn();buildQuiz();
+setScenario("Aser",true);
+requestAnimationFrame(t=>{lastT=t;requestAnimationFrame(loop);});
+</script>
+
+<script>
+/* deck-sim-nav-bridge: arrow keys still change slides while the sim has focus */
+if (window.self !== window.top) window.addEventListener('keydown', function (e) {
+  if (e.target && e.target.closest && e.target.closest('input,select,textarea')) return;
+  var d = /ArrowRight|PageDown/.test(e.key) ? 1 : /ArrowLeft|PageUp/.test(e.key) ? -1 : 0;
+  if (d) { e.preventDefault(); try { parent.postMessage({ nav: d }, '*'); } catch (err) {} }
+});
+</script>
+</body>
+</html>

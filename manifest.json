@@ -1,5 +1,38 @@
 {
   "schema": 1,
-  "updated": "2026-11-18T20:40:16Z",
-  "lessons": []
+  "updated": "2026-11-18T20:44:30Z",
+  "lessons": [
+    {
+      "slug": "epanalipsi-a-tetraminou-tesseris-stathmoi-mia-ora",
+      "title": "Επανάληψη Α΄ Τετραμήνου — Τέσσερις Σταθμοί, Μία Ώρα",
+      "subject": "Ηλεκτροτεχνια",
+      "section": "Πρωινό",
+      "description": "",
+      "entry": "v2.html",
+      "version": "v2",
+      "source": "C:\\Users\\andromeas\\Desktop\\Μαθηματα Σχολειο\\Πρωινο\\Ηλεκτροτεχνια (κυκλωματα συνεχους και εναλλασσομενου ρευματος)\\12 -1 - Επαναληψη",
+      "updated": "2026-11-18T20:44:30Z",
+      "files": [
+        "README.txt",
+        "chk-sim7.png",
+        "powerpoint.html",
+        "sim-slides/04-1-stathmos-1-fortio-nomos-coulomb-8.html",
+        "sim-slides/04-1-stathmos-1-fortio-nomos-coulomb-8.png",
+        "sim-slides/07-2-stathmos-2-reyma-i-q-t-8.html",
+        "sim-slides/07-2-stathmos-2-reyma-i-q-t-8.png",
+        "sim-slides/10-3-stathmos-3-poy-mpainei-to-kathe-organo-9.html",
+        "sim-slides/10-3-stathmos-3-poy-mpainei-to-kathe-organo-9.png",
+        "sim-slides/13-4-stathmos-4-nomos-ohm-i-charaktiristiki-v-i-12.html",
+        "sim-slides/13-4-stathmos-4-nomos-ohm-i-charaktiristiki-v-i-12.png",
+        "sim-slides/16-r-rl-s-apo-ti-exartatai-i-antistasi-5.html",
+        "sim-slides/16-r-rl-s-apo-ti-exartatai-i-antistasi-5.png",
+        "sim-slides/index.html",
+        "v1.html",
+        "v2.html",
+        "φυλλαδια/οδηγος καθηγητη.html",
+        "φυλλαδια/φυλλο-επαναληψης αυτιστικο.html",
+        "φυλλαδια/φυλλο-επαναληψης.html"
+      ]
+    }
+  ]
 }
